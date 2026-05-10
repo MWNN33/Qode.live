@@ -429,7 +429,15 @@
   .photo-post-img-placeholder { width:100%; height:200px; background:linear-gradient(135deg,var(--bg),var(--border)); display:flex; align-items:center; justify-content:center; font-size:40px; }
   .photo-post-body { padding:10px 14px; font-size:13px; color:var(--text-muted); line-height:1.6; display:none; }
   .photo-post-body.open { display:block; }
-  .photo-post-actions { padding:8px 14px; border-top:1px solid var(--border); display:flex; gap:14px; align-items:center; }
+  .photo-post-actions { padding:8px 14px; border-top:1px solid var(--border); display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .vote-bar { display:flex; align-items:center; gap:4px; }
+  .vote-btn { display:flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; border:1px solid var(--border); background:transparent; font-family:'Kanit',sans-serif; font-size:11px; font-weight:700; cursor:pointer; color:var(--text-muted); transition:all 0.15s; line-height:1.4; }
+  .vote-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .vote-btn.up.voted { background:rgba(39,174,96,0.13); border-color:#27ae60; color:#27ae60; }
+  .vote-btn.down.voted { background:rgba(231,76,60,0.13); border-color:#e74c3c; color:#e74c3c; }
+  .vote-sep { width:1px; height:14px; background:var(--border); margin:0 2px; }
+  body.dark .vote-btn { color:var(--text-muted); border-color:var(--border-hi); }
+  body.dark .vote-btn:hover { border-color:var(--accent); color:var(--accent); }
   .photo-action-btn { background:none; border:none; font-family:'Kanit',sans-serif; font-size:11px; font-weight:700; color:var(--text-light); cursor:pointer; padding:4px 8px; border-radius:6px; letter-spacing:0.04em; transition:background 0.15s; }
   .photo-action-btn:hover { background:var(--border); color:var(--text); }
   .photo-comments { padding:10px 14px; border-top:1px solid var(--border); display:none; flex-direction:column; gap:8px; }
@@ -1866,7 +1874,7 @@ async function loadPhotoRoom(channelId) {
     feed.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-light);font-size:13px;">No posts yet.<br><span style="font-size:11px;">Be the first to share something!</span></div>';
     return;
   }
-  data.forEach(p=>feed.appendChild(buildPostCard(p)));
+  data.forEach(p=>{feed.appendChild(buildPostCard(p));loadPostVotes(p.id);});
 }
 
 function buildPostCard(post) {
@@ -1886,6 +1894,17 @@ function buildPostCard(post) {
     `<div class="photo-post-img-placeholder">📷</div>`}
     ${hasBody?`<div class="photo-post-body" id="body-${post.id}">${post.body.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>`:''}
     <div class="photo-post-actions">
+      <div class="vote-bar">
+        <button class="vote-btn up" id="up-${post.id}" onclick="votePost('${post.id}',1)" title="Upvote">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M12 4l8 8H4z"/></svg>
+          <span id="up-count-${post.id}">0</span>
+        </button>
+        <div class="vote-sep"></div>
+        <button class="vote-btn down" id="down-${post.id}" onclick="votePost('${post.id}',-1)" title="Downvote">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M12 20l-8-8h16z"/></svg>
+          <span id="down-count-${post.id}">0</span>
+        </button>
+      </div>
       ${hasBody?`<button class="photo-action-btn" onclick="togglePostBody('${post.id}')">▾ Read more</button>`:''}
       <button class="photo-action-btn" onclick="toggleComments('${post.id}', this)">💬 Comments</button>
     </div>
@@ -1913,6 +1932,65 @@ async function toggleComments(postId, btn) {
   if(isOpen){
     await loadComments(postId);
   }
+}
+
+// ─── VOTES ───
+async function loadPostVotes(postId) {
+  const { data: votes } = await sb.from('post_votes').select('vote, user_id').eq('post_id', postId);
+  if(!votes) return;
+  const ups   = votes.filter(v=>v.vote===1).length;
+  const downs = votes.filter(v=>v.vote===-1).length;
+  const mine  = currentUser ? (votes.find(v=>v.user_id===currentUser.id)?.vote||0) : 0;
+  const upEl    = document.getElementById('up-count-'+postId);
+  const downEl  = document.getElementById('down-count-'+postId);
+  const upBtn   = document.getElementById('up-'+postId);
+  const downBtn = document.getElementById('down-'+postId);
+  if(upEl)    upEl.textContent   = ups;
+  if(downEl)  downEl.textContent = downs;
+  if(upBtn)   upBtn.classList.toggle('voted', mine===1);
+  if(downBtn) downBtn.classList.toggle('voted', mine===-1);
+}
+
+async function votePost(postId, vote) {
+  if(!currentUser){ toast('Log in to vote.'); return; }
+  const upBtn   = document.getElementById('up-'+postId);
+  const downBtn = document.getElementById('down-'+postId);
+  const upCount = document.getElementById('up-count-'+postId);
+  const downCount = document.getElementById('down-count-'+postId);
+  const wasUp   = upBtn?.classList.contains('voted');
+  const wasDown = downBtn?.classList.contains('voted');
+  const prevVote = wasUp ? 1 : wasDown ? -1 : 0;
+  const newVote  = prevVote === vote ? 0 : vote; // same = toggle off
+
+  // ── Optimistic UI ──
+  const upN   = parseInt(upCount?.textContent||0);
+  const downN = parseInt(downCount?.textContent||0);
+  if(upBtn)   upBtn.classList.toggle('voted',   newVote===1);
+  if(downBtn) downBtn.classList.toggle('voted', newVote===-1);
+  if(upCount) {
+    let n = upN;
+    if(prevVote===1 && newVote!==1)  n = Math.max(0, n-1);
+    if(prevVote!==1 && newVote===1)  n = n+1;
+    upCount.textContent = n;
+  }
+  if(downCount) {
+    let n = downN;
+    if(prevVote===-1 && newVote!==-1) n = Math.max(0, n-1);
+    if(prevVote!==-1 && newVote===-1) n = n+1;
+    downCount.textContent = n;
+  }
+
+  // ── DB write ──
+  if(newVote===0) {
+    await sb.from('post_votes').delete().eq('post_id',postId).eq('user_id',currentUser.id);
+  } else {
+    await sb.from('post_votes').upsert(
+      {post_id:postId, user_id:currentUser.id, vote:newVote},
+      {onConflict:'post_id,user_id'}
+    );
+  }
+  // Reconcile with server in background
+  loadPostVotes(postId);
 }
 
 async function loadComments(postId) {
