@@ -1,3 +1,1524 @@
-# Qode
-# Qode
-# Qode
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QODE — One place. Endless possibilities.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #89BCE3; --bg-card: #9dc8ea; --border: #4A76A8;
+    --text: #0c1e30; --text-muted: #1e3d5c; --text-light: #2e5a80;
+    --accent: #3a6ea8; --shadow: 0 2px 8px rgba(0,0,0,0.15);
+    --nav-h: 48px; --online: #2ecc71; --danger: #e74c3c;
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Kanit', sans-serif; font-size: 15px; line-height: 1.6; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: var(--bg); height: var(--nav-h); display: flex; align-items: center; padding: 0 28px; border-bottom: 1px solid var(--border); }
+  .logo { font-weight: 700; font-size: 17px; letter-spacing: 0.06em; color: var(--text); cursor: pointer; flex-shrink: 0; }
+  .nav-line { flex: 1; height: 1px; background: var(--border); margin: 0 20px; }
+  .nav-links { display: flex; align-items: center; gap: 24px; list-style: none; }
+  .nav-links a { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+  .nav-links a:hover, .nav-links a.active { color: var(--text); }
+  .nav-icon { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-card); display: flex; align-items: center; justify-content: center; cursor: pointer; margin-left: 16px; transition: background 0.2s; position: relative; }
+  .nav-icon:hover { background: var(--border); }
+  .nav-icon svg { width: 14px; height: 14px; stroke: var(--text-muted); fill: none; stroke-width: 2; }
+
+  /* AUTH */
+  .auth-dropdown { position: absolute; top: calc(var(--nav-h) + 8px); right: 16px; width: 340px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); z-index: 500; overflow: hidden; display: none; animation: dropIn 0.18s ease; }
+  @keyframes dropIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+  .auth-dropdown.open { display: block; }
+  .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--border); }
+  .auth-tab { padding: 13px; text-align: center; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; color: var(--text-muted); background: var(--bg-card); transition: background 0.15s; border: none; font-family: 'Kanit', sans-serif; }
+  .auth-tab.active { background: var(--bg); color: var(--text); border-bottom: 2px solid var(--accent); }
+  .auth-form { padding: 20px; display: none; flex-direction: column; gap: 12px; max-height: 80vh; overflow-y: auto; }
+  .auth-form.active { display: flex; }
+  .auth-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; display: block; }
+  .auth-input { width: 100%; padding: 9px 13px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); color: var(--text); font-family: 'Kanit', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; }
+  .auth-input:focus { border-color: var(--accent); }
+  .auth-input.error { border-color: var(--danger); }
+  .auth-input::placeholder { color: var(--text-light); }
+  .auth-btn { width: 100%; padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-family: 'Kanit', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; margin-top: 4px; transition: background 0.15s, transform 0.1s; }
+  .auth-btn:hover { background: #2a5a90; }
+  .auth-btn:active { transform: scale(0.98); }
+  .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .auth-btn.secondary { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); }
+  .auth-btn.secondary:hover { background: var(--border); }
+  .auth-divider { text-align: center; font-size: 11px; color: var(--text-light); position: relative; }
+  .auth-divider::before, .auth-divider::after { content: ''; position: absolute; top: 50%; width: 38%; height: 1px; background: var(--border); }
+  .auth-divider::before { left: 0; } .auth-divider::after { right: 0; }
+  .auth-error { font-size: 11px; color: #c0392b; background: #fdecea; border: 1px solid #f5c6c2; border-radius: 6px; padding: 7px 11px; display: none; }
+  .auth-success { font-size: 11px; color: #1a6b3c; background: #e6f4ed; border: 1px solid #b7dfc9; border-radius: 6px; padding: 7px 11px; display: none; }
+  .field-hint { font-size: 10px; margin-top: 2px; display: none; }
+  .field-hint.show { display: block; }
+  .field-hint.ok { color: #1a6b3c; }
+  .field-hint.err { color: #c0392b; }
+
+  /* Category chips */
+  .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 140px; overflow-y: auto; }
+  .cat-chip { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); font-family: 'Kanit', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; text-align: center; transition: all 0.15s; color: var(--text-muted); user-select: none; }
+  .cat-chip.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .cat-chip:hover:not(.selected) { background: var(--border); color: var(--text); }
+
+  /* Profile */
+  .profile-pill { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-left: 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px 4px 6px; transition: background 0.15s; }
+  .profile-pill:hover { background: var(--border); }
+  .profile-avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .profile-name { font-size: 11px; font-weight: 700; color: var(--text); }
+  .profile-menu { position: absolute; top: calc(var(--nav-h) + 8px); right: 16px; width: 200px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); z-index: 500; overflow: hidden; display: none; animation: dropIn 0.18s ease; }
+  .profile-menu.open { display: block; }
+  .profile-menu-item { padding: 11px 16px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: background 0.15s; border-bottom: 1px solid var(--border); font-family: 'Kanit', sans-serif; }
+  .profile-menu-item:last-child { border-bottom: none; }
+  .profile-menu-item:hover { background: var(--bg-card); color: var(--text); }
+  .profile-menu-item.danger { color: #c0392b; }
+  .profile-menu-item.danger:hover { background: #fdecea; }
+
+  /* PAGES */
+  .page { display: none; animation: fadeIn 0.2s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+  /* HOME */
+  .hero { padding: 72px 48px 56px; max-width: 900px; }
+  .hero h1 { font-size: 58px; font-weight: 700; line-height: 1.1; margin-bottom: 20px; }
+  .hero p { font-size: 15px; font-weight: 600; color: var(--text-muted); }
+  .home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-top: 1px solid var(--border); }
+  .home-col { background: var(--bg); padding: 32px 40px 48px; }
+  .section-label { font-size: 20px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 20px; display: block; }
+  .news-card { border: 1px solid var(--border); border-radius: 4px; overflow: hidden; background: var(--bg-card); display: grid; grid-template-columns: 120px 1fr; box-shadow: var(--shadow); cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+  .news-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
+  .news-img { width: 120px; height: 140px; background: linear-gradient(135deg, #8a9bc2, #6b7fa8); display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0; }
+  .news-body { padding: 14px 16px; }
+  .news-title { font-size: 16px; font-weight: 700; line-height: 1.3; margin-bottom: 6px; }
+  .news-date { font-size: 10px; font-weight: 700; color: var(--text-light); letter-spacing: 0.06em; margin-bottom: 8px; display: block; }
+  .news-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+  .forum-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .forum-btn { border: 1px solid var(--border); background: var(--bg-card); border-radius: 4px; padding: 14px 10px; font-family: 'Kanit', sans-serif; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; text-align: center; transition: background 0.15s; box-shadow: var(--shadow); }
+  .forum-btn:hover { background: var(--border); }
+
+  /* MODALS */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 999; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; box-shadow: 0 8px 40px rgba(0,0,0,0.28); width: 680px; max-width: 94vw; max-height: 82vh; display: flex; flex-direction: column; overflow: hidden; animation: modalIn 0.2s ease; }
+  @keyframes modalIn { from { opacity:0; transform:translateY(12px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+  .modal-head { padding: 20px 24px 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .modal-emoji { font-size: 36px; line-height: 1; flex-shrink: 0; }
+  .modal-title { font-size: 22px; font-weight: 700; line-height: 1.25; flex: 1; }
+  .modal-close { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 50%; background: var(--bg-card); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--text-muted); transition: background 0.15s; }
+  .modal-close:hover { background: var(--border); }
+  .modal-meta { padding: 8px 24px 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-light); border-bottom: 1px solid var(--border); display: flex; gap: 16px; align-items: center; }
+  .modal-tag { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 2px 10px; font-size: 10px; font-weight: 700; color: var(--text-muted); }
+  .modal-body { padding: 20px 24px 28px; overflow-y: auto; font-size: 15px; line-height: 1.8; color: var(--text-muted); }
+  .modal-body p { margin-bottom: 16px; }
+  .modal-body strong { color: var(--text); }
+
+  /* ABOUT */
+  .about-wrap { padding: 60px 40px; width: 65%; margin: 0 auto; }
+  .about-card { border: 1px solid var(--border); border-radius: 4px; background: var(--bg-card); padding: 40px 48px; margin-top: 24px; box-shadow: var(--shadow); }
+  .about-card p { font-size: 22px; color: var(--text-muted); line-height: 1.8; margin-bottom: 28px; }
+  .about-card strong { color: var(--text); font-weight: 700; }
+
+  /* CHAT SHELL (shared forum + messages) */
+  .chat-outer { padding: 16px; height: calc(100vh - var(--nav-h)); }
+  .chat-shell { border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; height: 100%; display: grid; grid-template-columns: 56px 1fr; background: var(--bg-card); box-shadow: var(--shadow); }
+  .chat-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 6px; background: var(--bg-card); overflow-y: auto; }
+  .side-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); transition: background 0.15s; flex-shrink: 0; }
+  .side-icon:hover { background: var(--border); }
+  .side-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .side-sep { width: 28px; height: 1px; background: var(--border); flex-shrink: 0; margin: 2px 0; }
+  .forum-circle { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--bg); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.15s, border-radius 0.15s; flex-shrink: 0; font-size: 14px; }
+  .forum-circle:hover { background: var(--border); border-radius: 10px; }
+  .forum-circle.active { background: var(--accent); border-color: #2a5a90; border-radius: 10px; }
+  .chat-main { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+
+  /* FORUM inner layout */
+  .forum-inner { display: flex; height: 100%; overflow: hidden; }
+  .forum-sub-sidebar { width: 190px; border-right: 1px solid var(--border); background: var(--bg); overflow-y: auto; flex-shrink: 0; }
+  .forum-chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #cce0f5; }
+  .forum-cat-header { padding: 10px 14px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .forum-cat-item { padding: 9px 14px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: background 0.12s; display: flex; align-items: center; gap: 8px; font-family: 'Kanit', sans-serif; border-left: 3px solid transparent; }
+  .forum-cat-item:hover { background: var(--bg-card); color: var(--text); }
+  .forum-cat-item.active { background: var(--bg-card); color: var(--text); border-left-color: var(--accent); }
+  .forum-cat-item .cat-hash { color: var(--text-light); }
+
+  /* MESSAGES page */
+  .msg-page { display: flex; height: 100%; overflow: hidden; }
+  .dm-list { width: 220px; border-right: 1px solid var(--border); background: var(--bg); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+  .dm-list-header { padding: 12px 14px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .dm-new-btn { cursor: pointer; width: 22px; height: 22px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; line-height: 1; transition: background 0.15s; }
+  .dm-new-btn:hover { background: var(--border); }
+  .dm-entries { flex: 1; overflow-y: auto; }
+  .dm-entry { padding: 10px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.12s; border-left: 3px solid transparent; }
+  .dm-entry:hover { background: var(--bg-card); }
+  .dm-entry.active { background: var(--bg-card); border-left-color: var(--accent); }
+  .dm-avatar { width: 32px; height: 32px; border-radius: 50%; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; }
+  .dm-status { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--bg); background: #95a5a6; }
+  .dm-status.online { background: var(--online); }
+  .dm-info { flex: 1; overflow: hidden; }
+  .dm-name { font-size: 12px; font-weight: 700; color: var(--text); }
+  .dm-preview { font-size: 11px; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dm-time { font-size: 10px; color: var(--text-light); flex-shrink: 0; }
+  .dm-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #cce0f5; }
+  .dm-placeholder { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text-light); }
+  .dm-placeholder svg { width: 48px; height: 48px; stroke: var(--border); fill: none; stroke-width: 1.5; }
+
+  /* Shared chat elements */
+  .chat-messages { flex: 1; overflow-y: auto; padding: 16px 16px 8px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+  .msg-row { display: flex; align-items: flex-end; gap: 8px; }
+  .msg-row.mine { flex-direction: row-reverse; }
+  .msg-avatar { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--bg-card); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; }
+  .msg-col { display: flex; flex-direction: column; gap: 3px; max-width: 65%; }
+  .msg-row.mine .msg-col { align-items: flex-end; }
+  .msg-meta { font-size: 10px; color: var(--text-light); display: flex; gap: 6px; align-items: center; }
+  .msg-meta .username { font-weight: 600; color: var(--text-muted); }
+  .bubble { padding: 8px 12px; border-radius: 16px; font-size: 13.5px; line-height: 1.45; color: var(--text); background: var(--bg-card); border: 1px solid var(--border); word-break: break-word; }
+  .msg-row.mine .bubble { background: var(--accent); color: #fff; border-color: #2a5a90; }
+  .chat-input-bar { border-top: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 10px; background: var(--bg-card); flex-shrink: 0; }
+  .chat-input { flex: 1; border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; font-family: 'Kanit', sans-serif; font-size: 13px; background: #cce0f5; color: var(--text); outline: none; transition: border-color 0.2s; }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-input::placeholder { color: var(--text-light); }
+  .chat-send { width: 34px; height: 34px; border-radius: 50%; border: none; background: var(--accent); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, transform 0.1s; flex-shrink: 0; }
+  .chat-send:hover { background: #2a5a90; }
+  .chat-send:active { transform: scale(0.93); }
+  .chat-send svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2; }
+  .chat-header { border-bottom: 1px solid var(--border); padding: 0 16px; height: 40px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-card); flex-shrink: 0; }
+  .chat-header-name { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; }
+  .chat-header-sub { font-size: 11px; color: var(--text-light); display: flex; align-items: center; gap: 6px; }
+  .online-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--online); display: inline-block; }
+
+  /* New DM modal */
+  .new-dm-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 800; align-items: center; justify-content: center; }
+  .new-dm-modal.open { display: flex; }
+  .new-dm-box { background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; width: 340px; padding: 20px; box-shadow: 0 8px 40px rgba(0,0,0,0.25); animation: modalIn 0.18s ease; }
+  .user-search-list { max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; }
+  .user-search-item { padding: 9px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.12s; font-size: 12px; font-family: 'Kanit', sans-serif; }
+  .user-search-item:hover { background: var(--bg-card); }
+  .usi-av { width: 28px; height: 28px; border-radius: 50%; color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .usi-name { font-weight: 600; color: var(--text); }
+  .usi-status { font-size: 10px; color: var(--text-light); }
+
+  /* Settings modal */
+  .settings-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 900; align-items: center; justify-content: center; }
+  .settings-modal.open { display: flex; }
+  .settings-box { background: var(--bg); border: 1.5px solid var(--border); border-radius: 14px; width: 480px; max-width: 94vw; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.28); animation: modalIn 0.2s ease; }
+  .settings-head { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .settings-head h3 { font-size: 15px; font-weight: 700; }
+  .settings-body { padding: 20px 22px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+  .settings-section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light); margin-bottom: 10px; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1c2133; color: #e8ecf7; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 9999; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Loading spinner */
+  .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Dark */
+  body.dark { --bg:#141824; --bg-card:#1c2133; --border:#2e3550; --text:#e8ecf7; --text-muted:#8b95b8; --text-light:#5d6888; --accent:#4a7ec0; }
+  body.dark .forum-chat-area, body.dark .dm-area, body.dark .chat-input { background: #1a2540; }
+  body.dark .msg-row.mine .bubble { background: #2a4a80; border-color: #1a3a6a; }
+
+  /* Photo room */
+  .photo-post { border:1px solid var(--border); border-radius:10px; background:var(--bg-card); overflow:hidden; box-shadow:var(--shadow); }
+  .photo-post-header { padding:10px 14px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); }
+  .photo-post-av { width:28px; height:28px; border-radius:50%; color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .photo-post-user { font-size:12px; font-weight:700; color:var(--text); }
+  .photo-post-time { font-size:10px; color:var(--text-light); margin-left:auto; }
+  .photo-post-title { padding:10px 14px 8px; font-size:15px; font-weight:700; color:var(--text); line-height:1.3; }
+  .photo-post-img { width:100%; max-height:480px; object-fit:cover; display:block; cursor:pointer; }
+  .photo-post-img-placeholder { width:100%; height:200px; background:linear-gradient(135deg,var(--bg),var(--border)); display:flex; align-items:center; justify-content:center; font-size:40px; }
+  .photo-post-body { padding:10px 14px; font-size:13px; color:var(--text-muted); line-height:1.6; display:none; }
+  .photo-post-body.open { display:block; }
+  .photo-post-actions { padding:8px 14px; border-top:1px solid var(--border); display:flex; gap:14px; align-items:center; }
+  .photo-action-btn { background:none; border:none; font-family:'Kanit',sans-serif; font-size:11px; font-weight:700; color:var(--text-light); cursor:pointer; padding:4px 8px; border-radius:6px; letter-spacing:0.04em; transition:background 0.15s; }
+  .photo-action-btn:hover { background:var(--border); color:var(--text); }
+  .photo-comments { padding:10px 14px; border-top:1px solid var(--border); display:none; flex-direction:column; gap:8px; }
+  .photo-comments.open { display:flex; }
+  .photo-comment { display:flex; gap:8px; align-items:flex-start; }
+  .photo-comment-av { width:22px; height:22px; border-radius:50%; color:#fff; font-size:8px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+  .photo-comment-body { flex:1; }
+  .photo-comment-user { font-size:11px; font-weight:700; color:var(--text-muted); }
+  .photo-comment-text { font-size:12px; color:var(--text); line-height:1.4; }
+  .photo-comment-input-row { display:flex; gap:8px; margin-top:6px; }
+  .photo-comment-input { flex:1; border:1px solid var(--border); border-radius:16px; padding:6px 12px; font-family:'Kanit',sans-serif; font-size:12px; background:var(--bg); color:var(--text); outline:none; }
+  .photo-comment-input:focus { border-color:var(--accent); }
+  .photo-comment-send { width:28px; height:28px; border-radius:50%; border:none; background:var(--accent); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .photo-comment-send svg { width:12px; height:12px; stroke:#fff; fill:none; stroke-width:2; }
+
+  /* New Post Modal */
+  .new-post-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:800; align-items:center; justify-content:center; }
+  .new-post-modal.open { display:flex; }
+  .new-post-box { background:var(--bg); border:1.5px solid var(--border); border-radius:14px; width:480px; max-width:94vw; max-height:88vh; overflow-y:auto; padding:24px; box-shadow:0 8px 40px rgba(0,0,0,0.25); animation:modalIn 0.18s ease; display:flex; flex-direction:column; gap:14px; }
+  .new-post-box h3 { font-size:15px; font-weight:700; margin-bottom:0; }
+  .photo-upload-zone { border:2px dashed var(--border); border-radius:8px; padding:28px; text-align:center; cursor:pointer; transition:border-color 0.2s, background 0.2s; background:var(--bg-card); }
+  .photo-upload-zone:hover { border-color:var(--accent); background:rgba(58,110,168,0.08); }
+  .photo-upload-zone img { max-width:100%; max-height:200px; border-radius:6px; object-fit:cover; }
+
+  /* Social auth */
+  .social-auth-row { display:flex; flex-direction:column; gap:8px; }
+  .social-btn { width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:8px; background:var(--bg-card); font-family:'Kanit',sans-serif; font-size:12px; font-weight:700; color:var(--text); cursor:pointer; display:flex; align-items:center; gap:10px; transition:background 0.15s; }
+  .social-btn:hover { background:var(--border); }
+  .social-btn svg { width:16px; height:16px; flex-shrink:0; }
+  .phone-input-row { display:flex; gap:6px; }
+  .phone-prefix { width:70px; padding:9px 8px; border:1px solid var(--border); border-radius:6px; background:var(--bg-card); font-family:'Kanit',sans-serif; font-size:13px; color:var(--text); outline:none; }
+  .otp-row { display:flex; gap:8px; align-items:center; }
+  .otp-input { flex:1; }
+
+  ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  @media (max-width: 700px) { .home-grid { grid-template-columns: 1fr; } .hero { padding: 36px 20px 28px; } .hero h1 { font-size: 36px; } .about-wrap { width: 100%; padding: 24px 16px; } .forum-sub-sidebar { width: 150px; } .dm-list { width: 170px; } }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<nav>
+  <span class="logo" onclick="goTo('home')">QODE</span>
+  <div class="nav-line"></div>
+  <ul class="nav-links">
+    <li><a id="nav-news" onclick="goTo('home')" class="active">NEWS</a></li>
+    <li><a id="nav-forum" onclick="goTo('forum')">FORUM</a></li>
+    <li><a id="nav-messages" onclick="goTo('messages')">MESSAGES</a></li>
+    <li><a id="nav-about" onclick="goTo('about')">ABOUT</a></li>
+  </ul>
+  <div class="nav-icon" onclick="toggleTheme()" title="Toggle theme" style="margin-left:12px;">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+  </div>
+  <div id="authTrigger" class="nav-icon" onclick="toggleAuthDropdown()" title="Account" style="margin-left:8px;">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  </div>
+  <div id="profilePill" class="profile-pill" onclick="toggleProfileMenu()" style="display:none;">
+    <div class="profile-avatar" id="profileAvatar">?</div>
+    <span class="profile-name" id="profileName">User</span>
+  </div>
+
+  <div class="auth-dropdown" id="authDropdown">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Log In</button>
+      <button class="auth-tab" onclick="switchTab('register')">Register</button>
+    </div>
+    <div class="auth-form active" id="loginForm">
+      <div><label class="auth-label">Email</label><input class="auth-input" id="loginEmail" type="email" placeholder="you@example.com"></div>
+      <div><label class="auth-label">Password</label><input class="auth-input" id="loginPass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="auth-error" id="loginError"></div>
+      <button class="auth-btn" id="loginBtn" onclick="doLogin()">Log In</button>
+      <div class="auth-divider">or continue with</div>
+      <div class="social-auth-row">
+        <button class="social-btn" onclick="doSocialLogin('google')">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Continue with Google
+        </button>
+        <button class="social-btn" onclick="doSocialLogin('apple')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.56-1.31 3.1-2.53 4.08zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+          Continue with Apple
+        </button>
+        <button class="social-btn" onclick="showPhoneAuth()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
+          Continue with Phone
+        </button>
+      </div>
+      <div id="phoneAuthSection" style="display:none;flex-direction:column;gap:8px;">
+        <div class="auth-divider" style="margin:4px 0;">phone verification</div>
+        <div class="phone-input-row">
+          <input class="auth-input phone-prefix" id="phonePrefix" type="text" value="+1" placeholder="+1">
+          <input class="auth-input" id="phoneNumber" type="tel" placeholder="555 000 0000" style="flex:1;">
+        </div>
+        <button class="auth-btn secondary" id="sendOtpBtn" onclick="sendPhoneOTP()">Send Code</button>
+        <div id="otpSection" style="display:none;flex-direction:column;gap:8px;">
+          <div><label class="auth-label">Verification Code</label>
+          <input class="auth-input otp-input" id="otpCode" type="text" placeholder="6-digit code" maxlength="6"></div>
+          <button class="auth-btn" onclick="verifyPhoneOTP()">Verify & Log In</button>
+        </div>
+      </div>
+      <div class="auth-divider">or</div>
+      <button class="auth-btn secondary" onclick="switchTab('register')">Create account</button>
+    </div>
+    <div class="auth-form" id="registerForm">
+      <div>
+        <label class="auth-label">Username</label>
+        <input class="auth-input" id="regUser" type="text" placeholder="choose a username" oninput="validateUsername()">
+        <span class="field-hint" id="hintUser"></span>
+      </div>
+      <div>
+        <label class="auth-label">Email</label>
+        <input class="auth-input" id="regEmail" type="email" placeholder="you@example.com" oninput="validateEmail()">
+        <span class="field-hint" id="hintEmail"></span>
+      </div>
+      <div>
+        <label class="auth-label">Password</label>
+        <input class="auth-input" id="regPass" type="password" placeholder="min. 6 characters" oninput="validatePass()">
+        <span class="field-hint" id="hintPass"></span>
+      </div>
+      <div>
+        <label class="auth-label">Confirm Password</label>
+        <input class="auth-input" id="regPass2" type="password" placeholder="repeat password" oninput="validatePass2()" onkeydown="if(event.key==='Enter')doRegister()">
+        <span class="field-hint" id="hintPass2"></span>
+      </div>
+      <div>
+        <label class="auth-label" style="margin-bottom:8px;">Join Forums</label>
+        <div class="cat-grid" id="regCatGrid"></div>
+      </div>
+      <div class="auth-error" id="registerError"></div>
+      <div class="auth-success" id="registerSuccess">Account created! Check your email to confirm, then log in.</div>
+      <button class="auth-btn" id="registerBtn" onclick="doRegister()">Create Account</button>
+    </div>
+  </div>
+
+  <div class="profile-menu" id="profileMenu">
+    <div class="profile-menu-item" onclick="openSettings()">⚙️ Settings</div>
+    <div class="profile-menu-item danger" onclick="doLogout()">🚪 Log Out</div>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <h1>One place.<br>Endless possibilities.</h1>
+    <p>Discover the latest in tech, design and innovation.</p>
+  </div>
+  <div class="home-grid">
+    <div class="home-col">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <span class="section-label" style="margin-bottom:0;">Tech News Around The World</span>
+        <button class="auth-btn" style="width:auto;padding:6px 14px;font-size:11px;margin:0;" onclick="openNewsUploadModal()">+ Add News</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;" id="newsCardList">
+        <div class="news-card" onclick="openArticle(0)"><div class="news-img">📰</div><div class="news-body"><div class="news-title">Donald J. Trump was shot</div><span class="news-date">July 13, 2024 · USA</span><p class="news-text">The candidate dives to the rostrum after an assassin's bullet grazes his ear.</p></div></div>
+        <div class="news-card" onclick="openArticle(1)"><div class="news-img">🤖</div><div class="news-body"><div class="news-title">OpenAI launches GPT-5 with real-time reasoning</div><span class="news-date">May 6, 2026 · Global</span><p class="news-text">Early benchmarks show it outperforming previous models across coding, math and multimodal tasks.</p></div></div>
+        <div class="news-card" onclick="openArticle(2)"><div class="news-img">🛰️</div><div class="news-body"><div class="news-title">SpaceX Starship completes first commercial flight</div><span class="news-date">Apr 28, 2026 · USA</span><p class="news-text">Elon Musk called it a turning point for deep-space logistics.</p></div></div>
+        <div class="news-card" onclick="openArticle(3)"><div class="news-img">💻</div><div class="news-body"><div class="news-title">EU passes sweeping AI liability directive</div><span class="news-date">Apr 15, 2026 · Europe</span><p class="news-text">Critics warn it could stifle innovation while consumer groups call it a necessary safeguard.</p></div></div>
+      </div>
+    </div>
+    <div class="home-col">
+      <span class="section-label" style="text-align:right;display:block;">Forums</span>
+      <div class="forum-grid" id="homeForumGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NEWS UPLOAD MODAL -->
+<div class="new-post-modal" id="newsUploadModal" onclick="if(event.target===this)closeNewsUploadModal()">
+  <div class="new-post-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <h3>📰 Add News Article</h3>
+      <button class="modal-close" onclick="closeNewsUploadModal()">✕</button>
+    </div>
+    <div><label class="auth-label">Title *</label><input class="auth-input" id="newsTitle" type="text" placeholder="Article headline..."></div>
+    <div style="display:flex;gap:10px;">
+      <div style="flex:1;"><label class="auth-label">Date</label><input class="auth-input" id="newsDate" type="text" placeholder="May 9, 2026"></div>
+      <div style="flex:1;"><label class="auth-label">Tag (e.g. USA · Tech)</label><input class="auth-input" id="newsTag" type="text" placeholder="Global · AI"></div>
+    </div>
+    <div><label class="auth-label">Summary (shown on card)</label><input class="auth-input" id="newsSummary" type="text" placeholder="Brief summary..."></div>
+    <div>
+      <label class="auth-label">Cover Photo</label>
+      <div class="photo-upload-zone" id="newsUploadZone" onclick="document.getElementById('newsFileInput').click()">
+        <div id="newsUploadPrompt" style="font-size:12px;color:var(--text-light);"><div style="font-size:28px;margin-bottom:6px;">🖼</div>Click to upload a cover photo</div>
+        <img id="newsPhotoPreview" style="display:none;max-height:160px;" alt="Preview">
+      </div>
+      <input type="file" id="newsFileInput" accept="image/*" style="display:none;" onchange="handleNewsPhoto(event)">
+    </div>
+    <div>
+      <label class="auth-label">Full Article Body *</label>
+      <textarea class="auth-input" id="newsBody" rows="6" placeholder="Write the full article here..." style="resize:vertical;min-height:100px;"></textarea>
+    </div>
+    <div class="auth-error" id="newsUploadError"></div>
+    <div class="auth-success" id="newsUploadSuccess" style="display:none;">Article published!</div>
+    <button class="auth-btn" id="newsUploadBtn" onclick="submitNewsArticle()">Publish Article</button>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<div class="page" id="page-about">
+  <div class="about-wrap">
+    <span class="section-label">About Us</span>
+    <div class="about-card">
+      <p><strong>QODE</strong> was born from a simple idea —<br>that tech doesn't have to be cold or complicated.<br>It can have soul, energy, and connection.</p>
+      <p>This is a place for builders, dreamers, and creators.<br>For those who see beauty in clean code and bold design.</p>
+      <p><strong>QODE</strong> isn't just another tech hub — it's an ecosystem.<br>A mix of news, forums, and tools crafted to spark creativity.</p>
+      <p>Welcome to <strong>QODE</strong> —<br>where every line of code carries a bit of your own aura.</p>
+    </div>
+  </div>
+</div>
+
+<!-- FORUM -->
+<div class="page" id="page-forum">
+  <div class="chat-outer">
+    <div class="chat-shell">
+      <div class="chat-sidebar" id="chatSidebar">
+        <div class="side-icon" title="Forums" style="color:var(--accent)">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="side-icon" title="Messages" onclick="goTo('messages')" style="margin-top:2px;">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <div class="side-sep"></div>
+      </div>
+      <div class="chat-main">
+        <div class="forum-inner">
+          <div class="forum-sub-sidebar" id="forumSubSidebar">
+            <div class="forum-cat-header">
+              <span>Channels</span>
+              <span onclick="openSettings()" style="cursor:pointer;font-size:15px;color:var(--text-light);">⚙</span>
+            </div>
+          </div>
+          <div class="forum-chat-area">
+            <div class="chat-header">
+              <span class="chat-header-name" id="chatHeaderName"># general</span>
+              <span class="chat-header-sub" id="chatHeaderCount"></span>
+            </div>
+            <!-- CHAT MODE -->
+            <div id="forumChatArea" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+              <div class="chat-messages" id="chatMessages">
+                <div style="text-align:center;color:var(--text-light);font-size:12px;margin-top:20px;">Loading messages...</div>
+              </div>
+              <div class="chat-input-bar">
+                <input class="chat-input" id="chatInput" type="text" placeholder="Message #general..." onkeydown="if(event.key==='Enter')sendMsg()">
+                <button class="chat-send" onclick="sendMsg()">
+                  <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+              </div>
+            </div>
+            <!-- PHOTO ROOM MODE -->
+            <div id="photoRoomArea" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+              <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg-card);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+                <span style="font-size:11px;font-weight:700;color:var(--text-light);letter-spacing:0.06em;text-transform:uppercase;">Photo Room</span>
+                <button class="auth-btn" style="width:auto;padding:6px 14px;font-size:11px;margin:0;" onclick="openNewPostModal()">+ New Post</button>
+              </div>
+              <div id="photoFeed" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MESSAGES -->
+<div class="page" id="page-messages">
+  <div class="chat-outer">
+    <div class="chat-shell">
+      <div class="chat-sidebar">
+        <div class="side-icon active" title="Messages">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+      </div>
+      <div class="chat-main">
+        <div class="msg-page">
+          <div class="dm-list">
+            <div class="dm-list-header">
+              <span>Direct Messages</span>
+              <div class="dm-new-btn" onclick="openNewDM()" title="New message">+</div>
+            </div>
+            <div class="dm-entries" id="dmEntries">
+              <div style="padding:16px;font-size:12px;color:var(--text-light);">Loading...</div>
+            </div>
+          </div>
+          <div class="dm-area" id="dmArea">
+            <div class="dm-placeholder" id="dmPlaceholder">
+              <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <p>Select a conversation or start a new one</p>
+            </div>
+            <div id="dmConvo" style="display:none;flex-direction:column;height:100%;overflow:hidden;">
+              <div class="chat-header">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div class="dm-avatar" id="dmHeaderAvatar" style="width:26px;height:26px;font-size:9px;">?</div>
+                  <span class="chat-header-name" id="dmHeaderName">User</span>
+                  <span class="online-dot" id="dmOnlineDot" style="display:none;"></span>
+                </div>
+                <span class="chat-header-sub" id="dmHeaderStatus"></span>
+              </div>
+              <div class="chat-messages" id="dmMessages"></div>
+              <div class="chat-input-bar">
+                <input class="chat-input" id="dmInput" type="text" placeholder="Send a message..." onkeydown="if(event.key==='Enter')sendDM()">
+                <button class="chat-send" onclick="sendDM()">
+                  <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARTICLE MODAL -->
+<div class="modal-overlay" id="articleModal" onclick="closeModal(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span class="modal-emoji" id="modalEmoji">📰</span>
+      <span class="modal-title" id="modalTitle"></span>
+      <button class="modal-close" onclick="document.getElementById('articleModal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-meta"><span id="modalDate"></span><span class="modal-tag" id="modalTag"></span></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- NEW DM MODAL -->
+<div class="new-dm-modal" id="newDmModal" onclick="if(event.target===this)closeNewDM()">
+  <div class="new-dm-box">
+    <div style="font-size:14px;font-weight:700;margin-bottom:14px;">Start a New Conversation</div>
+    <input class="auth-input" id="dmSearchInput" type="text" placeholder="Search users..." oninput="renderDMSearch()">
+    <div class="user-search-list" id="dmSearchList"></div>
+    <button class="auth-btn secondary" onclick="closeNewDM()" style="margin-top:12px;">Cancel</button>
+  </div>
+</div>
+
+<!-- NEW POST MODAL -->
+<div class="new-post-modal" id="newPostModal" onclick="if(event.target===this)closeNewPostModal()">
+  <div class="new-post-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <h3>📸 New Photo Post</h3>
+      <button class="modal-close" onclick="closeNewPostModal()">✕</button>
+    </div>
+    <div>
+      <label class="auth-label">Headline *</label>
+      <input class="auth-input" id="newPostTitle" type="text" placeholder="Write a catchy headline...">
+    </div>
+    <div>
+      <label class="auth-label">Photo</label>
+      <div class="photo-upload-zone" id="photoUploadZone" onclick="document.getElementById('photoFileInput').click()">
+        <div id="photoUploadPrompt" style="font-size:12px;color:var(--text-light);">
+          <div style="font-size:28px;margin-bottom:6px;">📷</div>
+          Click to upload a photo
+        </div>
+        <img id="photoPreview" style="display:none;" alt="Preview">
+      </div>
+      <input type="file" id="photoFileInput" accept="image/*" style="display:none;" onchange="handlePhotoSelect(event)">
+    </div>
+    <div>
+      <label class="auth-label">Body Text (optional — shown when post is expanded)</label>
+      <textarea class="auth-input" id="newPostBody" rows="4" placeholder="Add more context, story, or details..." style="resize:vertical;min-height:80px;"></textarea>
+    </div>
+    <div class="auth-error" id="newPostError"></div>
+    <button class="auth-btn" id="newPostBtn" onclick="submitPost()">Post</button>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="settings-modal" id="settingsModal" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-box">
+    <div class="settings-head">
+      <h3>⚙️ Settings</h3>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="settings-body">
+      <div>
+        <div class="settings-section-title">My Forum Rooms</div>
+        <p style="font-size:12px;color:var(--text-light);margin-bottom:10px;">Select the forums you want to join. Changes are saved to your account.</p>
+        <div class="cat-grid" id="settingsCatGrid"></div>
+      </div>
+      <button class="auth-btn" onclick="saveSettings()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── SUPABASE INIT ───
+const SUPABASE_URL = 'https://rrfwmatmgtskzjgnfmdx.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyZndtYXRtZ3Rza3pqZ25mbWR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNTM4MTIsImV4cCI6MjA5MzgyOTgxMn0.Mm7gSdqyKm2DsgKw_CV96CqOIMrSRMOr5sG70lexvSo';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ─── FORUM DATA ───
+const ALL_FORUMS = [
+  { id:'announcements', name:'Announcements', emoji:'📣' },
+  { id:'general',       name:'General Chat',  emoji:'💬' },
+  { id:'hardware',      name:'Hardware',      emoji:'🖥' },
+  { id:'software',      name:'Software',      emoji:'💾' },
+  { id:'gaming',        name:'Gaming',        emoji:'🎮' },
+  { id:'techsupport',   name:'Tech Support',  emoji:'🛠' },
+  { id:'programming',   name:'Programming',   emoji:'🧑‍💻' },
+  { id:'offtopic',      name:'Off Topic',     emoji:'🌀' },
+  { id:'ai',            name:'AI',            emoji:'🤖' },
+  { id:'security',      name:'Security',      emoji:'🔒' },
+  { id:'design',        name:'Design',        emoji:'🎨' },
+  { id:'projects',      name:'Projects',      emoji:'🚀' },
+];
+
+// Sub-channels for each forum
+const FORUM_CHANNELS = {
+  announcements: [
+    { id:'announcements', label:'general', type:'chat' },
+    { id:'announcements-photos', label:'photos', type:'photos' },
+  ],
+  general: [
+    { id:'general', label:'general', type:'chat' },
+    { id:'general-eu', label:'eu-chat', type:'chat' },
+    { id:'general-us', label:'us-chat', type:'chat' },
+    { id:'general-photos', label:'photos', type:'photos' },
+  ],
+  hardware: [
+    { id:'hardware', label:'general', type:'chat' },
+    { id:'hardware-eu', label:'eu-chat', type:'chat' },
+    { id:'hardware-us', label:'us-chat', type:'chat' },
+    { id:'hardware-photos', label:'photos', type:'photos' },
+  ],
+  software: [
+    { id:'software', label:'general', type:'chat' },
+    { id:'software-eu', label:'eu-chat', type:'chat' },
+    { id:'software-us', label:'us-chat', type:'chat' },
+    { id:'software-photos', label:'photos', type:'photos' },
+  ],
+  gaming: [
+    { id:'gaming', label:'general', type:'chat' },
+    { id:'gaming-eu', label:'eu-chat', type:'chat' },
+    { id:'gaming-us', label:'us-chat', type:'chat' },
+    { id:'gaming-photos', label:'photos', type:'photos' },
+  ],
+  techsupport: [
+    { id:'techsupport', label:'general', type:'chat' },
+    { id:'techsupport-eu', label:'eu-chat', type:'chat' },
+    { id:'techsupport-us', label:'us-chat', type:'chat' },
+    { id:'techsupport-photos', label:'photos', type:'photos' },
+  ],
+  programming: [
+    { id:'programming', label:'general', type:'chat' },
+    { id:'programming-eu', label:'eu-chat', type:'chat' },
+    { id:'programming-us', label:'us-chat', type:'chat' },
+    { id:'programming-photos', label:'photos', type:'photos' },
+  ],
+  offtopic: [
+    { id:'offtopic', label:'general', type:'chat' },
+    { id:'offtopic-eu', label:'eu-chat', type:'chat' },
+    { id:'offtopic-us', label:'us-chat', type:'chat' },
+    { id:'offtopic-photos', label:'photos', type:'photos' },
+  ],
+  ai: [
+    { id:'ai', label:'general', type:'chat' },
+    { id:'ai-eu', label:'eu-chat', type:'chat' },
+    { id:'ai-us', label:'us-chat', type:'chat' },
+    { id:'ai-photos', label:'photos', type:'photos' },
+  ],
+  security: [
+    { id:'security', label:'general', type:'chat' },
+    { id:'security-eu', label:'eu-chat', type:'chat' },
+    { id:'security-us', label:'us-chat', type:'chat' },
+    { id:'security-photos', label:'photos', type:'photos' },
+  ],
+  design: [
+    { id:'design', label:'general', type:'chat' },
+    { id:'design-eu', label:'eu-chat', type:'chat' },
+    { id:'design-us', label:'us-chat', type:'chat' },
+    { id:'design-photos', label:'photos', type:'photos' },
+  ],
+  projects: [
+    { id:'projects', label:'general', type:'chat' },
+    { id:'projects-eu', label:'eu-chat', type:'chat' },
+    { id:'projects-us', label:'us-chat', type:'chat' },
+    { id:'projects-photos', label:'photos', type:'photos' },
+  ],
+};
+const DEFAULT_FORUMS = ['announcements','general','hardware','software'];
+
+// ─── STATE ───
+let currentUser = null;
+let currentProfile = null;
+let activeForum = 'general';
+let activeChannel = 'general'; // the actual channel id (could be sub-channel)
+let activeChannelType = 'chat'; // 'chat' or 'photos'
+let activeDMUser = null; // { id, username }
+let forumChannel = null;
+let dmChannel = null;
+let allProfiles = []; // cache of all users for DM search
+let regSelectedCats = [...DEFAULT_FORUMS];
+let settingsSelectedCats = [];
+
+// ─── TOAST ───
+function toast(msg, dur=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ─── HELPERS ───
+function stringToColor(str) {
+  const p = ['#3a6ea8','#7b4fa8','#a84f4f','#4fa880','#a8804f','#4f7ba8','#a84f88','#5ea84f'];
+  let h = 0; for (let i=0;i<str.length;i++) h=str.charCodeAt(i)+((h<<5)-h);
+  return p[Math.abs(h)%p.length];
+}
+function fmtTime(iso) {
+  const d = new Date(iso);
+  return (d.getMonth()+1)+'/'+d.getDate()+'/'+String(d.getFullYear()).slice(2)+' '+d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function getJoined() { return currentProfile?.joined_forums || DEFAULT_FORUMS; }
+
+// ─── EMAIL VALIDATION ───
+function isValidEmail(e) {
+  return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(e);
+}
+function validateUsername() {
+  const v=document.getElementById('regUser').value.trim(), h=document.getElementById('hintUser'), i=document.getElementById('regUser');
+  if(!v){h.className='field-hint';return false;}
+  if(v.length<3){h.className='field-hint show err';h.textContent='At least 3 characters.';i.classList.add('error');return false;}
+  if(!/^[a-zA-Z0-9_]+$/.test(v)){h.className='field-hint show err';h.textContent='Letters, numbers and underscores only.';i.classList.add('error');return false;}
+  h.className='field-hint show ok';h.textContent='✓ Looks good';i.classList.remove('error');return true;
+}
+function validateEmail() {
+  const v=document.getElementById('regEmail').value.trim(), h=document.getElementById('hintEmail'), i=document.getElementById('regEmail');
+  if(!v){h.className='field-hint';return false;}
+  if(!isValidEmail(v)){h.className='field-hint show err';h.textContent='Enter a valid email address.';i.classList.add('error');return false;}
+  h.className='field-hint show ok';h.textContent='✓ Valid email format';i.classList.remove('error');return true;
+}
+function validatePass() {
+  const v=document.getElementById('regPass').value, h=document.getElementById('hintPass'), i=document.getElementById('regPass');
+  if(!v){h.className='field-hint';return false;}
+  if(v.length<6){h.className='field-hint show err';h.textContent='At least 6 characters.';i.classList.add('error');return false;}
+  const s=v.length>=12&&/[^a-zA-Z0-9]/.test(v)?'Strong':v.length>=8?'Good':'Weak';
+  h.className='field-hint show ok';h.textContent='✓ '+s+' password';i.classList.remove('error');return true;
+}
+function validatePass2() {
+  const p=document.getElementById('regPass').value, p2=document.getElementById('regPass2').value;
+  const h=document.getElementById('hintPass2'), i=document.getElementById('regPass2');
+  if(!p2){h.className='field-hint';return false;}
+  if(p!==p2){h.className='field-hint show err';h.textContent='Passwords do not match.';i.classList.add('error');return false;}
+  h.className='field-hint show ok';h.textContent='✓ Passwords match';i.classList.remove('error');return true;
+}
+
+// ─── AUTH ───
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  const btn   = document.getElementById('loginBtn');
+  errEl.style.display='none';
+  if(!email||!pass){errEl.textContent='Please fill in all fields.';errEl.style.display='block';return;}
+  btn.innerHTML='<span class="spin"></span>Logging in...'; btn.disabled=true;
+  const {error} = await sb.auth.signInWithPassword({email, password:pass});
+  btn.innerHTML='Log In'; btn.disabled=false;
+  if(error){errEl.textContent=error.message==='Invalid login credentials'?'Wrong email or password.':error.message;errEl.style.display='block';}
+  else { document.getElementById('authDropdown').classList.remove('open'); }
+}
+
+async function doRegister() {
+  if(!validateUsername()||!validateEmail()||!validatePass()||!validatePass2()) {
+    document.getElementById('registerError').textContent='Please fix the errors above.';
+    document.getElementById('registerError').style.display='block'; return;
+  }
+  const username = document.getElementById('regUser').value.trim();
+  const email    = document.getElementById('regEmail').value.trim();
+  const pass     = document.getElementById('regPass').value;
+  const errEl    = document.getElementById('registerError');
+  const okEl     = document.getElementById('registerSuccess');
+  const btn      = document.getElementById('registerBtn');
+  errEl.style.display='none'; okEl.style.display='none';
+
+  // Check username uniqueness
+  const {data:existing} = await sb.from('profiles').select('id').eq('username', username).maybeSingle();
+  if(existing){errEl.textContent='Username already taken.';errEl.style.display='block';return;}
+
+  btn.innerHTML='<span class="spin"></span>Creating...'; btn.disabled=true;
+  const {data, error} = await sb.auth.signUp({
+    email, password:pass,
+    options:{ data:{ username, joined_forums: regSelectedCats } }
+  });
+  btn.innerHTML='Create Account'; btn.disabled=false;
+  if(error){errEl.textContent=error.message;errEl.style.display='block';return;}
+  okEl.style.display='block';
+  setTimeout(()=>switchTab('login'), 2000);
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  document.getElementById('profileMenu').classList.remove('open');
+}
+
+async function doSocialLogin(provider) {
+  const {error} = await sb.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: window.location.href }
+  });
+  if(error) toast('Error: '+error.message);
+}
+
+function showPhoneAuth() {
+  const s=document.getElementById('phoneAuthSection');
+  s.style.display=s.style.display==='none'?'flex':'none';
+}
+
+async function sendPhoneOTP() {
+  const prefix=document.getElementById('phonePrefix').value.trim();
+  const num=document.getElementById('phoneNumber').value.trim();
+  const phone=prefix+num.replace(/\s/g,'');
+  if(!phone||phone.length<8){toast('Enter a valid phone number.');return;}
+  const btn=document.getElementById('sendOtpBtn');
+  btn.innerHTML='<span class="spin"></span>Sending...'; btn.disabled=true;
+  const {error}=await sb.auth.signInWithOtp({phone});
+  btn.innerHTML='Send Code'; btn.disabled=false;
+  if(error){toast('Error: '+error.message);return;}
+  document.getElementById('otpSection').style.display='flex';
+  toast('Code sent! Check your phone.');
+}
+
+async function verifyPhoneOTP() {
+  const prefix=document.getElementById('phonePrefix').value.trim();
+  const num=document.getElementById('phoneNumber').value.trim();
+  const phone=prefix+num.replace(/\s/g,'');
+  const token=document.getElementById('otpCode').value.trim();
+  if(!token){toast('Enter the verification code.');return;}
+  const {error}=await sb.auth.verifyOtp({phone, token, type:'sms'});
+  if(error){toast('Error: '+error.message);return;}
+  document.getElementById('authDropdown').classList.remove('open');
+  toast('Phone verified! Welcome.');
+}
+
+function applySession() {
+  if(currentUser && currentProfile) {
+    document.getElementById('authTrigger').style.display='none';
+    document.getElementById('profilePill').style.display='flex';
+    document.getElementById('profileAvatar').textContent=currentProfile.username.slice(0,2).toUpperCase();
+    document.getElementById('profileName').textContent=currentProfile.username;
+  } else {
+    document.getElementById('authTrigger').style.display='flex';
+    document.getElementById('profilePill').style.display='none';
+  }
+}
+
+// ─── NAV ───
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  const map={home:'nav-news',forum:'nav-forum',messages:'nav-messages',about:'nav-about'};
+  if(map[page]) document.getElementById(map[page]).classList.add('active');
+  if(page==='forum'){buildForumSidebar();buildForumSubSidebar();loadForumMessages(activeForum);}
+  if(page==='messages'){loadDMList();}
+}
+function toggleTheme(){document.body.classList.toggle('dark');}
+function toggleAuthDropdown(){document.getElementById('authDropdown').classList.toggle('open');document.getElementById('profileMenu').classList.remove('open');}
+function toggleProfileMenu(){document.getElementById('profileMenu').classList.toggle('open');document.getElementById('authDropdown').classList.remove('open');}
+function switchTab(t){
+  document.querySelectorAll('.auth-tab').forEach((el,i)=>el.classList.toggle('active',(t==='login'&&i===0)||(t==='register'&&i===1)));
+  document.getElementById('loginForm').classList.toggle('active',t==='login');
+  document.getElementById('registerForm').classList.toggle('active',t==='register');
+}
+
+// ─── CATEGORY CHIPS ───
+function buildRegCatGrid() {
+  const g=document.getElementById('regCatGrid'); g.innerHTML='';
+  ALL_FORUMS.forEach(f=>{
+    const c=document.createElement('div');
+    c.className='cat-chip'+(regSelectedCats.includes(f.id)?' selected':'');
+    c.textContent=f.name; c.dataset.id=f.id;
+    c.onclick=()=>{
+      if(regSelectedCats.includes(f.id)){regSelectedCats=regSelectedCats.filter(x=>x!==f.id);c.classList.remove('selected');}
+      else{regSelectedCats.push(f.id);c.classList.add('selected');}
+    };
+    g.appendChild(c);
+  });
+}
+function buildSettingsCatGrid() {
+  settingsSelectedCats=[...getJoined()];
+  const g=document.getElementById('settingsCatGrid'); g.innerHTML='';
+  ALL_FORUMS.forEach(f=>{
+    const c=document.createElement('div');
+    c.className='cat-chip'+(settingsSelectedCats.includes(f.id)?' selected':'');
+    c.textContent=f.name;
+    c.onclick=()=>{
+      if(settingsSelectedCats.includes(f.id)){
+        if(settingsSelectedCats.length<=1)return;
+        settingsSelectedCats=settingsSelectedCats.filter(x=>x!==f.id);c.classList.remove('selected');
+      } else {settingsSelectedCats.push(f.id);c.classList.add('selected');}
+    };
+    g.appendChild(c);
+  });
+}
+async function saveSettings() {
+  if(!currentUser){toast('Log in first.');return;}
+  const {error}=await sb.from('profiles').update({joined_forums:settingsSelectedCats}).eq('id',currentUser.id);
+  if(error){toast('Error saving: '+error.message);return;}
+  currentProfile.joined_forums=settingsSelectedCats;
+  closeSettings(); buildForumSidebar(); buildForumSubSidebar();
+  toast('Settings saved ✓');
+}
+function openSettings(){buildSettingsCatGrid();document.getElementById('settingsModal').classList.add('open');document.getElementById('profileMenu').classList.remove('open');}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('open');}
+
+// ─── HOME FORUM GRID ───
+function buildHomeForumGrid() {
+  const g=document.getElementById('homeForumGrid'); g.innerHTML='';
+  ALL_FORUMS.forEach(f=>{
+    const b=document.createElement('button');
+    b.className='forum-btn'; b.textContent=f.name;
+    b.onclick=()=>{goTo('forum');setTimeout(()=>switchForum(f.id),60);};
+    g.appendChild(b);
+  });
+}
+
+// ─── FORUM SIDEBAR ───
+function buildForumSidebar() {
+  const sb2=document.getElementById('chatSidebar');
+  sb2.querySelectorAll('.forum-circle').forEach(e=>e.remove());
+  const joined=getJoined();
+  ALL_FORUMS.filter(f=>joined.includes(f.id)).forEach(f=>{
+    const el=document.createElement('div');
+    el.className='forum-circle'+(f.id===activeForum?' active':'');
+    el.id='circle-'+f.id; el.title=f.name;
+    el.textContent=f.emoji;
+    el.onclick=()=>switchForum(f.id);
+    sb2.appendChild(el);
+  });
+}
+function buildForumSubSidebar() {
+  const sub=document.getElementById('forumSubSidebar');
+  const header=sub.querySelector('.forum-cat-header');
+  sub.innerHTML=''; sub.appendChild(header);
+  const joined=getJoined();
+  const f=ALL_FORUMS.find(x=>x.id===activeForum);
+  if(!f) return;
+  // Forum name header
+  const fh=document.createElement('div');
+  fh.style.cssText='padding:8px 14px 4px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text);';
+  fh.textContent=f.emoji+' '+f.name;
+  sub.appendChild(fh);
+  const channels=FORUM_CHANNELS[activeForum]||[{id:activeForum,label:'general',type:'chat'}];
+  channels.forEach(ch=>{
+    const el=document.createElement('div');
+    el.className='forum-cat-item'+(ch.id===activeChannel?' active':'');
+    el.id='sub-'+ch.id;
+    if(ch.type==='photos'){
+      el.innerHTML='<span style="color:var(--text-light)">🖼</span><span>'+ch.label+'</span>';
+    } else {
+      el.innerHTML='<span class="cat-hash">#</span><span>'+ch.label+'</span>';
+    }
+    el.onclick=()=>switchChannel(ch.id, ch.type);
+    sub.appendChild(el);
+  });
+}
+
+// ─── FORUM MESSAGES (REAL DATABASE) ───
+async function loadForumMessages(forumId) {
+  const msgs=document.getElementById('chatMessages');
+  msgs.innerHTML='<div style="text-align:center;color:var(--text-light);font-size:12px;padding:20px;">Loading...</div>';
+  const {data,error}=await sb.from('forum_messages').select('*').eq('forum_id',forumId).order('created_at',{ascending:true}).limit(100);
+  msgs.innerHTML='';
+  if(error){msgs.innerHTML='<div style="padding:16px;color:var(--danger);font-size:12px;">Error loading messages.</div>';return;}
+  if(data.length===0){msgs.innerHTML='<div style="text-align:center;color:var(--text-light);font-size:12px;padding:20px;">No messages yet. Be the first to say something!</div>';return;}
+  data.forEach(m=>appendForumMsg(m));
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function appendForumMsg(m) {
+  const msgs=document.getElementById('chatMessages');
+  const isMe=currentProfile&&m.user_id===currentUser?.id;
+  const row=document.createElement('div');
+  row.className='msg-row'+(isMe?' mine':'');
+  const color=stringToColor(m.username||'?');
+  row.innerHTML=`<div class="msg-avatar" style="background:${color}">${(m.username||'?').slice(0,2).toUpperCase()}</div><div class="msg-col"><div class="msg-meta"><span class="username">${m.username||'Unknown'}</span><span>${fmtTime(m.created_at)}</span></div><div class="bubble">${m.content.replace(/</g,'&lt;')}</div></div>`;
+  msgs.appendChild(row);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function switchForum(id) {
+  activeForum=id;
+  // Default to first channel of this forum
+  const channels=FORUM_CHANNELS[id]||[{id:id,label:'general',type:'chat'}];
+  const firstCh=channels[0];
+  document.querySelectorAll('.forum-circle').forEach(e=>e.classList.remove('active'));
+  const c=document.getElementById('circle-'+id);
+  if(c)c.classList.add('active');
+  buildForumSubSidebar();
+  switchChannel(firstCh.id, firstCh.type);
+}
+
+function switchChannel(channelId, type) {
+  activeChannel=channelId;
+  activeChannelType=type;
+  document.querySelectorAll('.forum-cat-item').forEach(e=>e.classList.remove('active'));
+  const s=document.getElementById('sub-'+channelId);
+  if(s)s.classList.add('active');
+  // Derive display name from channel id
+  const parts=channelId.split('-');
+  const label=parts[parts.length-1]==='photos'?'photos':parts[parts.length-1]==='eu'?'eu-chat':parts[parts.length-1]==='us'?'us-chat':'general';
+  const f=ALL_FORUMS.find(x=>x.id===activeForum);
+  document.getElementById('chatHeaderName').textContent=(type==='photos'?'🖼 ':' # ')+(f?f.name.toLowerCase():activeForum)+'-'+label;
+  if(type==='photos'){
+    document.getElementById('chatInput').placeholder='';
+    document.getElementById('forumChatArea').style.display='none';
+    document.getElementById('photoRoomArea').style.display='flex';
+    loadPhotoRoom(channelId);
+  } else {
+    document.getElementById('chatInput').placeholder='Message #'+channelId+'...';
+    document.getElementById('forumChatArea').style.display='flex';
+    document.getElementById('photoRoomArea').style.display='none';
+    loadForumMessages(channelId);
+    subscribeToForum(channelId);
+  }
+}
+
+// Polling fallback — works everywhere, no WebSocket needed
+let forumPollTimer=null;
+let forumLastId=null;
+
+function subscribeToForum(id) {
+  if(window._forumPollTimer) clearInterval(window._forumPollTimer);
+  window._forumLastId = null;
+  try {
+    if(forumChannel){try{sb.removeChannel(forumChannel);}catch(e){}}
+    forumChannel = sb.channel('forum-'+id)
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'forum_messages',filter:'forum_id=eq.'+id},
+        payload=>{ window._forumLastId=payload.new.id; appendForumMsg(payload.new); })
+      .subscribe((status,err)=>{
+        if(err||status==='CHANNEL_ERROR'||status==='TIMED_OUT') startForumPolling(id);
+      });
+  } catch(e){ startForumPolling(id); }
+}
+
+function startForumPolling(id) {
+  if(window._forumPollTimer) clearInterval(window._forumPollTimer);
+  window._forumPollTimer = setInterval(async()=>{
+    if(activeForum!==id) return;
+    const {data} = await sb.from('forum_messages').select('*').eq('forum_id',id)
+      .order('created_at',{ascending:true}).limit(10)
+      .gt('created_at', new Date(Date.now()-10000).toISOString());
+    if(data&&data.length>0) data.forEach(m=>appendForumMsg(m));
+  },3000);
+}
+
+function startForumPolling(id) {
+  if(forumPollTimer) clearInterval(forumPollTimer);
+  forumPollTimer=setInterval(async()=>{
+    if(activeForum!==id) return;
+    let q=sb.from('forum_messages').select('*').eq('forum_id',id).order('created_at',{ascending:true}).limit(5);
+    if(forumLastId) q=q.gt('id',forumLastId);
+    const {data}=await q;
+    if(data&&data.length>0){
+      data.forEach(m=>{ appendForumMsg(m); forumLastId=m.id; });
+    }
+  },3000);
+}
+
+async function sendMsg() {
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();
+  if(!text)return;
+  if(!currentUser){toast('Log in to send messages.');return;}
+  input.value='';
+  const {error}=await sb.from('forum_messages').insert({
+    forum_id:activeForum, user_id:currentUser.id,
+    username:currentProfile.username, content:text
+  });
+  if(error){toast('Error sending: '+error.message);input.value=text;}
+}
+
+// ─── DIRECT MESSAGES (REAL DATABASE) ───
+async function loadDMList() {
+  if(!currentUser){document.getElementById('dmEntries').innerHTML='<div style="padding:16px;font-size:12px;color:var(--text-light);">Log in to view messages.</div>';return;}
+  // Load all profiles except self
+  const {data}=await sb.from('profiles').select('*').neq('id',currentUser.id);
+  allProfiles=data||[];
+  renderDMList();
+}
+
+function renderDMList() {
+  const entries=document.getElementById('dmEntries');
+  entries.innerHTML='';
+  if(!currentUser){entries.innerHTML='<div style="padding:16px;font-size:12px;color:var(--text-light);">Log in to message users.</div>';return;}
+  if(allProfiles.length===0){entries.innerHTML='<div style="padding:16px;font-size:12px;color:var(--text-light);">No other users yet.</div>';return;}
+  allProfiles.forEach(u=>{
+    const el=document.createElement('div');
+    el.className='dm-entry'+(activeDMUser?.id===u.id?' active':'');
+    el.onclick=()=>openDM(u);
+    el.innerHTML=`<div class="dm-avatar" style="background:${stringToColor(u.username)}">${u.username.slice(0,2).toUpperCase()}<div class="dm-status"></div></div><div class="dm-info"><div class="dm-name">${u.username}</div><div class="dm-preview">Click to start chatting</div></div>`;
+    entries.appendChild(el);
+  });
+}
+
+async function openDM(profile) {
+  activeDMUser=profile;
+  document.getElementById('dmPlaceholder').style.display='none';
+  const convo=document.getElementById('dmConvo');
+  convo.style.display='flex';
+  const av=document.getElementById('dmHeaderAvatar');
+  av.textContent=profile.username.slice(0,2).toUpperCase();
+  av.style.background=stringToColor(profile.username);
+  document.getElementById('dmHeaderName').textContent=profile.username;
+  document.getElementById('dmHeaderStatus').textContent='';
+  document.getElementById('dmInput').placeholder='Message '+profile.username+'...';
+  renderDMList();
+  await loadDMMessages(profile.id);
+  subscribeToDMs(profile.id);
+}
+
+async function loadDMMessages(otherId) {
+  const msgs=document.getElementById('dmMessages');
+  msgs.innerHTML='<div style="text-align:center;color:var(--text-light);font-size:12px;padding:20px;">Loading...</div>';
+  const {data,error}=await sb.from('direct_messages').select('*')
+    .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${currentUser.id})`)
+    .order('created_at',{ascending:true}).limit(100);
+  msgs.innerHTML='';
+  if(error){msgs.innerHTML='<div style="padding:16px;color:var(--danger);font-size:12px;">Error loading.</div>';return;}
+  if(!data||data.length===0){msgs.innerHTML='<div style="text-align:center;color:var(--text-light);font-size:12px;padding:20px;">No messages yet. Say hello!</div>';return;}
+  data.forEach(m=>appendDMMsg(m));
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function appendDMMsg(m) {
+  const msgs=document.getElementById('dmMessages');
+  const isMe=m.sender_id===currentUser?.id;
+  const name=isMe?currentProfile.username:m.sender_username;
+  const row=document.createElement('div');
+  row.className='msg-row'+(isMe?' mine':'');
+  const color=isMe?'var(--accent)':stringToColor(name);
+  row.innerHTML=`<div class="msg-avatar" style="background:${color};border:none;">${name.slice(0,2).toUpperCase()}</div><div class="msg-col"><div class="msg-meta"><span class="username">${name}</span><span>${fmtTime(m.created_at)}</span></div><div class="bubble">${m.content.replace(/</g,'&lt;')}</div></div>`;
+  msgs.appendChild(row);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function subscribeToDMs(otherId) {
+  if(window._dmPollTimer) clearInterval(window._dmPollTimer);
+  try {
+    if(dmChannel){try{sb.removeChannel(dmChannel);}catch(e){}}
+    dmChannel = sb.channel('dms-'+[currentUser.id,otherId].sort().join('-'))
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages'},
+        payload=>{
+          const m=payload.new;
+          if((m.sender_id===currentUser.id&&m.receiver_id===otherId)||(m.sender_id===otherId&&m.receiver_id===currentUser.id)){
+            appendDMMsg(m);
+          }
+        })
+      .subscribe((status,err)=>{
+        if(err||status==='CHANNEL_ERROR'||status==='TIMED_OUT') startDMPolling(otherId);
+      });
+  } catch(e){ startDMPolling(otherId); }
+}
+
+function startDMPolling(otherId) {
+  if(window._dmPollTimer) clearInterval(window._dmPollTimer);
+  window._dmPollTimer = setInterval(async()=>{
+    if(!activeDMUser||activeDMUser.id!==otherId) return;
+    const {data} = await sb.from('direct_messages').select('*')
+      .or('and(sender_id.eq.'+currentUser.id+',receiver_id.eq.'+otherId+'),and(sender_id.eq.'+otherId+',receiver_id.eq.'+currentUser.id+')')
+      .order('created_at',{ascending:true}).limit(10)
+      .gt('created_at', new Date(Date.now()-10000).toISOString());
+    if(data&&data.length>0) data.forEach(m=>appendDMMsg(m));
+  },3000);
+}
+
+async function sendDM() {
+  const input=document.getElementById('dmInput');
+  const text=input.value.trim();
+  if(!text||!activeDMUser)return;
+  if(!currentUser){toast('Log in to send messages.');return;}
+  input.value='';
+  const {error}=await sb.from('direct_messages').insert({
+    sender_id:currentUser.id, receiver_id:activeDMUser.id,
+    sender_username:currentProfile.username, receiver_username:activeDMUser.username,
+    content:text
+  });
+  if(error){toast('Error sending: '+error.message);input.value=text;}
+}
+
+// New DM modal
+function openNewDM() {
+  if(!currentUser){toast('Log in first.');return;}
+  document.getElementById('dmSearchInput').value='';
+  renderDMSearch();
+  document.getElementById('newDmModal').classList.add('open');
+}
+function closeNewDM(){document.getElementById('newDmModal').classList.remove('open');}
+function renderDMSearch() {
+  const q=document.getElementById('dmSearchInput').value.toLowerCase();
+  const list=document.getElementById('dmSearchList'); list.innerHTML='';
+  allProfiles.filter(u=>u.username.toLowerCase().includes(q)).forEach(u=>{
+    const el=document.createElement('div');
+    el.className='user-search-item';
+    el.innerHTML=`<div class="usi-av" style="background:${stringToColor(u.username)}">${u.username.slice(0,2).toUpperCase()}</div><div><div class="usi-name">${u.username}</div></div>`;
+    el.onclick=()=>{closeNewDM();openDM(u);};
+    list.appendChild(el);
+  });
+  if(allProfiles.filter(u=>u.username.toLowerCase().includes(q)).length===0)
+    list.innerHTML='<div style="padding:12px;font-size:12px;color:var(--text-light);">No users found.</div>';
+}
+
+// ─── PHOTO ROOM ───
+let photoRoomPosts = [];
+let selectedPhotoBase64 = null;
+
+function openNewPostModal() {
+  if(!currentUser){toast('Log in to create a post.');return;}
+  document.getElementById('newPostTitle').value='';
+  document.getElementById('newPostBody').value='';
+  document.getElementById('photoPreview').style.display='none';
+  document.getElementById('photoPreview').src='';
+  document.getElementById('photoUploadPrompt').style.display='block';
+  document.getElementById('newPostError').style.display='none';
+  selectedPhotoBase64=null;
+  document.getElementById('newPostModal').classList.add('open');
+}
+function closeNewPostModal(){document.getElementById('newPostModal').classList.remove('open');}
+
+function handlePhotoSelect(e) {
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    selectedPhotoBase64=ev.target.result;
+    document.getElementById('photoPreview').src=selectedPhotoBase64;
+    document.getElementById('photoPreview').style.display='block';
+    document.getElementById('photoUploadPrompt').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitPost() {
+  const title=document.getElementById('newPostTitle').value.trim();
+  const body=document.getElementById('newPostBody').value.trim();
+  const errEl=document.getElementById('newPostError');
+  const btn=document.getElementById('newPostBtn');
+  errEl.style.display='none';
+  if(!title){errEl.textContent='Headline is required.';errEl.style.display='block';return;}
+  btn.innerHTML='<span class="spin"></span>Posting...'; btn.disabled=true;
+  const {error}=await sb.from('forum_posts').insert({
+    forum_id: activeChannel,
+    user_id: currentUser.id,
+    username: currentProfile.username,
+    title,
+    body: body||null,
+    image_url: selectedPhotoBase64||null
+  });
+  btn.innerHTML='Post'; btn.disabled=false;
+  if(error){errEl.textContent=error.message;errEl.style.display='block';return;}
+  closeNewPostModal();
+  loadPhotoRoom(activeChannel);
+  toast('Post published!');
+}
+
+async function loadPhotoRoom(channelId) {
+  const feed=document.getElementById('photoFeed');
+  feed.innerHTML='<div style="text-align:center;color:var(--text-light);font-size:12px;padding:24px;">Loading posts...</div>';
+  const {data,error}=await sb.from('forum_posts').select('*').eq('forum_id',channelId).order('created_at',{ascending:false}).limit(30);
+  feed.innerHTML='';
+  if(error){feed.innerHTML='<div style="color:var(--danger);padding:16px;font-size:12px;">Error loading: '+error.message+'</div>';return;}
+  if(!data||data.length===0){
+    feed.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-light);font-size:13px;">No posts yet.<br><span style="font-size:11px;">Be the first to share something!</span></div>';
+    return;
+  }
+  data.forEach(p=>feed.appendChild(buildPostCard(p)));
+}
+
+function buildPostCard(post) {
+  const card=document.createElement('div');
+  card.className='photo-post';
+  const color=stringToColor(post.username||'?');
+  const initials=(post.username||'?').slice(0,2).toUpperCase();
+  const hasBody=post.body&&post.body.trim();
+  card.innerHTML=`
+    <div class="photo-post-header">
+      <div class="photo-post-av" style="background:${color}">${initials}</div>
+      <span class="photo-post-user">${post.username||'Unknown'}</span>
+      <span class="photo-post-time">${fmtTime(post.created_at)}</span>
+    </div>
+    <div class="photo-post-title">${post.title.replace(/</g,'&lt;')}</div>
+    ${post.image_url?`<img class="photo-post-img" src="${post.image_url}" alt="Post image" onclick="this.style.maxHeight=this.style.maxHeight==='none'?'480px':'none'">`:
+    `<div class="photo-post-img-placeholder">📷</div>`}
+    ${hasBody?`<div class="photo-post-body" id="body-${post.id}">${post.body.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>`:''}
+    <div class="photo-post-actions">
+      ${hasBody?`<button class="photo-action-btn" onclick="togglePostBody('${post.id}')">▾ Read more</button>`:''}
+      <button class="photo-action-btn" onclick="toggleComments('${post.id}', this)">💬 Comments</button>
+    </div>
+    <div class="photo-comments" id="comments-${post.id}">
+      <div id="comments-list-${post.id}" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div class="photo-comment-input-row">
+        <input class="photo-comment-input" id="comment-input-${post.id}" type="text" placeholder="Add a comment..." onkeydown="if(event.key==='Enter')submitComment('${post.id}')">
+        <button class="photo-comment-send" onclick="submitComment('${post.id}')">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>`;
+  return card;
+}
+
+function togglePostBody(postId) {
+  const b=document.getElementById('body-'+postId);
+  if(!b)return;
+  b.classList.toggle('open');
+}
+
+async function toggleComments(postId, btn) {
+  const c=document.getElementById('comments-'+postId);
+  const isOpen=c.classList.toggle('open');
+  if(isOpen){
+    await loadComments(postId);
+  }
+}
+
+async function loadComments(postId) {
+  const list=document.getElementById('comments-list-'+postId);
+  list.innerHTML='<div style="font-size:11px;color:var(--text-light);">Loading...</div>';
+  const {data,error}=await sb.from('forum_comments').select('*').eq('post_id',postId).order('created_at',{ascending:true}).limit(50);
+  list.innerHTML='';
+  if(error||!data||data.length===0){
+    list.innerHTML='<div style="font-size:11px;color:var(--text-light);">No comments yet.</div>';
+    return;
+  }
+  data.forEach(c=>{
+    const el=document.createElement('div');
+    el.className='photo-comment';
+    const color=stringToColor(c.username||'?');
+    el.innerHTML=`<div class="photo-comment-av" style="background:${color}">${(c.username||'?').slice(0,2).toUpperCase()}</div><div class="photo-comment-body"><span class="photo-comment-user">${c.username||'Unknown'} </span><span class="photo-comment-text">${c.content.replace(/</g,'&lt;')}</span></div>`;
+    list.appendChild(el);
+  });
+}
+
+async function submitComment(postId) {
+  const input=document.getElementById('comment-input-'+postId);
+  const text=input.value.trim();
+  if(!text)return;
+  if(!currentUser){toast('Log in to comment.');return;}
+  input.value='';
+  const {error}=await sb.from('forum_comments').insert({
+    post_id: postId,
+    forum_id: activeChannel,
+    user_id: currentUser.id,
+    username: currentProfile.username,
+    content: text
+  });
+  if(error){toast('Error: '+error.message);input.value=text;return;}
+  await loadComments(postId);
+}
+
+// ─── ARTICLES ───
+const ARTICLES=[
+  {emoji:'📰',title:'Donald J. Trump was shot',date:'July 13, 2024',tag:'USA · Politics',body:`<p>The shooting took place at a campaign rally in Butler, Pennsylvania. A 20-year-old gunman opened fire from a rooftop approximately 130 meters away. The bullet narrowly missed Trump's head, grazing his right ear. One rally attendee was killed and two others were critically injured.</p><p>The attack sent shockwaves across the United States and the world. Within hours, condemnations poured in from political leaders on both sides of the aisle. President Biden addressed the nation, calling it a dark day for American democracy. Trump was seen raising his fist defiantly to the crowd as he was escorted off the stage, an image that quickly became iconic.</p><p>The Secret Service faced intense scrutiny over how the gunman was able to access a rooftop so close to the stage. Congressional investigations were launched and the agency's director resigned weeks later.</p>`},
+  {emoji:'🤖',title:'OpenAI launches GPT-5 with real-time reasoning',date:'May 6, 2026',tag:'Global · AI',body:`<p>OpenAI has officially unveiled GPT-5, the most powerful language model the company has released to date. The new model boasts significantly improved reasoning capabilities, real-time web access, and native multimodal understanding across text, image, audio and video.</p><p>Early benchmarks show GPT-5 outperforming its predecessors across a wide range of tasks, including competitive programming challenges, graduate-level mathematics, and complex multi-step reasoning problems.</p><p>The release comes amid fierce competition from Anthropic, Google DeepMind and a growing field of open-source models.</p>`},
+  {emoji:'🛰️',title:'SpaceX Starship completes first commercial flight',date:'Apr 28, 2026',tag:'USA · Space',body:`<p>SpaceX's Starship successfully completed its first fully commercial payload mission, deploying a 24-satellite constellation for a European telecommunications consortium. The mission marked a historic milestone for the company, which has been developing the massive rocket system for over a decade.</p><p>Elon Musk called it a turning point for deep-space logistics and commercial launch services. He reiterated the company's goal of conducting multiple Starship flights per week by 2027.</p>`},
+  {emoji:'💻',title:'EU passes sweeping AI liability directive',date:'Apr 15, 2026',tag:'Europe · Policy',body:`<p>The European Union has passed landmark legislation making AI developers and deployers liable for damages caused by their models. The AI Liability Directive fills a key gap left by the earlier EU AI Act by establishing clear civil liability rules for AI-related harms.</p><p>Under the new rules, victims of AI-caused damage will have the right to access information about how an AI system functions. High-risk AI systems face the strictest requirements.</p>`},
+];
+function openArticle(i){const a=ARTICLES[i];document.getElementById('modalEmoji').textContent=a.emoji;document.getElementById('modalTitle').textContent=a.title;document.getElementById('modalDate').textContent=a.date;document.getElementById('modalTag').textContent=a.tag;document.getElementById('modalBody').innerHTML=a.body;document.getElementById('articleModal').classList.add('open');}
+function closeModal(e){if(e.target===document.getElementById('articleModal'))document.getElementById('articleModal').classList.remove('open');}
+
+// ─── NEWS UPLOAD ───
+let selectedNewsPhotoBase64 = null;
+
+function openNewsUploadModal() {
+  if(!currentUser){toast('Log in to add news.');return;}
+  ['newsTitle','newsDate','newsTag','newsSummary','newsBody'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('newsPhotoPreview').style.display='none';
+  document.getElementById('newsUploadPrompt').style.display='block';
+  document.getElementById('newsUploadError').style.display='none';
+  document.getElementById('newsUploadSuccess').style.display='none';
+  selectedNewsPhotoBase64=null;
+  document.getElementById('newsUploadModal').classList.add('open');
+}
+function closeNewsUploadModal(){document.getElementById('newsUploadModal').classList.remove('open');}
+
+function handleNewsPhoto(e) {
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    selectedNewsPhotoBase64=ev.target.result;
+    document.getElementById('newsPhotoPreview').src=selectedNewsPhotoBase64;
+    document.getElementById('newsPhotoPreview').style.display='block';
+    document.getElementById('newsUploadPrompt').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitNewsArticle() {
+  const title=document.getElementById('newsTitle').value.trim();
+  const date=document.getElementById('newsDate').value.trim()||new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const tag=document.getElementById('newsTag').value.trim();
+  const summary=document.getElementById('newsSummary').value.trim();
+  const body=document.getElementById('newsBody').value.trim();
+  const errEl=document.getElementById('newsUploadError');
+  const okEl=document.getElementById('newsUploadSuccess');
+  const btn=document.getElementById('newsUploadBtn');
+  errEl.style.display='none'; okEl.style.display='none';
+  if(!title||!body){errEl.textContent='Title and body are required.';errEl.style.display='block';return;}
+  btn.innerHTML='<span class="spin"></span>Publishing...'; btn.disabled=true;
+  const {error}=await sb.from('news_articles').insert({
+    title, date_label:date, tag, summary, body,
+    image_url: selectedNewsPhotoBase64||null,
+    author_id: currentUser.id,
+    author_username: currentProfile.username
+  });
+  btn.innerHTML='Publish Article'; btn.disabled=false;
+  if(error){errEl.textContent=error.message;errEl.style.display='block';return;}
+  okEl.style.display='block';
+  setTimeout(()=>{closeNewsUploadModal();loadNewsArticles();},1200);
+}
+
+async function loadNewsArticles() {
+  const list=document.getElementById('newsCardList'); if(!list)return;
+  const {data,error}=await sb.from('news_articles').select('*').order('created_at',{ascending:false}).limit(20);
+  if(error||!data||data.length===0) return; // keep hardcoded fallback
+  list.innerHTML='';
+  data.forEach((a,i)=>{
+    const card=document.createElement('div');
+    card.className='news-card';
+    const imgHtml=a.image_url
+      ?`<div class="news-img" style="background:none;padding:0;overflow:hidden;"><img src="${a.image_url}" style="width:120px;height:140px;object-fit:cover;" alt=""></div>`
+      :`<div class="news-img">📰</div>`;
+    card.innerHTML=`${imgHtml}<div class="news-body"><div class="news-title">${a.title.replace(/</g,'&lt;')}</div><span class="news-date">${a.date_label||''}${a.tag?' · '+a.tag:''}</span><p class="news-text">${(a.summary||'').replace(/</g,'&lt;')}</p></div>`;
+    card.onclick=()=>openDynamicArticle(a);
+    list.appendChild(card);
+  });
+}
+
+function openDynamicArticle(a) {
+  document.getElementById('modalEmoji').textContent='📰';
+  document.getElementById('modalTitle').textContent=a.title;
+  document.getElementById('modalDate').textContent=a.date_label||'';
+  document.getElementById('modalTag').textContent=a.tag||'';
+  let bodyHtml='';
+  if(a.image_url) bodyHtml+=`<img src="${a.image_url}" style="width:100%;max-height:300px;object-fit:cover;border-radius:8px;margin-bottom:16px;" alt="">`;
+  bodyHtml+=(a.body||'').split('\n').filter(l=>l.trim()).map(l=>`<p>${l.replace(/</g,'&lt;')}</p>`).join('');
+  document.getElementById('modalBody').innerHTML=bodyHtml;
+  document.getElementById('articleModal').classList.add('open');
+}
+
+// ─── CLICK OUTSIDE ───
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#authDropdown')&&!e.target.closest('#authTrigger')) document.getElementById('authDropdown').classList.remove('open');
+  if(!e.target.closest('#profileMenu')&&!e.target.closest('#profilePill')) document.getElementById('profileMenu').classList.remove('open');
+});
+
+// ─── AUTH STATE LISTENER ───
+sb.auth.onAuthStateChange(async (event, session) => {
+  if(session?.user) {
+    currentUser=session.user;
+    // Load or create profile
+    let {data:profile}=await sb.from('profiles').select('*').eq('id',currentUser.id).maybeSingle();
+    if(!profile) {
+      // Create profile from user metadata
+      const meta=currentUser.user_metadata||{};
+      const {data:newProfile}=await sb.from('profiles').insert({
+        id:currentUser.id,
+        username:meta.username||currentUser.email.split('@')[0],
+        joined_forums:meta.joined_forums||DEFAULT_FORUMS
+      }).select().single();
+      profile=newProfile;
+    }
+    currentProfile=profile;
+    applySession();
+    buildForumSidebar(); buildForumSubSidebar();
+    // If currently on forum page, refresh
+    if(document.getElementById('page-forum').classList.contains('active')) switchForum(activeForum);
+    if(document.getElementById('page-messages').classList.contains('active')) loadDMList();
+  } else {
+    currentUser=null; currentProfile=null;
+    applySession();
+    buildForumSidebar(); buildForumSubSidebar();
+  }
+});
+
+// ─── INIT ───
+buildRegCatGrid();
+buildHomeForumGrid();
+buildForumSidebar();
+buildForumSubSidebar();
+// Initial forum load (unauthenticated users can still read)
+loadForumMessages(activeForum);
+subscribeToForum(activeForum);
+// Load dynamic news from Supabase (falls back to hardcoded if table empty)
+loadNewsArticles();
+</script>
+</body>
+</html>
