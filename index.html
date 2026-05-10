@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QODE — One place. Endless possibilities.</title>
+<link rel="icon" type="image/png" href="thumbnail.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -273,6 +274,38 @@
 
   ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
   @media (max-width: 700px) { .home-grid { grid-template-columns: 1fr; } .hero { padding: 36px 20px 28px; } .hero h1 { font-size: 36px; } .about-wrap { width: 100%; padding: 24px 16px; } .forum-sub-sidebar { width: 150px; } .dm-list { width: 170px; } }
+
+  /* ── Owner Panel ─────────────────────── */
+  .owner-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:950; align-items:center; justify-content:center; }
+  .owner-modal.open { display:flex; }
+  .owner-box { background:var(--bg); border:1.5px solid var(--border); border-radius:14px; width:720px; max-width:96vw; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.3); animation:modalIn 0.2s ease; }
+  .owner-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .owner-tab { flex:1; padding:12px 8px; text-align:center; font-size:11px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; cursor:pointer; color:var(--text-muted); background:var(--bg-card); border:none; font-family:'Kanit',sans-serif; transition:background 0.15s; }
+  .owner-tab.active { background:var(--bg); color:var(--text); border-bottom:2.5px solid var(--accent); }
+  .owner-content { flex:1; overflow-y:auto; padding:20px; }
+  .user-row { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); }
+  .user-row:last-child { border-bottom:none; }
+  .user-row-info { flex:1; min-width:0; }
+  .user-row-name { font-size:13px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .user-row-email { font-size:11px; color:var(--text-light); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .badge { padding:2px 7px; border-radius:10px; font-size:9px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; }
+  .badge-banned { background:#fdecea; color:#c0392b; }
+  .badge-muted { background:#fff3cd; color:#856404; }
+  .badge-owner { background:rgba(58,110,168,0.15); color:var(--accent); }
+  .user-row-actions { display:flex; gap:5px; flex-shrink:0; }
+  .action-btn { padding:5px 10px; border-radius:6px; font-size:10px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; cursor:pointer; font-family:'Kanit',sans-serif; border:1px solid var(--border); background:var(--bg-card); color:var(--text); transition:background 0.15s; }
+  .action-btn:hover { background:var(--border); }
+  .action-btn.danger { color:#c0392b; border-color:#e74c3c; }
+  .action-btn.danger:hover { background:#fdecea; }
+  .action-btn.warning { color:#856404; border-color:#c8a800; }
+  .action-btn.warning:hover { background:#fff3cd; }
+  .action-btn.ok { color:#1a6b3c; border-color:#27ae60; }
+  .action-btn.ok:hover { background:#e6f4ed; }
+  .owner-search { width:100%; margin-bottom:14px; }
+  .section-divider { font-size:11px; font-weight:700; letter-spacing:0.09em; text-transform:uppercase; color:var(--text-light); margin:18px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+  /* Settings tabs */
+  .stab { flex:1; padding:11px 8px; text-align:center; font-size:11px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; cursor:pointer; color:var(--text-muted); background:var(--bg-card); border:none; font-family:'Kanit',sans-serif; transition:background 0.15s; }
+  .stab.active { background:var(--bg); color:var(--text); border-bottom:2px solid var(--accent); }
 </style>
 </head>
 <body>
@@ -372,6 +405,7 @@
   </div>
 
   <div class="profile-menu" id="profileMenu">
+    <div class="profile-menu-item" id="ownerPanelBtn" onclick="openOwnerPanel()" style="display:none;">⚡ Owner Panel</div>
     <div class="profile-menu-item" onclick="openSettings()">⚙️ Settings</div>
     <div class="profile-menu-item danger" onclick="doLogout()">🚪 Log Out</div>
   </div>
@@ -452,9 +486,6 @@
   <div class="chat-outer">
     <div class="chat-shell">
       <div class="chat-sidebar" id="chatSidebar">
-        <div class="side-icon" title="Forums" style="color:var(--accent)">
-          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        </div>
         <div class="side-icon" title="Messages" onclick="goTo('messages')" style="margin-top:2px;">
           <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </div>
@@ -610,13 +641,53 @@
       <h3>⚙️ Settings</h3>
       <button class="modal-close" onclick="closeSettings()">✕</button>
     </div>
+    <!-- Tabs -->
+    <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <button class="stab active" id="stab-profile" onclick="switchSettingsTab('profile')">👤 Profile</button>
+      <button class="stab" id="stab-forums" onclick="switchSettingsTab('forums')">💬 Forums</button>
+    </div>
     <div class="settings-body">
-      <div>
+      <!-- PROFILE TAB -->
+      <div id="settings-profile-tab">
+        <div class="settings-section-title">Edit Profile</div>
+        <div style="margin-bottom:12px;">
+          <label class="auth-label">Display Name</label>
+          <input class="auth-input" id="settingsDisplayName" type="text" placeholder="Your display name (optional)">
+        </div>
+        <div style="margin-bottom:4px;">
+          <label class="auth-label">Username</label>
+          <input class="auth-input" id="settingsUsername" type="text" placeholder="username" oninput="validateSettingsUsername()">
+          <span class="field-hint" id="settingsUsernameHint"></span>
+        </div>
+        <div class="auth-error" id="settingsProfileError" style="margin-top:8px;"></div>
+        <div class="auth-success" id="settingsProfileSuccess" style="display:none;margin-top:8px;"></div>
+        <button class="auth-btn" style="margin-top:12px;" onclick="saveProfileSettings()">Save Profile</button>
+      </div>
+      <!-- FORUMS TAB -->
+      <div id="settings-forums-tab" style="display:none;">
         <div class="settings-section-title">My Forum Rooms</div>
         <p style="font-size:12px;color:var(--text-light);margin-bottom:10px;">Select the forums you want to join. Changes are saved to your account.</p>
         <div class="cat-grid" id="settingsCatGrid"></div>
+        <button class="auth-btn" style="margin-top:16px;" onclick="saveSettings()">Save Forums</button>
       </div>
-      <button class="auth-btn" onclick="saveSettings()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- OWNER PANEL MODAL -->
+<div class="owner-modal" id="ownerModal" onclick="if(event.target===this)closeOwnerPanel()">
+  <div class="owner-box">
+    <div class="settings-head" style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <h3 style="font-size:15px;font-weight:700;">⚡ Owner Panel</h3>
+      <button class="modal-close" onclick="closeOwnerPanel()">✕</button>
+    </div>
+    <div class="owner-tabs">
+      <button class="owner-tab active" id="otab-users" onclick="switchOwnerTab('users')">👥 Users</button>
+      <button class="owner-tab" id="otab-news" onclick="switchOwnerTab('news')">📰 News</button>
+      <button class="owner-tab" id="otab-channels" onclick="switchOwnerTab('channels')">📢 Channels</button>
+    </div>
+    <div class="owner-content" id="ownerContent">
+      <div style="color:var(--text-light);font-size:12px;">Loading...</div>
     </div>
   </div>
 </div>
@@ -626,6 +697,10 @@
 const SUPABASE_URL = 'https://rrfwmatmgtskzjgnfmdx.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyZndtYXRtZ3Rza3pqZ25mbWR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNTM4MTIsImV4cCI6MjA5MzgyOTgxMn0.Mm7gSdqyKm2DsgKw_CV96CqOIMrSRMOr5sG70lexvSo';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ─── OWNER CONFIG ───
+// Change this to your actual username after registering
+const OWNER_USERNAME = 'michal'; // 👈 your username here
 
 // ─── FORUM DATA ───
 const ALL_FORUMS = [
@@ -873,11 +948,18 @@ function applySession() {
   if(currentUser && currentProfile) {
     document.getElementById('authTrigger').style.display='none';
     document.getElementById('profilePill').style.display='flex';
-    document.getElementById('profileAvatar').textContent=currentProfile.username.slice(0,2).toUpperCase();
-    document.getElementById('profileName').textContent=currentProfile.username;
+    const displayLabel = currentProfile.display_name || currentProfile.username;
+    document.getElementById('profileAvatar').textContent=displayLabel.slice(0,2).toUpperCase();
+    document.getElementById('profileName').textContent=displayLabel;
+    // Show owner panel button if owner
+    const isOwner = currentProfile.username===OWNER_USERNAME || currentProfile.role==='owner';
+    const btn=document.getElementById('ownerPanelBtn');
+    if(btn) btn.style.display=isOwner?'block':'none';
   } else {
     document.getElementById('authTrigger').style.display='flex';
     document.getElementById('profilePill').style.display='none';
+    const btn=document.getElementById('ownerPanelBtn');
+    if(btn) btn.style.display='none';
   }
 }
 
@@ -936,10 +1018,253 @@ async function saveSettings() {
   if(error){toast('Error saving: '+error.message);return;}
   currentProfile.joined_forums=settingsSelectedCats;
   closeSettings(); buildForumSidebar(); buildForumSubSidebar();
-  toast('Settings saved ✓');
+  toast('Forums saved ✓');
 }
-function openSettings(){buildSettingsCatGrid();document.getElementById('settingsModal').classList.add('open');document.getElementById('profileMenu').classList.remove('open');}
+
+function switchSettingsTab(tab) {
+  document.querySelectorAll('.stab').forEach(el=>el.classList.remove('active'));
+  const t=document.getElementById('stab-'+tab);
+  if(t)t.classList.add('active');
+  document.getElementById('settings-profile-tab').style.display=tab==='profile'?'block':'none';
+  document.getElementById('settings-forums-tab').style.display=tab==='forums'?'block':'none';
+}
+
+function openSettings(){
+  if(!currentUser){toast('Log in first.');return;}
+  document.getElementById('profileMenu').classList.remove('open');
+  // Pre-fill profile fields
+  document.getElementById('settingsDisplayName').value=currentProfile.display_name||'';
+  document.getElementById('settingsUsername').value=currentProfile.username||'';
+  document.getElementById('settingsProfileError').style.display='none';
+  const okEl=document.getElementById('settingsProfileSuccess');
+  if(okEl){okEl.style.display='none';}
+  switchSettingsTab('profile');
+  buildSettingsCatGrid();
+  document.getElementById('settingsModal').classList.add('open');
+}
 function closeSettings(){document.getElementById('settingsModal').classList.remove('open');}
+
+function validateSettingsUsername() {
+  const v=document.getElementById('settingsUsername').value.trim();
+  const h=document.getElementById('settingsUsernameHint');
+  const i=document.getElementById('settingsUsername');
+  if(!v){h.className='field-hint';return false;}
+  if(v.length<3){h.className='field-hint show err';h.textContent='At least 3 characters.';i.classList.add('error');return false;}
+  if(!/^[a-zA-Z0-9_]+$/.test(v)){h.className='field-hint show err';h.textContent='Letters, numbers and underscores only.';i.classList.add('error');return false;}
+  h.className='field-hint show ok';h.textContent='✓ Looks good';i.classList.remove('error');return true;
+}
+
+async function saveProfileSettings() {
+  if(!currentUser){toast('Log in first.');return;}
+  const displayName=document.getElementById('settingsDisplayName').value.trim();
+  const username=document.getElementById('settingsUsername').value.trim();
+  const errEl=document.getElementById('settingsProfileError');
+  const okEl=document.getElementById('settingsProfileSuccess');
+  errEl.style.display='none';
+  if(okEl)okEl.style.display='none';
+  if(!validateSettingsUsername()){errEl.textContent='Fix username errors first.';errEl.style.display='block';return;}
+  // Check username uniqueness if changed
+  if(username!==currentProfile.username) {
+    const {data:existing}=await sb.from('profiles').select('id').eq('username',username).neq('id',currentUser.id).maybeSingle();
+    if(existing){errEl.textContent='Username already taken. Pick another.';errEl.style.display='block';return;}
+  }
+  const updates={username};
+  if(displayName) updates.display_name=displayName;
+  else updates.display_name=null;
+  const {error}=await sb.from('profiles').update(updates).eq('id',currentUser.id);
+  if(error){errEl.textContent=error.message;errEl.style.display='block';return;}
+  currentProfile.username=username;
+  currentProfile.display_name=displayName||null;
+  applySession();
+  if(okEl){okEl.textContent='Profile updated ✓';okEl.style.display='block';setTimeout(()=>{okEl.style.display='none';},2200);}
+}
+
+// ─── OWNER PANEL ───
+let ownerActiveTab='users';
+
+function openOwnerPanel(){
+  document.getElementById('ownerModal').classList.add('open');
+  document.getElementById('profileMenu').classList.remove('open');
+  switchOwnerTab('users');
+}
+function closeOwnerPanel(){document.getElementById('ownerModal').classList.remove('open');}
+
+function switchOwnerTab(tab) {
+  ownerActiveTab=tab;
+  document.querySelectorAll('.owner-tab').forEach(el=>el.classList.remove('active'));
+  const t=document.getElementById('otab-'+tab);
+  if(t)t.classList.add('active');
+  if(tab==='users') loadOwnerUsers();
+  else if(tab==='news') loadOwnerNews();
+  else if(tab==='channels') loadOwnerChannels();
+}
+
+async function loadOwnerUsers() {
+  const content=document.getElementById('ownerContent');
+  content.innerHTML='<div style="color:var(--text-light);font-size:12px;padding:8px 0;">Loading users...</div>';
+  const {data,error}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
+  if(error){content.innerHTML='<div style="color:var(--danger);font-size:12px;">Error: '+error.message+'</div>';return;}
+  const users=data||[];
+  content.innerHTML='';
+  // Search
+  const search=document.createElement('input');
+  search.className='auth-input owner-search';
+  search.placeholder='🔍 Search users...';
+  search.oninput=()=>{
+    const q=search.value.toLowerCase();
+    content.querySelectorAll('.user-row').forEach(r=>{
+      r.style.display=(r.dataset.u||'').includes(q)?'flex':'none';
+    });
+  };
+  content.appendChild(search);
+  if(users.length===0){
+    const empty=document.createElement('div');
+    empty.style.cssText='color:var(--text-light);font-size:12px;';
+    empty.textContent='No users yet.';
+    content.appendChild(empty);
+    return;
+  }
+  users.forEach(u=>{
+    const isOwnerUser=u.username===OWNER_USERNAME||u.role==='owner';
+    const row=document.createElement('div');
+    row.className='user-row';
+    row.dataset.u=(u.username||'').toLowerCase();
+    const badges=[
+      isOwnerUser?'<span class="badge badge-owner">OWNER</span>':'',
+      u.is_banned?'<span class="badge badge-banned">BANNED</span>':'',
+      u.is_muted?'<span class="badge badge-muted">MUTED</span>':''
+    ].filter(Boolean).join('');
+    const actions=isOwnerUser?'':`
+      <button class="action-btn ${u.is_muted?'ok':'warning'}" onclick="toggleMuteUser('${u.id}',${!!u.is_muted})">${u.is_muted?'Unmute':'Mute'}</button>
+      <button class="action-btn ${u.is_banned?'ok':'danger'}" onclick="toggleBanUser('${u.id}',${!!u.is_banned})">${u.is_banned?'Unban':'Ban'}</button>
+    `;
+    row.innerHTML=`
+      <div class="dm-avatar" style="background:${stringToColor(u.username||'?')};width:34px;height:34px;font-size:12px;flex-shrink:0;">${(u.username||'?').slice(0,2).toUpperCase()}</div>
+      <div class="user-row-info">
+        <div class="user-row-name">${u.username||'Unknown'} ${badges}</div>
+        <div class="user-row-email">${u.display_name?'Name: '+u.display_name+' · ':''} Joined: ${new Date(u.created_at||Date.now()).toLocaleDateString()}</div>
+      </div>
+      <div class="user-row-actions">${actions}</div>`;
+    content.appendChild(row);
+  });
+}
+
+async function toggleBanUser(userId, isBanned) {
+  const {error}=await sb.from('profiles').update({is_banned:!isBanned}).eq('id',userId);
+  if(error){toast('Error: '+error.message);return;}
+  toast(isBanned?'User unbanned ✓':'User banned ✓');
+  loadOwnerUsers();
+}
+
+async function toggleMuteUser(userId, isMuted) {
+  const {error}=await sb.from('profiles').update({is_muted:!isMuted}).eq('id',userId);
+  if(error){toast('Error: '+error.message);return;}
+  toast(isMuted?'User unmuted ✓':'User muted ✓');
+  loadOwnerUsers();
+}
+
+async function loadOwnerNews() {
+  const content=document.getElementById('ownerContent');
+  content.innerHTML='<div style="color:var(--text-light);font-size:12px;padding:8px 0;">Loading articles...</div>';
+  const {data,error}=await sb.from('news_articles').select('*').order('created_at',{ascending:false}).limit(80);
+  if(error){content.innerHTML='<div style="color:var(--danger);font-size:12px;">Error: '+error.message+'</div>';return;}
+  content.innerHTML='';
+  const articles=data||[];
+  if(articles.length===0){
+    content.innerHTML='<div style="color:var(--text-light);font-size:12px;">No published articles yet.</div>';
+    return;
+  }
+  articles.forEach(a=>{
+    const row=document.createElement('div');
+    row.className='user-row';
+    row.innerHTML=`
+      <div style="flex:1;min-width:0;">
+        <div class="user-row-name" style="font-size:13px;">${(a.title||'').replace(/</g,'&lt;')}</div>
+        <div class="user-row-email">${a.date_label||''} ${a.tag?' · '+a.tag:''} · by ${a.author_username||'unknown'}</div>
+      </div>
+      <button class="action-btn danger" onclick="ownerDeleteNews('${a.id}')">🗑 Delete</button>`;
+    content.appendChild(row);
+  });
+}
+
+async function ownerDeleteNews(articleId) {
+  if(!confirm('Delete this article? This cannot be undone.'))return;
+  const {error}=await sb.from('news_articles').delete().eq('id',articleId);
+  if(error){toast('Error: '+error.message);return;}
+  toast('Article deleted ✓');
+  loadOwnerNews();
+  loadNewsArticles();
+}
+
+function loadOwnerChannels() {
+  const content=document.getElementById('ownerContent');
+  content.innerHTML='';
+  // Add channel form
+  const addBox=document.createElement('div');
+  addBox.style.cssText='margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--border);';
+  addBox.innerHTML=`
+    <div class="section-divider" style="margin-top:0;">Add New Channel</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <select class="auth-input" id="newChanForum" style="min-width:150px;flex:1;">
+        ${ALL_FORUMS.map(f=>`<option value="${f.id}">${f.emoji} ${f.name}</option>`).join('')}
+      </select>
+      <input class="auth-input" id="newChanLabel" type="text" placeholder="channel-name" style="flex:1;min-width:120px;">
+      <select class="auth-input" id="newChanType" style="min-width:100px;">
+        <option value="chat">💬 Chat</option>
+        <option value="photos">🖼 Photos</option>
+      </select>
+    </div>
+    <button class="auth-btn" style="width:auto;padding:8px 20px;font-size:11px;" onclick="addNewChannel()">+ Add Channel</button>
+  `;
+  content.appendChild(addBox);
+  // List channels by forum
+  ALL_FORUMS.forEach(f=>{
+    const channels=FORUM_CHANNELS[f.id]||[];
+    const section=document.createElement('div');
+    section.style.marginBottom='14px';
+    const hdr=document.createElement('div');
+    hdr.className='section-divider';
+    hdr.textContent=f.emoji+' '+f.name+' ('+channels.length+' channels)';
+    section.appendChild(hdr);
+    channels.forEach((ch,idx)=>{
+      const row=document.createElement('div');
+      row.className='user-row';
+      row.style.padding='7px 0';
+      row.innerHTML=`
+        <span style="font-size:13px;flex:1;color:var(--text-muted);">${ch.type==='photos'?'🖼':'#'} ${ch.label} <span style="font-size:10px;color:var(--text-light);">(${ch.type})</span></span>
+        ${idx===0?'<span style="font-size:10px;color:var(--text-light);padding:4px 8px;">default</span>':
+          `<button class="action-btn danger" onclick="removeOwnerChannel('${f.id}','${ch.id}')">Remove</button>`}
+      `;
+      section.appendChild(row);
+    });
+    content.appendChild(section);
+  });
+}
+
+function addNewChannel() {
+  const forumId=document.getElementById('newChanForum').value;
+  const rawLabel=document.getElementById('newChanLabel').value.trim();
+  const label=rawLabel.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  const type=document.getElementById('newChanType').value;
+  if(!label){toast('Enter a channel name.');return;}
+  if(!FORUM_CHANNELS[forumId])FORUM_CHANNELS[forumId]=[];
+  const channelId=forumId+'-'+label;
+  if(FORUM_CHANNELS[forumId].find(c=>c.id===channelId)){toast('Channel already exists in this forum.');return;}
+  FORUM_CHANNELS[forumId].push({id:channelId,label,type});
+  document.getElementById('newChanLabel').value='';
+  toast('Channel added ✓');
+  buildForumSubSidebar();
+  loadOwnerChannels();
+}
+
+function removeOwnerChannel(forumId, channelId) {
+  if(!confirm('Remove this channel and all its messages?'))return;
+  FORUM_CHANNELS[forumId]=FORUM_CHANNELS[forumId].filter(c=>c.id!==channelId);
+  if(activeChannel===channelId) switchForum(forumId);
+  toast('Channel removed ✓');
+  buildForumSubSidebar();
+  loadOwnerChannels();
+}
 
 // ─── HOME FORUM GRID ───
 function buildHomeForumGrid() {
@@ -1100,6 +1425,8 @@ async function sendMsg() {
   const text=input.value.trim();
   if(!text)return;
   if(!currentUser){toast('Log in to send messages.');return;}
+  if(currentProfile?.is_banned){toast('⛔ Your account has been banned.');return;}
+  if(currentProfile?.is_muted){toast('🔇 You are muted and cannot send messages.');return;}
   input.value='';
   const {error}=await sb.from('forum_messages').insert({
     forum_id:activeForum, user_id:currentUser.id,
@@ -1207,6 +1534,8 @@ async function sendDM() {
   const text=input.value.trim();
   if(!text||!activeDMUser)return;
   if(!currentUser){toast('Log in to send messages.');return;}
+  if(currentProfile?.is_banned){toast('⛔ Your account has been banned.');return;}
+  if(currentProfile?.is_muted){toast('🔇 You are muted and cannot send messages.');return;}
   input.value='';
   const {error}=await sb.from('direct_messages').insert({
     sender_id:currentUser.id, receiver_id:activeDMUser.id,
@@ -1489,9 +1818,13 @@ sb.auth.onAuthStateChange(async (event, session) => {
     if(!profile) {
       // Create profile from user metadata
       const meta=currentUser.user_metadata||{};
+      // For social logins (Google/Apple), generate username from email or name
+      const rawUsername = meta.username || meta.name?.replace(/\s+/g,'_').toLowerCase() || currentUser.email?.split('@')[0] || 'user_'+Math.random().toString(36).slice(2,7);
+      const cleanUsername = rawUsername.replace(/[^a-zA-Z0-9_]/g,'_').slice(0,20);
       const {data:newProfile}=await sb.from('profiles').insert({
         id:currentUser.id,
-        username:meta.username||currentUser.email.split('@')[0],
+        username:cleanUsername,
+        display_name: meta.full_name || meta.name || null,
         joined_forums:meta.joined_forums||DEFAULT_FORUMS
       }).select().single();
       profile=newProfile;
