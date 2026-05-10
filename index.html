@@ -1058,10 +1058,31 @@ async function doLogin() {
   errEl.style.display='none';
   if(!email||!pass){errEl.textContent='Please fill in all fields.';errEl.style.display='block';return;}
   btn.innerHTML='<span class="spin"></span>Logging in...'; btn.disabled=true;
-  const {error} = await sb.auth.signInWithPassword({email, password:pass});
-  btn.innerHTML='Log In'; btn.disabled=false;
-  if(error){errEl.textContent=error.message==='Invalid login credentials'?'Wrong email or password.':error.message;errEl.style.display='block';}
-  else { document.getElementById('authDropdown').classList.remove('open'); }
+
+  const resetBtn = () => { btn.innerHTML='Log In'; btn.disabled=false; };
+
+  try {
+    // Race against a 12s timeout so button never stays stuck forever
+    const authResult = await Promise.race([
+      sb.auth.signInWithPassword({email, password:pass}),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('TIMEOUT')), 12000))
+    ]);
+    resetBtn();
+    if(authResult.error) {
+      const msg = authResult.error.message;
+      errEl.textContent = msg==='Invalid login credentials' ? 'Wrong email or password.' :
+                          msg.includes('Email not confirmed') ? 'Please confirm your email first.' : msg;
+      errEl.style.display='block';
+    } else {
+      document.getElementById('authDropdown').classList.remove('open');
+    }
+  } catch(e) {
+    resetBtn();
+    errEl.textContent = e.message==='TIMEOUT'
+      ? 'Connection timed out — Supabase may be waking up, try again in a moment.'
+      : 'Network error: '+e.message;
+    errEl.style.display='block';
+  }
 }
 
 async function doRegister() {
@@ -2025,38 +2046,87 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('#profileMenu')&&!e.target.closest('#profilePill')) document.getElementById('profileMenu').classList.remove('open');
 });
 
+// ─── PROFILE LOADER (with timeout + retry) ───
+async function loadProfile(userId, meta={}) {
+  // Try fetching existing profile, timeout after 6s
+  const fetchProfile = () => Promise.race([
+    sb.from('profiles').select('*').eq('id', userId).maybeSingle(),
+    new Promise((_,r)=>setTimeout(()=>r(new Error('TIMEOUT')),6000))
+  ]);
+
+  try {
+    let { data: profile, error } = await fetchProfile();
+    if(error) throw error;
+
+    if(!profile) {
+      // DB trigger may not have fired yet — wait 600ms and retry once
+      await new Promise(r=>setTimeout(r,600));
+      const retry = await fetchProfile();
+      profile = retry.data;
+    }
+
+    if(!profile) {
+      // Last resort: create it client-side
+      const raw = meta.username || meta.name?.replace(/\s+/g,'_').toLowerCase()
+                  || currentUser.email?.split('@')[0] || 'user_'+Math.random().toString(36).slice(2,6);
+      const clean = raw.replace(/[^a-zA-Z0-9_]/g,'_').slice(0,20);
+      const { data: created } = await sb.from('profiles').insert({
+        id: userId,
+        username: clean,
+        display_name: meta.full_name || meta.name || null,
+        joined_forums: meta.joined_forums || DEFAULT_FORUMS
+      }).select().single();
+      profile = created;
+    }
+
+    return profile;
+  } catch(e) {
+    // Network failed entirely — return a minimal offline profile so UI doesn't break
+    console.warn('Profile load failed, using fallback:', e.message);
+    return {
+      id: userId,
+      username: meta.username || currentUser.email?.split('@')[0] || 'user',
+      display_name: meta.full_name || meta.name || null,
+      joined_forums: DEFAULT_FORUMS,
+      role: 'user', is_banned: false, is_muted: false
+    };
+  }
+}
+
 // ─── AUTH STATE LISTENER ───
 sb.auth.onAuthStateChange(async (event, session) => {
+  // TOKEN_REFRESHED fires silently in background — skip to avoid double-builds
+  if(event === 'TOKEN_REFRESHED') return;
+
   if(session?.user) {
-    currentUser=session.user;
-    // Load or create profile
-    let {data:profile}=await sb.from('profiles').select('*').eq('id',currentUser.id).maybeSingle();
-    if(!profile) {
-      // Create profile from user metadata
-      const meta=currentUser.user_metadata||{};
-      // For social logins (Google/Apple), generate username from email or name
-      const rawUsername = meta.username || meta.name?.replace(/\s+/g,'_').toLowerCase() || currentUser.email?.split('@')[0] || 'user_'+Math.random().toString(36).slice(2,7);
-      const cleanUsername = rawUsername.replace(/[^a-zA-Z0-9_]/g,'_').slice(0,20);
-      const {data:newProfile}=await sb.from('profiles').insert({
-        id:currentUser.id,
-        username:cleanUsername,
-        display_name: meta.full_name || meta.name || null,
-        joined_forums:meta.joined_forums||DEFAULT_FORUMS
-      }).select().single();
-      profile=newProfile;
-    }
-    currentProfile=profile;
+    currentUser = session.user;
+    currentProfile = await loadProfile(currentUser.id, currentUser.user_metadata || {});
     applySession();
     buildForumSidebar(); buildForumSubSidebar();
-    // If currently on forum page, refresh
     if(document.getElementById('page-forum').classList.contains('active')) switchForum(activeForum);
     if(document.getElementById('page-messages').classList.contains('active')) loadDMList();
   } else {
-    currentUser=null; currentProfile=null;
+    currentUser = null; currentProfile = null;
     applySession();
     buildForumSidebar(); buildForumSubSidebar();
   }
 });
+
+// ─── FAST SESSION RESTORE ───
+// getSession() reads from localStorage instantly — no network hit.
+// This means the UI shows the correct logged-in state immediately,
+// before onAuthStateChange fires and loads the full profile.
+(async () => {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if(session?.user && !currentUser) {
+      currentUser = session.user;
+      currentProfile = await loadProfile(currentUser.id, currentUser.user_metadata || {});
+      applySession();
+      buildForumSidebar(); buildForumSubSidebar();
+    }
+  } catch(e) { /* silent — onAuthStateChange will handle it */ }
+})();
 
 // ─── INIT ───
 buildRegCatGrid();
