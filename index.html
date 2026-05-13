@@ -498,52 +498,298 @@
   .banned-banner { display:none; background:#e74c3c; color:#fff; text-align:center; font-size:12px; font-weight:700; padding:8px; letter-spacing:0.05em; position:fixed; top:var(--nav-h); left:0; right:0; z-index:500; }
   body.banned .banned-banner { display:block; }
 
+
+  /* ── MOBILE BOTTOM NAV ───────────────────── */
+  .mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 58px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    z-index: 200;
+    align-items: stretch;
+    justify-content: space-around;
+    padding: 0 4px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+  }
+  .mbn-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 6px 4px;
+    border-radius: 10px;
+    transition: background 0.15s;
+    position: relative;
+    color: var(--text-muted);
+  }
+  .mbn-item.active { color: var(--accent); }
+  .mbn-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+  .mbn-label { font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .mbn-badge {
+    position: absolute;
+    top: 5px; right: calc(50% - 16px);
+    min-width: 16px; height: 16px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    border-radius: 8px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    line-height: 1;
+    border: 1.5px solid var(--bg-card);
+  }
+  .mbn-badge.show { display: flex; }
+  body.dark .mobile-bottom-nav { background: var(--bg-elevated); border-top-color: var(--border-hi); }
+
+  /* Notification bell in nav */
+  .notif-bell { position: relative; }
+  .notif-dot {
+    position: absolute;
+    top: 5px; right: 5px;
+    width: 8px; height: 8px;
+    background: var(--danger);
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+    display: none;
+  }
+  .notif-dot.show { display: block; }
+  .notif-count {
+    position: absolute;
+    top: 2px; right: 2px;
+    min-width: 16px; height: 16px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    border-radius: 8px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    line-height: 1;
+    border: 1.5px solid var(--bg);
+  }
+  .notif-count.show { display: flex; }
+
+  /* Notification panel */
+  .notif-panel {
+    display: none;
+    position: absolute;
+    top: calc(var(--nav-h) + 8px);
+    right: 0;
+    width: 300px;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    z-index: 500;
+    overflow: hidden;
+    animation: dropIn 0.18s ease;
+  }
+  .notif-panel.open { display: block; }
+  .notif-panel-head {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .notif-panel-head button {
+    font-size: 10px;
+    color: var(--accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 700;
+  }
+  .notif-list { max-height: 320px; overflow-y: auto; }
+  .notif-item {
+    padding: 11px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-item:hover { background: var(--bg-card); }
+  .notif-item.unread { background: rgba(58,110,168,0.07); }
+  .notif-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .notif-text { flex: 1; min-width: 0; }
+  .notif-name { font-size: 12px; font-weight: 700; color: var(--text); }
+  .notif-preview { font-size: 11px; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .notif-time { font-size: 10px; color: var(--text-light); flex-shrink: 0; }
+  .notif-empty { padding: 24px 16px; text-align: center; font-size: 12px; color: var(--text-light); }
+  body.dark .notif-panel { background: var(--bg-elevated); border-color: var(--border-hi); }
+  body.dark .notif-item.unread { background: rgba(91,141,238,0.08); }
+
+  /* Unread DM in list — bright name */
+  .dm-entry.has-unread .dm-name { color: #fff; font-weight: 800; }
+  body:not(.dark) .dm-entry.has-unread .dm-name { color: var(--text); font-weight: 800; }
+  .dm-unread-pill {
+    background: var(--accent);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 1px 6px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
   /* ── MOBILE ─────────────────────────────── */
   @media (max-width:700px) {
-    nav { padding:0 12px; gap:8px; }
-    .nav-links { display:none; }
-    .logo { font-size:18px; }
-    .hero { padding:28px 16px 20px; }
-    .hero h1 { font-size:28px; }
-    .home-grid { grid-template-columns:1fr; gap:16px; padding:16px; }
-    .home-col { min-width:0; }
-    .news-card { grid-template-columns:90px 1fr; }
-    .news-img { width:90px; height:110px; font-size:24px; }
-    .forum-grid { grid-template-columns:repeat(2,1fr); }
+    /* Nav: keep logo + theme + profile only */
+    nav { padding: 0 12px; gap: 6px; }
+    .nav-links { display: none; }
+    .nav-line { display: none; }
+    .logo { font-size: 17px; flex: 1; }
+    /* Push theme icon to the right, keep profile pill */
+    #authTrigger { margin-left: auto; }
+    .profile-pill { margin-left: auto; padding: 4px 10px 4px 5px; }
+    .profile-name { display: none; } /* avatar only on mobile */
+    .profile-status-dot { display: none !important; }
 
-    /* Forum shell */
-    .chat-shell { flex-direction:column; height:calc(100vh - var(--nav-h) - 36px); }
-    .chat-sidebar { width:100% !important; height:48px; flex-direction:row; border-right:none; border-bottom:1px solid var(--border); padding:6px 10px; overflow-x:auto; overflow-y:hidden; justify-content:flex-start; gap:8px; }
-    .side-sep { display:none; }
-    .forum-circle { width:32px; height:32px; font-size:14px; }
-    .forum-sub-sidebar { width:100% !important; height:44px; flex-direction:row; border-right:none; border-bottom:1px solid var(--border); overflow-x:auto; overflow-y:hidden; padding:0 10px; }
-    .forum-cat-header { display:none; }
-    .forum-cat-item { white-space:nowrap; border-left:none !important; border-bottom:3px solid transparent; padding:0 12px; height:44px; line-height:44px; border-radius:0; }
-    .forum-cat-item.active { border-bottom-color:var(--accent); background:transparent; }
-    .forum-chat-area { flex:1; min-height:0; }
+    /* Show mobile bottom nav */
+    .mobile-bottom-nav { display: flex; }
 
-    /* DM */
-    .dm-shell { flex-direction:column; }
-    .dm-list { width:100% !important; height:auto; max-height:44px; flex-direction:row; border-right:none; border-bottom:1px solid var(--border); overflow-x:auto; overflow-y:hidden; }
-    .dm-list-header { display:none; }
-    .dm-entry { padding:8px 12px; white-space:nowrap; border-left:none !important; border-bottom:3px solid transparent; }
-    .dm-entry.active { border-bottom-color:var(--accent); background:transparent; }
-    .dm-info { display:none; }
-    .dm-area { flex:1; min-height:0; }
+    /* Give pages bottom padding so content clears the nav */
+    .page { padding-bottom: 58px; }
 
-    /* Owner / settings modals */
-    .owner-box, .settings-box { width:100% !important; max-width:100% !important; max-height:100dvh !important; border-radius:0; }
-    .owner-modal, .settings-modal { align-items:flex-end; }
-    .owner-tabs { overflow-x:auto; }
-    .owner-tab { font-size:9px; padding:10px 6px; white-space:nowrap; }
-    .stab { font-size:9px; padding:10px 4px; }
-    .user-row-actions { flex-direction:column; gap:3px; }
-    .action-btn { font-size:9px; padding:4px 7px; }
+    /* Hero */
+    .hero { padding: 24px 16px 16px; }
+    .hero h1 { font-size: 26px; }
+    .hero p { font-size: 13px; }
+
+    /* Home grid */
+    .home-grid { grid-template-columns: 1fr; gap: 0; background: none; }
+    .home-col { padding: 16px; }
+    .home-col + .home-col { border-top: 1px solid var(--border); }
+    .news-card { grid-template-columns: 80px 1fr; }
+    .news-img { width: 80px; height: 100px; font-size: 22px; }
+    .forum-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .section-label { font-size: 16px; }
+
+    /* Chat shell — full height minus nav bars */
+    .chat-outer { padding: 0; height: calc(100vh - var(--nav-h) - 58px); }
+    .chat-shell { border-radius: 0; border-left: none; border-right: none; border-top: none; height: 100%; flex-direction: column; grid-template-columns: 1fr; }
+
+    /* Forum icon strip */
+    .chat-sidebar { width: 100% !important; height: 46px; flex-direction: row; border-right: none; border-bottom: 1px solid var(--border); padding: 5px 10px; overflow-x: auto; overflow-y: hidden; justify-content: flex-start; gap: 8px; scrollbar-width: none; }
+    .chat-sidebar::-webkit-scrollbar { display: none; }
+    .side-sep { display: none; }
+    .forum-circle { width: 34px; height: 34px; font-size: 15px; }
+
+    /* Forum sub-sidebar — horizontal pill strip */
+    .forum-sub-sidebar { width: 100% !important; height: 40px; flex-direction: row; border-right: none; border-bottom: 1px solid var(--border); overflow-x: auto; overflow-y: hidden; padding: 0 8px; scrollbar-width: none; }
+    .forum-sub-sidebar::-webkit-scrollbar { display: none; }
+    .forum-cat-header { display: none; }
+    .forum-cat-item { white-space: nowrap; border-left: none !important; border-bottom: 2.5px solid transparent; padding: 0 10px; height: 40px; line-height: 40px; border-radius: 0; font-size: 11px; }
+    .forum-cat-item.active { border-bottom-color: var(--accent); background: transparent; }
+    .forum-chat-area { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+    /* Chat input */
+    .chat-input-bar { padding: 8px 10px; }
+    .chat-input { font-size: 14px; padding: 8px 12px; }
+    .bubble { font-size: 13px; padding: 7px 11px; max-width: 82vw; }
+    .chat-messages { padding: 10px 10px 6px; gap: 8px; }
+
+    /* DM page — full-width convo, no sidebar drawer */
+    .msg-page { flex-direction: column; }
+    .dm-list {
+      width: 100% !important;
+      height: 52px;
+      flex-direction: row;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      overflow-y: hidden;
+      flex-shrink: 0;
+      scrollbar-width: none;
+    }
+    .dm-list::-webkit-scrollbar { display: none; }
+    .dm-list-header { display: none; }
+    .dm-entry {
+      padding: 6px 10px;
+      white-space: nowrap;
+      border-left: none !important;
+      border-bottom: 3px solid transparent;
+      min-width: 52px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+    .dm-entry.active { border-bottom-color: var(--accent); background: transparent; }
+    /* On mobile show name under avatar in DM strip */
+    .dm-info { display: flex; flex-direction: column; align-items: center; }
+    .dm-preview { display: none; }
+    .dm-name { font-size: 9px; font-weight: 700; max-width: 50px; overflow: hidden; text-overflow: ellipsis; }
+    .dm-area { flex: 1; min-height: 0; }
+    .dm-unread-pill { display: none; } /* shown in notif panel instead */
+
+    /* Modals — slide up from bottom, full screen */
+    .owner-box, .settings-box {
+      width: 100% !important;
+      max-width: 100% !important;
+      max-height: 96dvh !important;
+      border-radius: 16px 16px 0 0;
+    }
+    .owner-modal, .settings-modal { align-items: flex-end; padding: 0; }
+    .owner-tabs { overflow-x: auto; scrollbar-width: none; }
+    .owner-tabs::-webkit-scrollbar { display: none; }
+    .owner-tab { font-size: 9px; padding: 10px 6px; white-space: nowrap; }
+    .stab { font-size: 9px; padding: 10px 4px; }
+    .user-row { flex-wrap: wrap; }
+    .user-row-actions { flex-direction: row; flex-wrap: wrap; gap: 4px; width: 100%; padding-top: 4px; }
+    .action-btn { font-size: 10px; padding: 5px 10px; flex: 1; text-align: center; }
+
+    /* Article modal */
+    .modal-box { max-height: 94dvh; border-radius: 14px 14px 0 0; }
+    .modal-overlay { align-items: flex-end; }
+
+    /* About */
+    .about-wrap { padding: 24px 16px; width: 100%; }
+    .about-card { padding: 24px 20px; }
+    .about-card p { font-size: 16px; }
+
+    /* Owner photo grid */
+    .owner-photo-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+
+    /* Notif panel */
+    .notif-panel { right: -8px; width: 280px; }
   }
-  @media (max-width:400px) {
-    .forum-grid { grid-template-columns:1fr 1fr; }
-    .news-card { grid-template-columns:1fr; }
-    .news-img { width:100%; height:80px; }
+
+  @media (max-width: 400px) {
+    .hero h1 { font-size: 22px; }
+    .news-card { grid-template-columns: 70px 1fr; }
+    .news-img { width: 70px; height: 88px; }
+    .forum-grid { grid-template-columns: repeat(2, 1fr); }
   }
 
   /* ── Owner Panel ─────────────────────── */
@@ -641,7 +887,22 @@
     <li><a id="nav-messages" onclick="goTo('messages')">MESSAGES</a></li>
     <li><a id="nav-about" onclick="goTo('about')">ABOUT</a></li>
   </ul>
-  <div class="nav-icon" onclick="toggleTheme()" title="Toggle theme" style="margin-left:12px;">
+  <!-- Notification bell -->
+  <div class="nav-icon notif-bell" id="notifBell" onclick="toggleNotifPanel()" title="Notifications" style="margin-left:12px;display:none;">
+    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <div class="notif-count" id="notifCount"></div>
+  </div>
+  <!-- Notification panel dropdown -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-panel-head">
+      <span>Notifications</span>
+      <button onclick="markAllNotifsRead()">Mark all read</button>
+    </div>
+    <div class="notif-list" id="notifList">
+      <div class="notif-empty">No notifications yet</div>
+    </div>
+  </div>
+  <div class="nav-icon" onclick="toggleTheme()" title="Toggle theme" style="margin-left:8px;">
     <span id="themeIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
   </div>
   <div id="authTrigger" class="nav-icon" onclick="toggleAuthDropdown()" title="Account" style="margin-left:8px;">
@@ -732,7 +993,31 @@
   </div>
 </nav>
 
-<!-- HOME -->
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-bottom-nav" id="mobileBottomNav">
+  <div class="mbn-item active" id="mbn-home" onclick="goTo('home')">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span class="mbn-label">Home</span>
+  </div>
+  <div class="mbn-item" id="mbn-forum" onclick="goTo('forum')">
+    <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span class="mbn-label">Forum</span>
+  </div>
+  <div class="mbn-item" id="mbn-messages" onclick="goTo('messages')">
+    <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    <span class="mbn-label">Messages</span>
+    <div class="mbn-badge" id="mbnMsgBadge"></div>
+  </div>
+  <div class="mbn-item" id="mbn-notif" onclick="toggleNotifPanel()">
+    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span class="mbn-label">Notifs</span>
+    <div class="mbn-badge" id="mbnNotifBadge"></div>
+  </div>
+  <div class="mbn-item" id="mbn-profile" onclick="currentUser ? toggleProfileMenu() : toggleAuthDropdown()">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span class="mbn-label" id="mbnProfileLabel">Profile</span>
+  </div>
+</nav>
 <div class="page active" id="page-home">
   <div class="hero">
     <h1>One place.<br>Endless possibilities.</h1>
@@ -1364,6 +1649,14 @@ function applySession() {
     const addNewsBtn=document.getElementById('addNewsBtn');
     if(addNewsBtn) addNewsBtn.style.display=isOwner?'inline-block':'none';
 
+    // ── Notification bell ──
+    const bell=document.getElementById('notifBell');
+    if(bell) bell.style.display='flex';
+
+    // ── Mobile bottom nav profile label ──
+    const mbnLabel=document.getElementById('mbnProfileLabel');
+    if(mbnLabel) mbnLabel.textContent=displayLabel.slice(0,8);
+
     // ── Online status dot ──
     const privacyShowMyDot=localStorage.getItem('qode-privacy-myDot');
     const showDot=privacyShowMyDot===null||privacyShowMyDot==='true';
@@ -1384,6 +1677,10 @@ function applySession() {
     if(btn) btn.style.display='none';
     const addNewsBtn=document.getElementById('addNewsBtn');
     if(addNewsBtn) addNewsBtn.style.display='none';
+    const bell=document.getElementById('notifBell');
+    if(bell) bell.style.display='none';
+    const mbnLabel=document.getElementById('mbnProfileLabel');
+    if(mbnLabel) mbnLabel.textContent='Profile';
     const dot=document.getElementById('profileStatusDot');
     if(dot){ dot.classList.remove('online'); }
   }
@@ -1396,8 +1693,12 @@ function goTo(page) {
   document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
   const map={home:'nav-news',forum:'nav-forum',messages:'nav-messages',about:'nav-about'};
   if(map[page]) document.getElementById(map[page]).classList.add('active');
+  // Sync mobile bottom nav
+  document.querySelectorAll('.mbn-item').forEach(el=>el.classList.remove('active'));
+  const mbnMap={home:'mbn-home',forum:'mbn-forum',messages:'mbn-messages',about:'mbn-about'};
+  if(mbnMap[page]){const el=document.getElementById(mbnMap[page]);if(el)el.classList.add('active');}
   if(page==='forum'){buildForumSidebar();buildForumSubSidebar();loadForumMessages(activeForum);}
-  if(page==='messages'){loadDMList();}
+  if(page==='messages'){loadDMList();clearUnreadFrom(null);} // mark all read when opening messages
   localStorage.setItem('qode-page', page);
 }
 function toggleTheme(){
@@ -2051,20 +2352,27 @@ function renderDMList() {
   if(!currentUser){entries.innerHTML='<div style="padding:16px;font-size:12px;color:var(--text-light);">Log in to message users.</div>';return;}
   if(allProfiles.length===0){entries.innerHTML='<div style="padding:16px;font-size:12px;color:var(--text-light);">No other users yet.</div>';return;}
   allProfiles.forEach(u=>{
-    // Consider online if last_seen within 3 minutes
-    const lastSeen=u.last_seen?new Date(u.last_seen):null;
-    const isOnline=lastSeen&&(Date.now()-lastSeen.getTime()<3*60*1000);
-    const statusClass=isOnline?'online':'';
+    const online = isUserOnline(u);
+    const unreadCount = unreadByUser[u.id]||0;
     const el=document.createElement('div');
-    el.className='dm-entry'+(activeDMUser?.id===u.id?' active':'');
-    el.onclick=()=>openDM(u);
-    el.innerHTML=`<div class="dm-avatar" style="background:${stringToColor(u.username)}">${u.username.slice(0,2).toUpperCase()}<div class="dm-status ${statusClass}"></div></div><div class="dm-info"><div class="dm-name">${u.username}${isOnline?'<span class="online-badge" style="margin-left:6px;"><span class="online-dot"></span>online</span>':''}</div><div class="dm-preview">Click to start chatting</div></div>`;
+    el.className='dm-entry'+(activeDMUser?.id===u.id?' active':'')+(unreadCount>0?' has-unread':'');
+    el.dataset.uid=u.id;
+    el.onclick=()=>{ clearUnreadFrom(u.id); openDM(u); };
+    const unreadPill=unreadCount>0?`<div class="dm-unread-pill">${unreadCount>9?'9+':unreadCount}</div>`:'';
+    el.innerHTML=`
+      <div class="dm-avatar" style="background:${stringToColor(u.username)}">${u.username.slice(0,2).toUpperCase()}<div class="dm-status${online?' online':''}"></div></div>
+      <div class="dm-info">
+        <div class="dm-name">${u.username}${online?'<span class="online-badge" style="margin-left:6px;font-size:9px;"><span class="online-dot"></span>online</span>':''}</div>
+        <div class="dm-preview">${online?'Active now':fmtLastSeen(u)}</div>
+      </div>
+      ${unreadPill}`;
     entries.appendChild(el);
   });
 }
 
 async function openDM(profile) {
   activeDMUser=profile;
+  clearUnreadFrom(profile.id);
   document.getElementById('dmPlaceholder').style.display='none';
   const convo=document.getElementById('dmConvo');
   convo.style.display='flex';
@@ -2072,13 +2380,12 @@ async function openDM(profile) {
   av.textContent=profile.username.slice(0,2).toUpperCase();
   av.style.background=stringToColor(profile.username);
   document.getElementById('dmHeaderName').textContent=profile.username;
-  // Show online status in DM header
-  const lastSeen=profile.last_seen?new Date(profile.last_seen):null;
-  const isOnline=lastSeen&&(Date.now()-lastSeen.getTime()<3*60*1000);
+  // Show online status in DM header using shared helpers
+  const online=isUserOnline(profile);
   const dot=document.getElementById('dmOnlineDot');
   const status=document.getElementById('dmHeaderStatus');
-  if(dot){ dot.style.display=isOnline?'inline-block':'none'; }
-  if(status){ status.textContent=isOnline?'online':lastSeen?'last seen '+fmtTime(lastSeen.toISOString()):'offline'; }
+  if(dot){ dot.style.display=online?'inline-block':'none'; }
+  if(status){ status.textContent=fmtLastSeen(profile); }
   document.getElementById('dmInput').placeholder='Message '+profile.username+'...';
   renderDMList();
   await loadDMMessages(profile.id);
@@ -2120,6 +2427,15 @@ function subscribeToDMs(otherId) {
           const m=payload.new;
           if((m.sender_id===currentUser.id&&m.receiver_id===otherId)||(m.sender_id===otherId&&m.receiver_id===currentUser.id)){
             appendDMMsg(m);
+            // If the message is FROM the other person (not me), fire a notification
+            if(m.sender_id!==currentUser.id){
+              // Only add notification if we're NOT currently on messages page looking at this convo
+              const onMsgPage=document.getElementById('page-messages').classList.contains('active');
+              const lookingAtThem=activeDMUser&&activeDMUser.id===m.sender_id;
+              if(!onMsgPage||!lookingAtThem){
+                addNotification(m.sender_username, m.sender_id, m.content);
+              }
+            }
           }
         })
       .subscribe((status,err)=>{
@@ -2487,7 +2803,10 @@ function openDynamicArticle(a) {
 // ─── CLICK OUTSIDE ───
 document.addEventListener('click',e=>{
   if(!e.target.closest('#authDropdown')&&!e.target.closest('#authTrigger')) document.getElementById('authDropdown').classList.remove('open');
-  if(!e.target.closest('#profileMenu')&&!e.target.closest('#profilePill')) document.getElementById('profileMenu').classList.remove('open');
+  if(!e.target.closest('#profileMenu')&&!e.target.closest('#profilePill')&&!e.target.closest('.mbn-item:last-child')) document.getElementById('profileMenu').classList.remove('open');
+  if(!e.target.closest('#notifPanel')&&!e.target.closest('#notifBell')&&!e.target.closest('#mbn-notif')){
+    const p=document.getElementById('notifPanel'); if(p) p.classList.remove('open');
+  }
 });
 
 // ─── PROFILE LOADER (with timeout + retry) ───
@@ -2549,8 +2868,10 @@ sb.auth.onAuthStateChange(async (event, session) => {
     buildForumSidebar(); buildForumSubSidebar();
     if(document.getElementById('page-forum').classList.contains('active')) switchForum(activeForum);
     if(document.getElementById('page-messages').classList.contains('active')) loadDMList();
+    startProfileStatusPolling();
   } else {
     currentUser = null; currentProfile = null;
+    if(profilePollTimer){ clearInterval(profilePollTimer); profilePollTimer=null; }
     applySession();
     buildForumSidebar(); buildForumSubSidebar();
   }
@@ -2591,7 +2912,195 @@ subscribeToForum(activeChannel || activeForum);
 // Load dynamic news from Supabase (falls back to hardcoded if table empty)
 loadNewsArticles();
 
-// ─── ONLINE HEARTBEAT ─────────────────────────────────────────────────────
+// ─── NOTIFICATIONS & UNREAD ──────────────────────────────────────────────────
+let notifications = []; // {id, from, fromId, preview, ts, read, type}
+let unreadByUser = {};  // { userId: count }
+
+function addNotification(fromUsername, fromId, preview, type='dm') {
+  const id = Date.now()+Math.random();
+  notifications.unshift({id, from:fromUsername, fromId, preview, ts:new Date(), read:false, type});
+  if(notifications.length > 50) notifications.pop();
+  // Track unread per user
+  unreadByUser[fromId] = (unreadByUser[fromId]||0) + 1;
+  updateNotifBadge();
+  updateDMUnreadBadges();
+}
+
+function updateNotifBadge() {
+  const unread = notifications.filter(n=>!n.read).length;
+  const countEl = document.getElementById('notifCount');
+  const mbnBadge = document.getElementById('mbnNotifBadge');
+  const msgBadge = document.getElementById('mbnMsgBadge');
+  const totalDMUnread = Object.values(unreadByUser).reduce((a,b)=>a+b,0);
+
+  if(countEl) {
+    if(unread > 0){ countEl.textContent=unread>9?'9+':unread; countEl.classList.add('show'); }
+    else { countEl.classList.remove('show'); }
+  }
+  if(mbnBadge) {
+    if(unread > 0){ mbnBadge.textContent=unread>9?'9+':unread; mbnBadge.classList.add('show'); }
+    else { mbnBadge.classList.remove('show'); }
+  }
+  if(msgBadge) {
+    if(totalDMUnread > 0){ msgBadge.textContent=totalDMUnread>9?'9+':totalDMUnread; msgBadge.classList.add('show'); }
+    else { msgBadge.classList.remove('show'); }
+  }
+}
+
+function updateDMUnreadBadges() {
+  document.querySelectorAll('.dm-entry').forEach(el=>{
+    const uid = el.dataset.uid;
+    if(!uid) return;
+    const count = unreadByUser[uid]||0;
+    el.classList.toggle('has-unread', count > 0);
+    let pill = el.querySelector('.dm-unread-pill');
+    if(count > 0) {
+      if(!pill){ pill=document.createElement('div'); pill.className='dm-unread-pill'; el.appendChild(pill); }
+      pill.textContent = count > 9 ? '9+' : count;
+    } else if(pill) { pill.remove(); }
+  });
+}
+
+function renderNotifPanel() {
+  const list = document.getElementById('notifList');
+  if(!list) return;
+  if(notifications.length === 0){
+    list.innerHTML='<div class="notif-empty">No notifications yet</div>';
+    return;
+  }
+  list.innerHTML='';
+  notifications.forEach(n=>{
+    const el=document.createElement('div');
+    el.className='notif-item'+(n.read?'':' unread');
+    el.innerHTML=`
+      <div class="notif-avatar" style="background:${stringToColor(n.from)}">${n.from.slice(0,2).toUpperCase()}</div>
+      <div class="notif-text">
+        <div class="notif-name">${n.from}</div>
+        <div class="notif-preview">${n.preview.replace(/</g,'&lt;')}</div>
+      </div>
+      <div class="notif-time">${fmtTime(n.ts.toISOString())}</div>`;
+    el.onclick=()=>{
+      n.read=true;
+      const profile=allProfiles.find(p=>p.id===n.fromId);
+      if(profile){ goTo('messages'); openDM(profile); }
+      document.getElementById('notifPanel').classList.remove('open');
+      updateNotifBadge();
+      renderNotifPanel();
+    };
+    list.appendChild(el);
+  });
+}
+
+function markAllNotifsRead() {
+  notifications.forEach(n=>n.read=true);
+  unreadByUser={};
+  updateNotifBadge();
+  updateDMUnreadBadges();
+  renderNotifPanel();
+}
+
+function clearUnreadFrom(userId) {
+  // Called when opening a DM conversation — clear that user's unreads
+  if(userId===null){ unreadByUser={}; }
+  else { delete unreadByUser[userId]; }
+  notifications.filter(n=>userId===null||n.fromId===userId).forEach(n=>n.read=true);
+  updateNotifBadge();
+  updateDMUnreadBadges();
+}
+
+function toggleNotifPanel() {
+  const panel=document.getElementById('notifPanel');
+  if(!panel) return;
+  const isOpen=panel.classList.contains('open');
+  // Close all other dropdowns
+  document.getElementById('authDropdown').classList.remove('open');
+  document.getElementById('profileMenu').classList.remove('open');
+  if(!isOpen){
+    renderNotifPanel();
+    panel.classList.add('open');
+  } else {
+    panel.classList.remove('open');
+  }
+}
+
+// ─── ONLINE / OFFLINE DETECTION ──────────────────────────────────────────────
+// Threshold: if last_seen < 2 minutes ago → online, else → offline.
+// Heartbeat fires every 60s (was 90s) to keep the window tight.
+const ONLINE_THRESHOLD_MS = 2 * 60 * 1000; // 2 minutes
+
+function isUserOnline(profile) {
+  if(!profile || !profile.last_seen) return false;
+  return (Date.now() - new Date(profile.last_seen).getTime()) < ONLINE_THRESHOLD_MS;
+}
+
+function fmtLastSeen(profile) {
+  if(!profile.last_seen) return 'never online';
+  const diff = Date.now() - new Date(profile.last_seen).getTime();
+  if(diff < ONLINE_THRESHOLD_MS) return 'online';
+  if(diff < 60000) return 'just now';
+  if(diff < 3600000) return Math.floor(diff/60000)+'m ago';
+  if(diff < 86400000) return Math.floor(diff/3600000)+'h ago';
+  return Math.floor(diff/86400000)+'d ago';
+}
+
+// Poll profiles every 30s to refresh online status across the app
+let profilePollTimer = null;
+function startProfileStatusPolling() {
+  if(profilePollTimer) clearInterval(profilePollTimer);
+  profilePollTimer = setInterval(async () => {
+    if(!currentUser || !allProfiles.length) return;
+    const ids = allProfiles.map(p=>p.id);
+    const {data} = await sb.from('profiles').select('id,last_seen').in('id', ids);
+    if(!data) return;
+    // Update cached profiles
+    data.forEach(fresh=>{
+      const p = allProfiles.find(x=>x.id===fresh.id);
+      if(p) p.last_seen = fresh.last_seen;
+    });
+    // Update open DM header if active
+    if(activeDMUser){
+      const fresh = allProfiles.find(x=>x.id===activeDMUser.id);
+      if(fresh){
+        const online = isUserOnline(fresh);
+        const dot=document.getElementById('dmOnlineDot');
+        const status=document.getElementById('dmHeaderStatus');
+        if(dot) dot.style.display=online?'inline-block':'none';
+        if(status) status.textContent=fmtLastSeen(fresh);
+      }
+    }
+    // Re-render DM list dots
+    document.querySelectorAll('.dm-entry').forEach(el=>{
+      const uid=el.dataset.uid;
+      if(!uid) return;
+      const p=allProfiles.find(x=>x.id===uid);
+      if(!p) return;
+      const statusDot=el.querySelector('.dm-status');
+      if(statusDot) statusDot.className='dm-status'+(isUserOnline(p)?' online':'');
+    });
+  }, 30000);
+}
+
+// Page visibility — update last_seen when user comes back to tab
+document.addEventListener('visibilitychange', async () => {
+  if(!currentUser || !currentProfile || currentProfile.is_banned) return;
+  if(document.visibilityState === 'visible') {
+    const showOnline = localStorage.getItem('qode-privacy-showOnline');
+    if(showOnline !== 'false') {
+      await sb.from('profiles').update({last_seen: new Date().toISOString()}).eq('id', currentUser.id);
+    }
+  }
+});
+
+// beforeunload — best-effort mark offline (can't await, but fires the request)
+window.addEventListener('beforeunload', () => {
+  if(!currentUser || !currentProfile) return;
+  const showOnline = localStorage.getItem('qode-privacy-showOnline');
+  if(showOnline === 'false') return;
+  // Set last_seen to 10 minutes in the past so they appear offline immediately
+  const offlineTime = new Date(Date.now() - ONLINE_THRESHOLD_MS - 1000).toISOString();
+  navigator.sendBeacon && navigator.sendBeacon('', ''); // keep-alive trick
+  sb.from('profiles').update({last_seen: offlineTime}).eq('id', currentUser.id);
+});
 // Updates last_seen every 90s so other users see accurate online status.
 // Respects privacy setting: if user opted out, we skip the update.
 setInterval(async () => {
