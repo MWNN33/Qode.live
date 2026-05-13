@@ -160,8 +160,13 @@
   .dm-entry:hover { background: var(--bg-card); }
   .dm-entry.active { background: var(--bg-card); border-left-color: var(--accent); }
   .dm-avatar { width: 32px; height: 32px; border-radius: 50%; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; }
-  .dm-status { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--bg); background: #95a5a6; }
+  .dm-status { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--bg); background: #6b7280; transition: background 0.3s; }
   .dm-status.online { background: var(--online); }
+  .dm-status.online::after { content:''; position:absolute; inset:-2px; border-radius:50%; background:var(--online); opacity:0.4; animation:pulse-ring 2s ease-out infinite; }
+  @keyframes pulse-ring { 0%{transform:scale(1);opacity:0.4} 70%{transform:scale(1.9);opacity:0} 100%{transform:scale(1.9);opacity:0} }
+  .online-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; color:var(--online); }
+  .online-dot { width:6px; height:6px; border-radius:50%; background:var(--online); display:inline-block; }
+  body.dark .dm-status { border-color: var(--bg); }
   .dm-info { flex: 1; overflow: hidden; }
   .dm-name { font-size: 12px; font-weight: 700; color: var(--text); }
   .dm-preview { font-size: 11px; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -263,6 +268,7 @@
   body.dark .auth-btn.secondary { color: var(--text); }
   body.dark .send-btn, body.dark [onclick*="sendMsg"], body.dark [onclick*="sendDM"],
   body.dark [onclick*="submit"], body.dark [onclick*="publish"] { color: #fff; }
+  body.dark nav {
     background: rgba(14,17,23,0.92);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
@@ -473,7 +479,72 @@
   .otp-input { flex:1; }
 
   ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-  @media (max-width: 700px) { .home-grid { grid-template-columns: 1fr; } .hero { padding: 36px 20px 28px; } .hero h1 { font-size: 36px; } .about-wrap { width: 100%; padding: 24px 16px; } .forum-sub-sidebar { width: 150px; } .dm-list { width: 170px; } }
+  /* ── TOGGLE SWITCH ─────────────────────── */
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
+  .toggle-row:last-child { border-bottom:none; }
+  .toggle-label { font-size:13px; font-weight:600; color:var(--text); }
+  .toggle-sub { font-size:11px; color:var(--text-light); margin-top:2px; }
+  .toggle { position:relative; width:40px; height:22px; flex-shrink:0; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; inset:0; background:var(--border-hi,#ccc); border-radius:22px; cursor:pointer; transition:background 0.2s; }
+  .toggle-slider::before { content:''; position:absolute; width:16px; height:16px; left:3px; top:3px; background:#fff; border-radius:50%; transition:transform 0.2s; }
+  .toggle input:checked + .toggle-slider { background:var(--accent); }
+  .toggle input:checked + .toggle-slider::before { transform:translateX(18px); }
+
+  /* ── BANNED OVERLAY ─────────────────────── */
+  body.banned .chat-input, body.banned .photo-upload-zone,
+  body.banned #newPostBtn, body.banned .send-btn,
+  body.banned .vote-btn, body.banned .photo-action-btn { opacity:0.4; pointer-events:none; cursor:not-allowed; }
+  .banned-banner { display:none; background:#e74c3c; color:#fff; text-align:center; font-size:12px; font-weight:700; padding:8px; letter-spacing:0.05em; position:fixed; top:var(--nav-h); left:0; right:0; z-index:500; }
+  body.banned .banned-banner { display:block; }
+
+  /* ── MOBILE ─────────────────────────────── */
+  @media (max-width:700px) {
+    nav { padding:0 12px; gap:8px; }
+    .nav-links { display:none; }
+    .logo { font-size:18px; }
+    .hero { padding:28px 16px 20px; }
+    .hero h1 { font-size:28px; }
+    .home-grid { grid-template-columns:1fr; gap:16px; padding:16px; }
+    .home-col { min-width:0; }
+    .news-card { grid-template-columns:90px 1fr; }
+    .news-img { width:90px; height:110px; font-size:24px; }
+    .forum-grid { grid-template-columns:repeat(2,1fr); }
+
+    /* Forum shell */
+    .chat-shell { flex-direction:column; height:calc(100vh - var(--nav-h) - 36px); }
+    .chat-sidebar { width:100% !important; height:48px; flex-direction:row; border-right:none; border-bottom:1px solid var(--border); padding:6px 10px; overflow-x:auto; overflow-y:hidden; justify-content:flex-start; gap:8px; }
+    .side-sep { display:none; }
+    .forum-circle { width:32px; height:32px; font-size:14px; }
+    .forum-sub-sidebar { width:100% !important; height:44px; flex-direction:row; border-right:none; border-bottom:1px solid var(--border); overflow-x:auto; overflow-y:hidden; padding:0 10px; }
+    .forum-cat-header { display:none; }
+    .forum-cat-item { white-space:nowrap; border-left:none !important; border-bottom:3px solid transparent; padding:0 12px; height:44px; line-height:44px; border-radius:0; }
+    .forum-cat-item.active { border-bottom-color:var(--accent); background:transparent; }
+    .forum-chat-area { flex:1; min-height:0; }
+
+    /* DM */
+    .dm-shell { flex-direction:column; }
+    .dm-list { width:100% !important; height:auto; max-height:44px; flex-direction:row; border-right:none; border-bottom:1px solid var(--border); overflow-x:auto; overflow-y:hidden; }
+    .dm-list-header { display:none; }
+    .dm-entry { padding:8px 12px; white-space:nowrap; border-left:none !important; border-bottom:3px solid transparent; }
+    .dm-entry.active { border-bottom-color:var(--accent); background:transparent; }
+    .dm-info { display:none; }
+    .dm-area { flex:1; min-height:0; }
+
+    /* Owner / settings modals */
+    .owner-box, .settings-box { width:100% !important; max-width:100% !important; max-height:100dvh !important; border-radius:0; }
+    .owner-modal, .settings-modal { align-items:flex-end; }
+    .owner-tabs { overflow-x:auto; }
+    .owner-tab { font-size:9px; padding:10px 6px; white-space:nowrap; }
+    .stab { font-size:9px; padding:10px 4px; }
+    .user-row-actions { flex-direction:column; gap:3px; }
+    .action-btn { font-size:9px; padding:4px 7px; }
+  }
+  @media (max-width:400px) {
+    .forum-grid { grid-template-columns:1fr 1fr; }
+    .news-card { grid-template-columns:1fr; }
+    .news-img { width:100%; height:80px; }
+  }
 
   /* ── Owner Panel ─────────────────────── */
   .owner-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:950; align-items:center; justify-content:center; }
@@ -506,11 +577,60 @@
   /* Settings tabs */
   .stab { flex:1; padding:11px 8px; text-align:center; font-size:11px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; cursor:pointer; color:var(--text-muted); background:var(--bg-card); border:none; font-family:'Kanit',sans-serif; transition:background 0.15s; }
   .stab.active { background:var(--bg); color:var(--text); border-bottom:2px solid var(--accent); }
+
+  /* Online/Offline status badge on profile pill */
+  .profile-status-dot { width:8px; height:8px; border-radius:50%; background:#6b7280; border:2px solid var(--bg-card); margin-left:2px; flex-shrink:0; transition:background 0.3s; }
+  .profile-status-dot.online { background:var(--online); }
+
+  /* Banned overlay — covers entire page when user is banned */
+  #bannedOverlay { display:none; position:fixed; inset:0; z-index:9999; background:rgba(12,30,48,0.96); align-items:center; justify-content:center; flex-direction:column; gap:16px; }
+  #bannedOverlay.active { display:flex; }
+  .banned-box { background:var(--bg); border:2px solid var(--danger); border-radius:16px; padding:40px 48px; text-align:center; max-width:440px; width:90%; box-shadow:0 16px 60px rgba(0,0,0,0.5); }
+  .banned-icon { font-size:56px; margin-bottom:12px; }
+  .banned-title { font-size:22px; font-weight:700; color:var(--danger); margin-bottom:10px; }
+  .banned-sub { font-size:14px; color:var(--text-muted); line-height:1.7; margin-bottom:20px; }
+  .banned-logout { padding:10px 28px; background:var(--danger); color:#fff; border:none; border-radius:8px; font-family:'Kanit',sans-serif; font-size:13px; font-weight:700; cursor:pointer; letter-spacing:0.05em; transition:background 0.15s; }
+  .banned-logout:hover { background:#c0392b; }
+
+  /* Toggle switch for settings — uses .toggle-switch + .toggle-track */
+  .toggle-switch { position:relative; width:40px; height:22px; flex-shrink:0; }
+  .toggle-switch input { opacity:0; width:0; height:0; }
+  .toggle-track { position:absolute; inset:0; background:var(--border); border-radius:22px; cursor:pointer; transition:background 0.2s; }
+  .toggle-switch input:checked + .toggle-track { background:var(--accent); }
+  .toggle-track::before { content:''; position:absolute; width:16px; height:16px; left:3px; top:3px; background:#fff; border-radius:50%; transition:transform 0.2s; }
+  .toggle-switch input:checked + .toggle-track::before { transform:translateX(18px); }
+
+  /* Password change section */
+  .settings-section-title { font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-light); margin:16px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+  .settings-section-title:first-child { margin-top:0; }
+
+  /* Owner panel — photos tab */
+  .owner-photo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-top:10px; }
+  .owner-photo-item { position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--border); background:var(--bg-card); aspect-ratio:1; }
+  .owner-photo-item img { width:100%; height:100%; object-fit:cover; display:block; }
+  .owner-photo-item .photo-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:32px; }
+  .owner-photo-del { position:absolute; top:6px; right:6px; width:26px; height:26px; border-radius:50%; background:rgba(231,76,60,0.9); border:none; color:#fff; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.15s; }
+  .owner-photo-del:hover { background:#c0392b; }
+  .owner-photo-caption { padding:6px 8px; font-size:10px; font-weight:600; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  /* News edit form in owner panel */
+  .news-edit-form { background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:14px; margin-top:8px; display:none; flex-direction:column; gap:8px; }
+  .news-edit-form.open { display:flex; }
 </style>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
+
+<!-- BANNED OVERLAY — blocks all interaction when user is banned -->
+<div id="bannedOverlay">
+  <div class="banned-box">
+    <div class="banned-icon">⛔</div>
+    <div class="banned-title">Account Banned</div>
+    <div class="banned-sub">Your account has been banned by an administrator. You cannot access QODE while this restriction is active. If you believe this is a mistake, please contact support.</div>
+    <button class="banned-logout" onclick="doLogout()">Log Out</button>
+  </div>
+</div>
 
 <nav>
   <span class="logo" onclick="goTo('home')">QODE</span>
@@ -530,6 +650,7 @@
   <div id="profilePill" class="profile-pill" onclick="toggleProfileMenu()" style="display:none;">
     <div class="profile-avatar" id="profileAvatar">?</div>
     <span class="profile-name" id="profileName">User</span>
+    <div class="profile-status-dot" id="profileStatusDot"></div>
   </div>
 
   <div class="auth-dropdown" id="authDropdown">
@@ -621,7 +742,7 @@
     <div class="home-col">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
         <span class="section-label" style="margin-bottom:0;">Tech News Around The World</span>
-        <button class="auth-btn" style="width:auto;padding:6px 14px;font-size:11px;margin:0;" onclick="openNewsUploadModal()">+ Add News</button>
+        <button id="addNewsBtn" class="auth-btn" style="width:auto;padding:6px 14px;font-size:11px;margin:0;display:none;" onclick="openNewsUploadModal()">+ Add News</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;" id="newsCardList">
         <div class="news-card" onclick="openArticle(0)"><div class="news-img">📰</div><div class="news-body"><div class="news-title">Donald J. Trump was shot</div><span class="news-date">July 13, 2024 · USA</span><p class="news-text">The candidate dives to the rostrum after an assassin's bullet grazes his ear.</p></div></div>
@@ -673,7 +794,7 @@
   <div class="about-wrap">
     <span class="section-label">About Us</span>
     <div class="about-card">
-      <p><strong>QODE</strong> was born from a simple idea —<br>that tech doesn't have to be cold or complicated.<br>It can have a soul, energy, and connection.</p>
+      <p><strong>QODE</strong> was born from a simple idea —<br>that tech doesn't have to be cold or complicated.<br>It can have soul, energy, and connection.</p>
       <p>This is a place for builders, dreamers, and creators.<br>For those who see beauty in clean code and bold design.</p>
       <p><strong>QODE</strong> isn't just another tech hub — it's an ecosystem.<br>A mix of news, forums, and tools crafted to spark creativity.</p>
       <p>Welcome to <strong>QODE</strong> —<br>where every line of code carries a bit of your own aura.</p>
@@ -842,8 +963,10 @@
       <button class="modal-close" onclick="closeSettings()">✕</button>
     </div>
     <!-- Tabs -->
-    <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0;">
+    <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;">
       <button class="stab active" id="stab-profile" onclick="switchSettingsTab('profile')">👤 Profile</button>
+      <button class="stab" id="stab-password" onclick="switchSettingsTab('password')">🔒 Password</button>
+      <button class="stab" id="stab-privacy" onclick="switchSettingsTab('privacy')">🕵️ Privacy</button>
       <button class="stab" id="stab-forums" onclick="switchSettingsTab('forums')">💬 Forums</button>
     </div>
     <div class="settings-body">
@@ -862,6 +985,49 @@
         <div class="auth-error" id="settingsProfileError" style="margin-top:8px;"></div>
         <div class="auth-success" id="settingsProfileSuccess" style="display:none;margin-top:8px;"></div>
         <button class="auth-btn" style="margin-top:12px;" onclick="saveProfileSettings()">Save Profile</button>
+      </div>
+      <!-- PASSWORD TAB -->
+      <div id="settings-password-tab" style="display:none;">
+        <div class="settings-section-title">Change Password</div>
+        <p style="font-size:12px;color:var(--text-light);margin-bottom:14px;">Enter a new password for your account. You will remain logged in after changing it.</p>
+        <div style="margin-bottom:12px;">
+          <label class="auth-label">New Password</label>
+          <input class="auth-input" id="newPassword" type="password" placeholder="min. 6 characters" oninput="validateNewPass()">
+          <span class="field-hint" id="hintNewPass"></span>
+        </div>
+        <div style="margin-bottom:4px;">
+          <label class="auth-label">Confirm New Password</label>
+          <input class="auth-input" id="newPassword2" type="password" placeholder="repeat new password">
+          <span class="field-hint" id="hintNewPass2"></span>
+        </div>
+        <div class="auth-error" id="passChangeError" style="margin-top:8px;display:none;"></div>
+        <div class="auth-success" id="passChangeSuccess" style="display:none;margin-top:8px;"></div>
+        <button class="auth-btn" style="margin-top:12px;" id="changePassBtn" onclick="changePassword()">Update Password</button>
+      </div>
+      <!-- PRIVACY TAB -->
+      <div id="settings-privacy-tab" style="display:none;">
+        <div class="settings-section-title">Privacy & Display</div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Show Online Status</div>
+            <div class="toggle-sub">Let others see when you are online</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="privacyShowOnline" checked onchange="savePrivacySettings()">
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Show My Status Indicator</div>
+            <div class="toggle-sub">Display the online dot on your profile pill in the nav bar</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="privacyShowMyDot" checked onchange="savePrivacySettings()">
+            <div class="toggle-track"></div>
+          </label>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--text-light);">Privacy settings are stored locally on this device.</div>
       </div>
       <!-- FORUMS TAB -->
       <div id="settings-forums-tab" style="display:none;">
@@ -884,6 +1050,7 @@
     <div class="owner-tabs">
       <button class="owner-tab active" id="otab-users" onclick="switchOwnerTab('users')">👥 Users</button>
       <button class="owner-tab" id="otab-news" onclick="switchOwnerTab('news')">📰 News</button>
+      <button class="owner-tab" id="otab-photos" onclick="switchOwnerTab('photos')">🖼 Photos</button>
       <button class="owner-tab" id="otab-channels" onclick="switchOwnerTab('channels')">📢 Channels</button>
     </div>
     <div class="owner-content" id="ownerContent">
@@ -1166,21 +1333,59 @@ async function verifyPhoneOTP() {
 }
 
 function applySession() {
+  const bannedOverlay = document.getElementById('bannedOverlay');
   if(currentUser && currentProfile) {
+    // ── BANNED: block everything ──
+    if(currentProfile.is_banned) {
+      bannedOverlay.classList.add('active');
+      document.getElementById('authTrigger').style.display='none';
+      document.getElementById('profilePill').style.display='none';
+      // Hide nav links for banned users
+      document.querySelectorAll('.nav-links a').forEach(a=>a.style.pointerEvents='none');
+      return;
+    } else {
+      bannedOverlay.classList.remove('active');
+      document.querySelectorAll('.nav-links a').forEach(a=>a.style.pointerEvents='');
+    }
     document.getElementById('authTrigger').style.display='none';
     document.getElementById('profilePill').style.display='flex';
     const displayLabel = currentProfile.display_name || currentProfile.username;
     document.getElementById('profileAvatar').textContent=displayLabel.slice(0,2).toUpperCase();
     document.getElementById('profileName').textContent=displayLabel;
-    // Show owner panel button if owner
-    const isOwner = currentProfile.username===OWNER_USERNAME || currentProfile.role==='owner';
+
+    // ── OWNER: only via database role check (not client-side username match alone) ──
+    // We check both: username must match OWNER_USERNAME AND role must be 'owner' in DB
+    // This prevents anyone just setting their username to OWNER_USERNAME from gaining access
+    const isOwner = currentProfile.role === 'owner';
     const btn=document.getElementById('ownerPanelBtn');
     if(btn) btn.style.display=isOwner?'block':'none';
+
+    // ── Add News button: owner only ──
+    const addNewsBtn=document.getElementById('addNewsBtn');
+    if(addNewsBtn) addNewsBtn.style.display=isOwner?'inline-block':'none';
+
+    // ── Online status dot ──
+    const privacyShowMyDot=localStorage.getItem('qode-privacy-myDot');
+    const showDot=privacyShowMyDot===null||privacyShowMyDot==='true';
+    const dot=document.getElementById('profileStatusDot');
+    if(dot){ dot.style.display=showDot?'block':'none'; dot.classList.add('online'); }
+
+    // ── Broadcast online presence to DB (non-blocking) ──
+    const showOnline=localStorage.getItem('qode-privacy-showOnline');
+    if(showOnline===null||showOnline==='true'){
+      sb.from('profiles').update({last_seen: new Date().toISOString()}).eq('id',currentUser.id).then(()=>{});
+    }
   } else {
+    bannedOverlay.classList.remove('active');
+    document.querySelectorAll('.nav-links a').forEach(a=>a.style.pointerEvents='');
     document.getElementById('authTrigger').style.display='flex';
     document.getElementById('profilePill').style.display='none';
     const btn=document.getElementById('ownerPanelBtn');
     if(btn) btn.style.display='none';
+    const addNewsBtn=document.getElementById('addNewsBtn');
+    if(addNewsBtn) addNewsBtn.style.display='none';
+    const dot=document.getElementById('profileStatusDot');
+    if(dot){ dot.classList.remove('online'); }
   }
 }
 
@@ -1268,7 +1473,10 @@ function switchSettingsTab(tab) {
   const t=document.getElementById('stab-'+tab);
   if(t)t.classList.add('active');
   document.getElementById('settings-profile-tab').style.display=tab==='profile'?'block':'none';
+  document.getElementById('settings-password-tab').style.display=tab==='password'?'block':'none';
+  document.getElementById('settings-privacy-tab').style.display=tab==='privacy'?'block':'none';
   document.getElementById('settings-forums-tab').style.display=tab==='forums'?'block':'none';
+  if(tab==='privacy') loadPrivacySettings();
 }
 
 function openSettings(){
@@ -1280,6 +1488,13 @@ function openSettings(){
   document.getElementById('settingsProfileError').style.display='none';
   const okEl=document.getElementById('settingsProfileSuccess');
   if(okEl){okEl.style.display='none';}
+  // Reset password tab
+  document.getElementById('newPassword').value='';
+  document.getElementById('newPassword2').value='';
+  document.getElementById('hintNewPass').className='field-hint';
+  document.getElementById('hintNewPass2').className='field-hint';
+  document.getElementById('passChangeError').style.display='none';
+  document.getElementById('passChangeSuccess').style.display='none';
   switchSettingsTab('profile');
   buildSettingsCatGrid();
   document.getElementById('settingsModal').classList.add('open');
@@ -1321,10 +1536,70 @@ async function saveProfileSettings() {
   if(okEl){okEl.textContent='Profile updated ✓';okEl.style.display='block';setTimeout(()=>{okEl.style.display='none';},2200);}
 }
 
+// ─── PASSWORD CHANGE ───
+function validateNewPass() {
+  const v=document.getElementById('newPassword').value;
+  const h=document.getElementById('hintNewPass');
+  const i=document.getElementById('newPassword');
+  if(!v){h.className='field-hint';return false;}
+  if(v.length<6){h.className='field-hint show err';h.textContent='At least 6 characters.';i.classList.add('error');return false;}
+  const s=v.length>=12&&/[^a-zA-Z0-9]/.test(v)?'Strong':v.length>=8?'Good':'Weak';
+  h.className='field-hint show ok';h.textContent='✓ '+s+' password';i.classList.remove('error');return true;
+}
+
+async function changePassword() {
+  if(!currentUser){toast('Log in first.');return;}
+  const errEl=document.getElementById('passChangeError');
+  const okEl=document.getElementById('passChangeSuccess');
+  const btn=document.getElementById('changePassBtn');
+  errEl.style.display='none';okEl.style.display='none';
+  if(!validateNewPass()){errEl.textContent='Fix password errors above.';errEl.style.display='block';return;}
+  const p1=document.getElementById('newPassword').value;
+  const p2=document.getElementById('newPassword2').value;
+  const h2=document.getElementById('hintNewPass2');
+  if(p1!==p2){h2.className='field-hint show err';h2.textContent='Passwords do not match.';document.getElementById('newPassword2').classList.add('error');return;}
+  h2.className='field-hint show ok';h2.textContent='✓ Passwords match';document.getElementById('newPassword2').classList.remove('error');
+  btn.innerHTML='<span class="spin"></span>Updating...';btn.disabled=true;
+  const {error}=await sb.auth.updateUser({password:p1});
+  btn.innerHTML='Update Password';btn.disabled=false;
+  if(error){errEl.textContent=error.message;errEl.style.display='block';return;}
+  document.getElementById('newPassword').value='';
+  document.getElementById('newPassword2').value='';
+  document.getElementById('hintNewPass').className='field-hint';
+  document.getElementById('hintNewPass2').className='field-hint';
+  okEl.textContent='Password updated successfully ✓';okEl.style.display='block';
+  setTimeout(()=>{okEl.style.display='none';},3000);
+}
+
+// ─── PRIVACY SETTINGS ───
+function loadPrivacySettings() {
+  const showOnline=localStorage.getItem('qode-privacy-showOnline');
+  const showMyDot=localStorage.getItem('qode-privacy-myDot');
+  document.getElementById('privacyShowOnline').checked=showOnline===null||showOnline==='true';
+  document.getElementById('privacyShowMyDot').checked=showMyDot===null||showMyDot==='true';
+}
+
+function savePrivacySettings() {
+  const showOnline=document.getElementById('privacyShowOnline').checked;
+  const showMyDot=document.getElementById('privacyShowMyDot').checked;
+  localStorage.setItem('qode-privacy-showOnline', showOnline);
+  localStorage.setItem('qode-privacy-myDot', showMyDot);
+  // Update status dot immediately
+  const dot=document.getElementById('profileStatusDot');
+  if(dot){ dot.style.display=showMyDot?'block':'none'; }
+  toast('Privacy settings saved ✓');
+}
+
 // ─── OWNER PANEL ───
 let ownerActiveTab='users';
 
 function openOwnerPanel(){
+  // Security: re-verify ownership from loaded profile (role must be 'owner' in DB)
+  if(!currentProfile || currentProfile.role !== 'owner'){
+    toast('⛔ Access denied.');
+    document.getElementById('profileMenu').classList.remove('open');
+    return;
+  }
   document.getElementById('ownerModal').classList.add('open');
   document.getElementById('profileMenu').classList.remove('open');
   switchOwnerTab('users');
@@ -1332,12 +1607,15 @@ function openOwnerPanel(){
 function closeOwnerPanel(){document.getElementById('ownerModal').classList.remove('open');}
 
 function switchOwnerTab(tab) {
+  // Security check on every tab switch
+  if(!currentProfile || currentProfile.role !== 'owner'){ closeOwnerPanel(); return; }
   ownerActiveTab=tab;
   document.querySelectorAll('.owner-tab').forEach(el=>el.classList.remove('active'));
   const t=document.getElementById('otab-'+tab);
   if(t)t.classList.add('active');
   if(tab==='users') loadOwnerUsers();
   else if(tab==='news') loadOwnerNews();
+  else if(tab==='photos') loadOwnerPhotos();
   else if(tab==='channels') loadOwnerChannels();
 }
 
@@ -1418,15 +1696,49 @@ async function loadOwnerNews() {
   }
   articles.forEach(a=>{
     const row=document.createElement('div');
-    row.className='user-row';
+    row.style.borderBottom='1px solid var(--border)';
+    row.style.paddingBottom='10px';
+    row.style.marginBottom='4px';
     row.innerHTML=`
-      <div style="flex:1;min-width:0;">
-        <div class="user-row-name" style="font-size:13px;">${(a.title||'').replace(/</g,'&lt;')}</div>
-        <div class="user-row-email">${a.date_label||''} ${a.tag?' · '+a.tag:''} · by ${a.author_username||'unknown'}</div>
+      <div class="user-row" style="border-bottom:none;padding-bottom:0;">
+        <div style="flex:1;min-width:0;">
+          <div class="user-row-name" style="font-size:13px;">${(a.title||'').replace(/</g,'&lt;')}</div>
+          <div class="user-row-email">${a.date_label||''} ${a.tag?' · '+a.tag:''} · by ${a.author_username||'unknown'}</div>
+        </div>
+        <button class="action-btn" onclick="toggleNewsEdit('edit-${a.id}')">✏️ Edit</button>
+        <button class="action-btn danger" onclick="ownerDeleteNews('${a.id}')">🗑 Delete</button>
       </div>
-      <button class="action-btn danger" onclick="ownerDeleteNews('${a.id}')">🗑 Delete</button>`;
+      <div class="news-edit-form" id="edit-${a.id}">
+        <div><label class="auth-label">Title</label><input class="auth-input" id="edit-title-${a.id}" value="${(a.title||'').replace(/"/g,'&quot;')}"></div>
+        <div style="display:flex;gap:8px;"><div style="flex:1;"><label class="auth-label">Date</label><input class="auth-input" id="edit-date-${a.id}" value="${(a.date_label||'').replace(/"/g,'&quot;')}"></div><div style="flex:1;"><label class="auth-label">Tag</label><input class="auth-input" id="edit-tag-${a.id}" value="${(a.tag||'').replace(/"/g,'&quot;')}"></div></div>
+        <div><label class="auth-label">Summary</label><input class="auth-input" id="edit-summary-${a.id}" value="${(a.summary||'').replace(/"/g,'&quot;')}"></div>
+        <div><label class="auth-label">Body</label><textarea class="auth-input" id="edit-body-${a.id}" rows="4" style="resize:vertical;">${(a.body||'').replace(/</g,'&lt;')}</textarea></div>
+        <div style="display:flex;gap:8px;">
+          <button class="auth-btn" style="flex:1;margin:0;padding:8px;" onclick="saveNewsEdit('${a.id}')">💾 Save</button>
+          <button class="auth-btn secondary" style="flex:1;margin:0;padding:8px;" onclick="toggleNewsEdit('edit-${a.id}')">Cancel</button>
+        </div>
+      </div>`;
     content.appendChild(row);
   });
+}
+
+function toggleNewsEdit(editId) {
+  const el=document.getElementById(editId);
+  if(el) el.classList.toggle('open');
+}
+
+async function saveNewsEdit(articleId) {
+  const title=document.getElementById('edit-title-'+articleId).value.trim();
+  const date=document.getElementById('edit-date-'+articleId).value.trim();
+  const tag=document.getElementById('edit-tag-'+articleId).value.trim();
+  const summary=document.getElementById('edit-summary-'+articleId).value.trim();
+  const body=document.getElementById('edit-body-'+articleId).value.trim();
+  if(!title){toast('Title is required.');return;}
+  const {error}=await sb.from('news_articles').update({title,date_label:date,tag,summary,body}).eq('id',articleId);
+  if(error){toast('Error: '+error.message);return;}
+  toast('Article updated ✓');
+  loadOwnerNews();
+  loadNewsArticles();
 }
 
 async function ownerDeleteNews(articleId) {
@@ -1436,6 +1748,50 @@ async function ownerDeleteNews(articleId) {
   toast('Article deleted ✓');
   loadOwnerNews();
   loadNewsArticles();
+}
+
+// ─── OWNER: PHOTOS TAB ───
+async function loadOwnerPhotos() {
+  const content=document.getElementById('ownerContent');
+  content.innerHTML='<div style="color:var(--text-light);font-size:12px;padding:8px 0;">Loading photos...</div>';
+  const {data,error}=await sb.from('forum_posts').select('*').order('created_at',{ascending:false}).limit(100);
+  if(error){content.innerHTML='<div style="color:var(--danger);font-size:12px;">Error: '+error.message+'</div>';return;}
+  content.innerHTML='';
+  const posts=(data||[]);
+  if(posts.length===0){content.innerHTML='<div style="color:var(--text-light);font-size:12px;">No photo posts yet.</div>';return;}
+
+  const label=document.createElement('div');
+  label.className='section-divider';
+  label.style.marginTop='0';
+  label.textContent='All Photo Room Posts ('+posts.length+')';
+  content.appendChild(label);
+
+  const grid=document.createElement('div');
+  grid.className='owner-photo-grid';
+  posts.forEach(p=>{
+    const item=document.createElement('div');
+    item.className='owner-photo-item';
+    if(p.image_url){
+      item.innerHTML=`<img src="${p.image_url}" alt="post image"><button class="owner-photo-del" onclick="ownerDeletePhoto('${p.id}')" title="Delete post">✕</button><div class="owner-photo-caption">${(p.title||'').replace(/</g,'&lt;')} <span style="opacity:0.6;">· ${p.username||'?'}</span></div>`;
+    } else {
+      item.innerHTML=`<div class="photo-placeholder">📷</div><button class="owner-photo-del" onclick="ownerDeletePhoto('${p.id}')" title="Delete post">✕</button><div class="owner-photo-caption">${(p.title||'').replace(/</g,'&lt;')} <span style="opacity:0.6;">· ${p.username||'?'}</span></div>`;
+    }
+    grid.appendChild(item);
+  });
+  content.appendChild(grid);
+}
+
+async function ownerDeletePhoto(postId) {
+  if(!confirm('Delete this photo post and all its comments/votes?'))return;
+  // Delete associated comments and votes first
+  await sb.from('forum_comments').delete().eq('post_id',postId);
+  await sb.from('post_votes').delete().eq('post_id',postId);
+  const {error}=await sb.from('forum_posts').delete().eq('id',postId);
+  if(error){toast('Error: '+error.message);return;}
+  toast('Post deleted ✓');
+  loadOwnerPhotos();
+  // Refresh photo room if currently open
+  if(activeChannelType==='photos') loadPhotoRoom(activeChannel);
 }
 
 function loadOwnerChannels() {
@@ -1695,10 +2051,14 @@ function renderDMList() {
   if(!currentUser){entries.innerHTML='<div style="padding:16px;font-size:12px;color:var(--text-light);">Log in to message users.</div>';return;}
   if(allProfiles.length===0){entries.innerHTML='<div style="padding:16px;font-size:12px;color:var(--text-light);">No other users yet.</div>';return;}
   allProfiles.forEach(u=>{
+    // Consider online if last_seen within 3 minutes
+    const lastSeen=u.last_seen?new Date(u.last_seen):null;
+    const isOnline=lastSeen&&(Date.now()-lastSeen.getTime()<3*60*1000);
+    const statusClass=isOnline?'online':'';
     const el=document.createElement('div');
     el.className='dm-entry'+(activeDMUser?.id===u.id?' active':'');
     el.onclick=()=>openDM(u);
-    el.innerHTML=`<div class="dm-avatar" style="background:${stringToColor(u.username)}">${u.username.slice(0,2).toUpperCase()}<div class="dm-status"></div></div><div class="dm-info"><div class="dm-name">${u.username}</div><div class="dm-preview">Click to start chatting</div></div>`;
+    el.innerHTML=`<div class="dm-avatar" style="background:${stringToColor(u.username)}">${u.username.slice(0,2).toUpperCase()}<div class="dm-status ${statusClass}"></div></div><div class="dm-info"><div class="dm-name">${u.username}${isOnline?'<span class="online-badge" style="margin-left:6px;"><span class="online-dot"></span>online</span>':''}</div><div class="dm-preview">Click to start chatting</div></div>`;
     entries.appendChild(el);
   });
 }
@@ -1712,7 +2072,13 @@ async function openDM(profile) {
   av.textContent=profile.username.slice(0,2).toUpperCase();
   av.style.background=stringToColor(profile.username);
   document.getElementById('dmHeaderName').textContent=profile.username;
-  document.getElementById('dmHeaderStatus').textContent='';
+  // Show online status in DM header
+  const lastSeen=profile.last_seen?new Date(profile.last_seen):null;
+  const isOnline=lastSeen&&(Date.now()-lastSeen.getTime()<3*60*1000);
+  const dot=document.getElementById('dmOnlineDot');
+  const status=document.getElementById('dmHeaderStatus');
+  if(dot){ dot.style.display=isOnline?'inline-block':'none'; }
+  if(status){ status.textContent=isOnline?'online':lastSeen?'last seen '+fmtTime(lastSeen.toISOString()):'offline'; }
   document.getElementById('dmInput').placeholder='Message '+profile.username+'...';
   renderDMList();
   await loadDMMessages(profile.id);
@@ -2224,6 +2590,31 @@ loadForumMessages(activeChannel || activeForum);
 subscribeToForum(activeChannel || activeForum);
 // Load dynamic news from Supabase (falls back to hardcoded if table empty)
 loadNewsArticles();
+
+// ─── ONLINE HEARTBEAT ─────────────────────────────────────────────────────
+// Updates last_seen every 90s so other users see accurate online status.
+// Respects privacy setting: if user opted out, we skip the update.
+setInterval(async () => {
+  if(!currentUser || !currentProfile) return;
+  if(currentProfile.is_banned) return;
+  const showOnline = localStorage.getItem('qode-privacy-showOnline');
+  if(showOnline === 'false') return;
+  await sb.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', currentUser.id);
+}, 90000);
+
+// ─── BAN RECHECK ──────────────────────────────────────────────────────────
+// Re-fetch profile every 2 minutes to catch bans applied mid-session.
+setInterval(async () => {
+  if(!currentUser) return;
+  try {
+    const { data } = await sb.from('profiles').select('is_banned,role').eq('id', currentUser.id).single();
+    if(!data) return;
+    if(data.is_banned && !currentProfile?.is_banned) {
+      currentProfile.is_banned = true;
+      applySession(); // will show ban overlay immediately
+    }
+  } catch(e) { /* silent */ }
+}, 120000);
 
 // Restore last visited page (after everything is built)
 const _savedPage = localStorage.getItem('qode-page');
