@@ -1687,6 +1687,9 @@ function applySession() {
     // ── Notification bell ──
     const bell=document.getElementById('notifBell');
     if(bell) bell.style.display='flex';
+    // Ask for browser push permission & load persisted notifs
+    requestNotifPermission();
+    loadNotifsFromDB();
 
     // ── Mobile bottom nav profile label ──
     const mbnLabel=document.getElementById('mbnProfileLabel');
@@ -2520,23 +2523,70 @@ function subscribeToDMs(otherId) {
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'direct_messages'},
         payload=>{
           const m=payload.new;
+          // Show message in the active convo panel
           if((m.sender_id===currentUser.id&&m.receiver_id===otherId)||(m.sender_id===otherId&&m.receiver_id===currentUser.id)){
             appendDMMsg(m);
-            // If the message is FROM the other person (not me), fire a notification
-            if(m.sender_id!==currentUser.id){
-              // Only add notification if we're NOT currently on messages page looking at this convo
-              const onMsgPage=document.getElementById('page-messages').classList.contains('active');
-              const lookingAtThem=activeDMUser&&activeDMUser.id===m.sender_id;
-              if(!onMsgPage||!lookingAtThem){
-                addNotification(m.sender_username, m.sender_id, m.content);
-              }
-            }
           }
         })
       .subscribe((status,err)=>{
         if(err||status==='CHANNEL_ERROR'||status==='TIMED_OUT') startDMPolling(otherId);
       });
   } catch(e){ startDMPolling(otherId); }
+}
+
+// ─── GLOBAL INBOX LISTENER ───────────────────────────────────────────────────
+// Listens for ANY incoming DM addressed to the current user.
+// Fires notifications and unread badges regardless of which convo is open.
+let _inboxChannel = null;
+function startInboxListener() {
+  if(!currentUser) return;
+  if(_inboxChannel){ try{sb.removeChannel(_inboxChannel);}catch(e){} }
+  try {
+    _inboxChannel = sb.channel('inbox-'+currentUser.id)
+      .on('postgres_changes',{
+        event:'INSERT', schema:'public', table:'direct_messages',
+        filter:'receiver_id=eq.'+currentUser.id
+      }, payload=>{
+        const m = payload.new;
+        if(m.sender_id === currentUser.id) return; // own echo, ignore
+        const onMsgPage = document.getElementById('page-messages').classList.contains('active');
+        const lookingAtThem = activeDMUser && activeDMUser.id === m.sender_id;
+        if(!onMsgPage || !lookingAtThem) {
+          addNotification(m.sender_username, m.sender_id, m.content, 'dm');
+        }
+      })
+      .subscribe((status, err) => {
+        if(err || status==='CHANNEL_ERROR' || status==='TIMED_OUT') {
+          // Fallback: poll for new DMs every 8s
+          startInboxPolling();
+        }
+      });
+  } catch(e){ startInboxPolling(); }
+}
+
+let _inboxPollTimer = null;
+let _inboxLastCheck = new Date().toISOString();
+function startInboxPolling() {
+  if(_inboxPollTimer) clearInterval(_inboxPollTimer);
+  _inboxPollTimer = setInterval(async () => {
+    if(!currentUser) return;
+    const since = _inboxLastCheck;
+    _inboxLastCheck = new Date().toISOString();
+    const {data} = await sb.from('direct_messages').select('*')
+      .eq('receiver_id', currentUser.id)
+      .gt('created_at', since)
+      .order('created_at', {ascending: true});
+    if(!data || data.length === 0) return;
+    data.forEach(m => {
+      const onMsgPage = document.getElementById('page-messages').classList.contains('active');
+      const lookingAtThem = activeDMUser && activeDMUser.id === m.sender_id;
+      if(!onMsgPage || !lookingAtThem) {
+        addNotification(m.sender_username, m.sender_id, m.content, 'dm');
+      }
+      // Also append to open convo if it matches
+      if(activeDMUser && activeDMUser.id === m.sender_id) appendDMMsg(m);
+    });
+  }, 8000);
 }
 
 function startDMPolling(otherId) {
@@ -2964,9 +3014,12 @@ sb.auth.onAuthStateChange(async (event, session) => {
     if(document.getElementById('page-forum').classList.contains('active')) switchForum(activeForum);
     if(document.getElementById('page-messages').classList.contains('active')) loadDMList();
     startProfileStatusPolling();
+    startInboxListener();
   } else {
     currentUser = null; currentProfile = null;
     if(profilePollTimer){ clearInterval(profilePollTimer); profilePollTimer=null; }
+    if(_inboxChannel){ try{sb.removeChannel(_inboxChannel);}catch(e){} _inboxChannel=null; }
+    if(_inboxPollTimer){ clearInterval(_inboxPollTimer); _inboxPollTimer=null; }
     applySession();
     buildForumSidebar(); buildForumSubSidebar();
   }
@@ -2984,6 +3037,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
       currentProfile = await loadProfile(currentUser.id, currentUser.user_metadata || {});
       applySession();
       buildForumSidebar(); buildForumSubSidebar();
+      startInboxListener();
     }
   } catch(e) { /* silent — onAuthStateChange will handle it */ }
 })();
@@ -3017,14 +3071,100 @@ loadNewsArticles();
 let notifications = []; // {id, from, fromId, preview, ts, read, type}
 let unreadByUser = {};  // { userId: count }
 
-function addNotification(fromUsername, fromId, preview, type='dm') {
+function addNotification(fromUsername, fromId, preview, type='dm', dbId=null) {
+  // Deduplicate by dbId (prevent double-adding from realtime + polling)
+  if(dbId && notifications.find(n=>n.dbId===dbId)) return;
   const id = Date.now()+Math.random();
-  notifications.unshift({id, from:fromUsername, fromId, preview, ts:new Date(), read:false, type});
+  notifications.unshift({id, dbId, from:fromUsername, fromId, preview, ts:new Date(), read:false, type});
   if(notifications.length > 50) notifications.pop();
   // Track unread per user
   unreadByUser[fromId] = (unreadByUser[fromId]||0) + 1;
   updateNotifBadge();
   updateDMUnreadBadges();
+  // Browser push notification (works even when tab is in background)
+  showBrowserNotif(fromUsername, preview);
+  // Persist to DB
+  saveNotifToDB(fromUsername, fromId, preview, type);
+}
+
+// ─── BROWSER PUSH NOTIFICATIONS ──────────────────────────────────────────────
+function showBrowserNotif(title, body) {
+  if(!('Notification' in window)) return;
+  if(Notification.permission === 'granted') {
+    try {
+      new Notification('QODE — ' + title, {
+        body: body.length > 80 ? body.slice(0, 80) + '…' : body,
+        icon: document.querySelector('link[rel="icon"]')?.href || '',
+        tag: 'qode-dm-' + title, // replaces previous notif from same person
+        renotify: true
+      });
+    } catch(e) { /* Safari may throw */ }
+  } else if(Notification.permission !== 'denied') {
+    // Ask once, then show
+    Notification.requestPermission().then(perm => {
+      if(perm === 'granted') showBrowserNotif(title, body);
+    });
+  }
+}
+
+// Request permission proactively when user logs in (called from applySession)
+function requestNotifPermission() {
+  if('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+// ─── PERSIST NOTIFICATIONS TO DB ─────────────────────────────────────────────
+async function saveNotifToDB(fromUsername, fromId, preview, type) {
+  if(!currentUser) return;
+  try {
+    await sb.from('notifications').insert({
+      user_id: currentUser.id,
+      from_user_id: fromId,
+      from_username: fromUsername,
+      preview: preview.slice(0, 300),
+      type,
+      read: false
+    });
+  } catch(e) { /* silent — in-memory notifs still work */ }
+}
+
+// Load unread notifications from DB when user logs in
+async function loadNotifsFromDB() {
+  if(!currentUser) return;
+  try {
+    const {data} = await sb.from('notifications')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .eq('read', false)
+      .order('created_at', {ascending: false})
+      .limit(50);
+    if(!data || data.length === 0) return;
+    // Merge into in-memory list (avoid duplicates)
+    data.forEach(row => {
+      if(notifications.find(n=>n.dbId===row.id)) return;
+      notifications.push({
+        id: row.id, dbId: row.id,
+        from: row.from_username, fromId: row.from_user_id,
+        preview: row.preview, ts: new Date(row.created_at),
+        read: false, type: row.type
+      });
+      unreadByUser[row.from_user_id] = (unreadByUser[row.from_user_id]||0) + 1;
+    });
+    // Sort newest first
+    notifications.sort((a,b)=>b.ts-a.ts);
+    updateNotifBadge();
+    updateDMUnreadBadges();
+  } catch(e) { /* silent */ }
+}
+
+// Mark all read in DB when user clicks "Mark all read"
+async function markAllNotifsReadInDB() {
+  if(!currentUser) return;
+  try {
+    await sb.from('notifications').update({read: true})
+      .eq('user_id', currentUser.id).eq('read', false);
+  } catch(e) { /* silent */ }
 }
 
 function updateNotifBadge() {
@@ -3098,6 +3238,7 @@ function markAllNotifsRead() {
   updateNotifBadge();
   updateDMUnreadBadges();
   renderNotifPanel();
+  markAllNotifsReadInDB();
 }
 
 function clearUnreadFrom(userId) {
