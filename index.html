@@ -13,10 +13,10 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #89BCE3; --bg-card: #9dc8ea; --border: #4A76A8;
-    --text: #0c1e30; --text-muted: #1e3d5c; --text-light: #2e5a80;
-    --accent: #3a6ea8; --shadow: 0 2px 8px rgba(0,0,0,0.15);
-    --nav-h: 48px; --online: #2ecc71; --danger: #e74c3c;
+    --bg: #dff0ff; --bg-card: #c4e2fa; --border: #3d8fd4;
+    --text: #071828; --text-muted: #0d3658; --text-light: #1a5a96;
+    --accent: #1167c4; --shadow: 0 2px 10px rgba(0,80,200,0.18);
+    --nav-h: 48px; --online: #16c060; --danger: #d9321f;
   }
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Kanit', sans-serif; font-size: 15px; line-height: 1.6; }
 
@@ -142,7 +142,7 @@
   /* FORUM inner layout */
   .forum-inner { display: flex; height: 100%; overflow: hidden; }
   .forum-sub-sidebar { width: 190px; border-right: 1px solid var(--border); background: var(--bg); overflow-y: auto; flex-shrink: 0; }
-  .forum-chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #cce0f5; }
+  .forum-chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #b8d8f8; }
   .forum-cat-header { padding: 10px 14px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
   .forum-cat-item { padding: 9px 14px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: background 0.12s; display: flex; align-items: center; gap: 8px; font-family: 'Kanit', sans-serif; border-left: 3px solid transparent; }
   .forum-cat-item:hover { background: var(--bg-card); color: var(--text); }
@@ -171,7 +171,7 @@
   .dm-name { font-size: 12px; font-weight: 700; color: var(--text); }
   .dm-preview { font-size: 11px; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .dm-time { font-size: 10px; color: var(--text-light); flex-shrink: 0; }
-  .dm-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #cce0f5; }
+  .dm-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #b8d8f8; }
   .dm-placeholder { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text-light); }
   .dm-placeholder svg { width: 48px; height: 48px; stroke: var(--border); fill: none; stroke-width: 1.5; }
 
@@ -187,7 +187,7 @@
   .bubble { padding: 8px 12px; border-radius: 16px; font-size: 13.5px; line-height: 1.45; color: var(--text); background: var(--bg-card); border: 1px solid var(--border); word-break: break-word; }
   .msg-row.mine .bubble { background: var(--accent); color: #fff; border-color: #2a5a90; }
   .chat-input-bar { border-top: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 10px; background: var(--bg-card); flex-shrink: 0; }
-  .chat-input { flex: 1; border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; font-family: 'Kanit', sans-serif; font-size: 13px; background: #cce0f5; color: var(--text); outline: none; transition: border-color 0.2s; }
+  .chat-input { flex: 1; border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; font-family: 'Kanit', sans-serif; font-size: 13px; background: #b8d8f8; color: var(--text); outline: none; transition: border-color 0.2s; }
   .chat-input:focus { border-color: var(--accent); }
   .chat-input::placeholder { color: var(--text-light); }
   .chat-send { width: 34px; height: 34px; border-radius: 50%; border: none; background: var(--accent); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, transform 0.1s; flex-shrink: 0; }
@@ -1445,6 +1445,41 @@ const FORUM_CHANNELS = {
 };
 const DEFAULT_FORUMS = ['announcements','general','hardware','software'];
 
+// ─── CHANNEL PERSISTENCE ───
+// Channels are loaded from Supabase on startup and saved on every change.
+// Falls back to FORUM_CHANNELS (hardcoded) if the table is empty or errors.
+async function loadChannelsFromDB() {
+  try {
+    const {data, error} = await sb.from('forum_channels').select('*').order('position', {ascending: true});
+    if (error || !data || data.length === 0) return; // keep hardcoded defaults
+    // Reset all forum channels from DB
+    Object.keys(FORUM_CHANNELS).forEach(k => FORUM_CHANNELS[k] = []);
+    data.forEach(row => {
+      if (!FORUM_CHANNELS[row.forum_id]) FORUM_CHANNELS[row.forum_id] = [];
+      FORUM_CHANNELS[row.forum_id].push({ id: row.channel_id, label: row.label, type: row.type });
+    });
+  } catch(e) { console.warn('loadChannelsFromDB failed:', e.message); }
+}
+
+async function saveChannelsToDB() {
+  try {
+    // Build flat list of all channels with position
+    const rows = [];
+    ALL_FORUMS.forEach(f => {
+      (FORUM_CHANNELS[f.id] || []).forEach((ch, idx) => {
+        rows.push({ forum_id: f.id, channel_id: ch.id, label: ch.label, type: ch.type, position: idx });
+      });
+    });
+    // Upsert all, then delete any that are no longer present
+    const { error: upsertErr } = await sb.from('forum_channels')
+      .upsert(rows, { onConflict: 'channel_id' });
+    if (upsertErr) { console.warn('Channel upsert error:', upsertErr.message); return; }
+    // Delete channels no longer in the list
+    const validIds = rows.map(r => r.channel_id);
+    await sb.from('forum_channels').delete().not('channel_id', 'in', '(' + validIds.map(id => `"${id}"`).join(',') + ')');
+  } catch(e) { console.warn('saveChannelsToDB failed:', e.message); }
+}
+
 // ─── STATE ───
 let currentUser = null;
 let currentProfile = null;
@@ -2102,7 +2137,7 @@ function loadOwnerChannels() {
   const addBox=document.createElement('div');
   addBox.style.cssText='margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--border);';
   addBox.innerHTML=`
-    <div class="section-divider" style="margin-top:0;">Add New Channel</div>
+    <div class="section-divider" style="margin-top:0;">➕ Create New Channel</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
       <select class="auth-input" id="newChanForum" style="min-width:150px;flex:1;">
         ${ALL_FORUMS.map(f=>`<option value="${f.id}">${f.emoji} ${f.name}</option>`).join('')}
@@ -2129,15 +2164,73 @@ function loadOwnerChannels() {
       const row=document.createElement('div');
       row.className='user-row';
       row.style.padding='7px 0';
+      row.setAttribute('id','chanrow-'+ch.id);
       row.innerHTML=`
-        <span style="font-size:13px;flex:1;color:var(--text-muted);">${ch.type==='photos'?'🖼':'#'} ${ch.label} <span style="font-size:10px;color:var(--text-light);">(${ch.type})</span></span>
-        ${idx===0?'<span style="font-size:10px;color:var(--text-light);padding:4px 8px;">default</span>':
-          `<button class="action-btn danger" onclick="removeOwnerChannel('${f.id}','${ch.id}')">Remove</button>`}
+        <span style="font-size:13px;flex:1;color:var(--text-muted);">${ch.type==='photos'?'🖼':'#'} <span id="chan-label-display-${ch.id}">${ch.label}</span> <span style="font-size:10px;color:var(--text-light);">(${ch.type})</span></span>
+        <div style="display:flex;gap:5px;align-items:center;">
+          <button class="action-btn" onclick="toggleEditChannel('${f.id}','${ch.id}','${ch.label}','${ch.type}')" title="Edit channel">✏️ Edit</button>
+          ${idx===0?'<span style="font-size:10px;color:var(--text-light);padding:4px 8px;">default</span>':
+            `<button class="action-btn danger" onclick="removeOwnerChannel('${f.id}','${ch.id}')">Remove</button>`}
+        </div>
+      `;
+      // Edit form row (hidden by default)
+      const editRow=document.createElement('div');
+      editRow.id='edit-row-'+ch.id;
+      editRow.style.cssText='display:none;padding:8px 0 10px;gap:8px;flex-wrap:wrap;align-items:center;';
+      editRow.innerHTML=`
+        <input class="auth-input" id="edit-label-${ch.id}" type="text" value="${ch.label}" placeholder="new-name" style="flex:1;min-width:100px;font-size:12px;">
+        <select class="auth-input" id="edit-type-${ch.id}" style="min-width:90px;font-size:12px;">
+          <option value="chat" ${ch.type==='chat'?'selected':''}>💬 Chat</option>
+          <option value="photos" ${ch.type==='photos'?'selected':''}>🖼 Photos</option>
+        </select>
+        <button class="action-btn ok" onclick="saveEditChannel('${f.id}','${ch.id}')">Save</button>
+        <button class="action-btn" onclick="cancelEditChannel('${ch.id}')">Cancel</button>
       `;
       section.appendChild(row);
+      section.appendChild(editRow);
     });
     content.appendChild(section);
   });
+}
+
+function toggleEditChannel(forumId, channelId, label, type) {
+  const editRow=document.getElementById('edit-row-'+channelId);
+  if(!editRow)return;
+  const isOpen=editRow.style.display==='flex';
+  // Close all other edit rows first
+  document.querySelectorAll('[id^="edit-row-"]').forEach(r=>r.style.display='none');
+  if(!isOpen){
+    document.getElementById('edit-label-'+channelId).value=label;
+    document.getElementById('edit-type-'+channelId).value=type;
+    editRow.style.display='flex';
+  }
+}
+
+function cancelEditChannel(channelId) {
+  const editRow=document.getElementById('edit-row-'+channelId);
+  if(editRow)editRow.style.display='none';
+}
+
+function saveEditChannel(forumId, channelId) {
+  const rawLabel=document.getElementById('edit-label-'+channelId).value.trim();
+  const newLabel=rawLabel.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+  const newType=document.getElementById('edit-type-'+channelId).value;
+  if(!newLabel){toast('Channel name cannot be empty.');return;}
+  const ch=FORUM_CHANNELS[forumId].find(c=>c.id===channelId);
+  if(!ch){toast('Channel not found.');return;}
+  const oldId=ch.id;
+  ch.label=newLabel;
+  ch.type=newType;
+  // If active channel was this one, update display
+  if(activeChannel===oldId){
+    activeChannelType=newType;
+    const headerEl=document.getElementById('chatHeaderName');
+    if(headerEl)headerEl.textContent=(newType==='photos'?'🖼 ':'# ')+newLabel;
+  }
+  toast('Channel updated ✓');
+  buildForumSubSidebar();
+  loadOwnerChannels();
+  saveChannelsToDB();
 }
 
 function addNewChannel() {
@@ -2154,6 +2247,7 @@ function addNewChannel() {
   toast('Channel added ✓');
   buildForumSubSidebar();
   loadOwnerChannels();
+  saveChannelsToDB();
 }
 
 function removeOwnerChannel(forumId, channelId) {
@@ -2163,6 +2257,7 @@ function removeOwnerChannel(forumId, channelId) {
   toast('Channel removed ✓');
   buildForumSubSidebar();
   loadOwnerChannels();
+  saveChannelsToDB();
 }
 
 // ─── HOME FORUM GRID ───
@@ -2906,9 +3001,15 @@ if (_savedChannel) { activeChannel = _savedChannel; activeChannelType = _savedCh
 
 buildForumSidebar();
 buildForumSubSidebar();
-// Initial forum load (unauthenticated users can still read)
+// Load channels from DB, then rebuild sidebar and load messages
+loadChannelsFromDB().then(() => {
+  buildForumSidebar();
+  buildForumSubSidebar();
+  loadForumMessages(activeChannel || activeForum);
+  subscribeToForum(activeChannel || activeForum);
+});
+// Initial forum load (unauthenticated users can still read — may load again after DB channels arrive)
 loadForumMessages(activeChannel || activeForum);
-subscribeToForum(activeChannel || activeForum);
 // Load dynamic news from Supabase (falls back to hardcoded if table empty)
 loadNewsArticles();
 
