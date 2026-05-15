@@ -663,36 +663,40 @@
   }
 
   /* ══════════════════════════════════════════
-     MOBILE — comprehensive phone optimisation
+     MOBILE — best-in-class phone optimisation
      ══════════════════════════════════════════ */
 
-  /* Safe-area helpers (notch / Dynamic Island / home bar) */
-  @supports (padding: env(safe-area-inset-bottom)) {
-    .mobile-bottom-nav {
-      padding-bottom: env(safe-area-inset-bottom);
-      height: calc(58px + env(safe-area-inset-bottom));
-    }
-    .page { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
-    .chat-outer { height: calc(100dvh - var(--nav-h) - 58px - env(safe-area-inset-bottom)); }
-  }
-
   @media (max-width: 700px) {
-    /* ── Scrolling ── */
-    html { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
-    * { -webkit-tap-highlight-color: transparent; }
+    /* ── Global resets ── */
+    html { -webkit-text-size-adjust: 100%; }
+    * { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    /* Prevent iOS zoom on input focus — must be exactly 16px */
+    input, select, textarea { font-size: 16px !important; }
 
     /* ── Nav ── */
-    nav { padding: 0 env(safe-area-inset-right, 12px) 0 env(safe-area-inset-left, 12px); gap: 6px; padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
-    .nav-links { display: none; }
-    .nav-line { display: none; }
+    nav {
+      padding-left: max(12px, env(safe-area-inset-left));
+      padding-right: max(12px, env(safe-area-inset-right));
+      gap: 6px;
+    }
+    .nav-links, .nav-line { display: none; }
     .logo { font-size: 17px; flex: 1; }
     #authTrigger { margin-left: auto; }
     .profile-pill { margin-left: auto; padding: 4px 10px 4px 5px; }
-    .profile-name { display: none; }
-    .profile-status-dot { display: none !important; }
+    .profile-name, .profile-status-dot { display: none !important; }
 
-    /* ── Bottom nav ── */
-    .mobile-bottom-nav { display: flex; }
+    /* ── Bottom nav — respects home indicator ── */
+    .mobile-bottom-nav {
+      display: flex;
+      height: calc(58px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+    }
+    .mbn-item { min-height: 44px; flex: 1; }
+    .mbn-label { font-size: 9px; }
+
+    /* Pages clear the bottom nav + home indicator */
     .page { padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px)); }
 
     /* ── Hero ── */
@@ -710,198 +714,242 @@
     .forum-btn { padding: 16px 10px; font-size: 11px; min-height: 52px; }
     .section-label { font-size: 16px; }
 
-    /* ── Chat shell ── */
+    /* ── FORUM PAGE ─────────────────────────────────────────
+       Full-height column stack: forum strip → channel strip → messages → input
+       Using dvh so it actually fills the screen on mobile browsers
+    ─────────────────────────────────────────────────────── */
+    #page-forum, #page-messages {
+      padding-bottom: 0; /* these pages have their own internal layout */
+    }
     .chat-outer {
       padding: 0;
+      /* dvh = dynamic viewport height — shrinks when browser chrome appears */
       height: calc(100dvh - var(--nav-h) - 58px - env(safe-area-inset-bottom, 0px));
     }
+    /* Kill the desktop grid, switch to a pure flex column */
     .chat-shell {
-      border-radius: 0; border-left: none; border-right: none; border-top: none;
-      height: 100%; flex-direction: column; grid-template-columns: 1fr;
+      display: flex !important;
+      flex-direction: column !important;
+      grid-template-columns: unset !important;
+      border-radius: 0; border: none;
+      height: 100%; overflow: hidden;
     }
 
-    /* Forum icon strip */
+    /* Forum icon strip — horizontal scrollable row */
     .chat-sidebar {
-      width: 100% !important; height: 50px;
-      flex-direction: row; border-right: none; border-bottom: 1px solid var(--border);
-      padding: 6px 12px; overflow-x: auto; overflow-y: hidden;
-      justify-content: flex-start; gap: 10px; scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
+      width: 100% !important;
+      height: 50px; min-height: 50px; flex-shrink: 0;
+      flex-direction: row !important;
+      border-right: none; border-bottom: 1px solid var(--border);
+      padding: 6px 10px; gap: 8px;
+      overflow-x: auto; overflow-y: hidden;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
     }
     .chat-sidebar::-webkit-scrollbar { display: none; }
     .side-sep { display: none; }
     .forum-circle { width: 36px; height: 36px; font-size: 16px; flex-shrink: 0; }
+    /* Hide the mail icon inside forum sidebar on mobile — nav handles it */
+    #page-forum .chat-sidebar .side-icon { display: none; }
+    /* Messages page sidebar — just hide it entirely, nav handles switching */
+    #page-messages .chat-sidebar { display: none !important; }
+
+    /* chat-main fills remaining space */
+    .chat-main { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* forum-inner fills chat-main */
+    .forum-inner { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 
     /* Channel pill strip */
     .forum-sub-sidebar {
-      width: 100% !important; height: 42px;
-      flex-direction: row; border-right: none; border-bottom: 1px solid var(--border);
-      overflow-x: auto; overflow-y: hidden; padding: 0 10px; scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
+      width: 100% !important;
+      height: 42px; min-height: 42px; flex-shrink: 0;
+      flex-direction: row !important;
+      border-right: none; border-bottom: 1px solid var(--border);
+      overflow-x: auto; overflow-y: hidden;
+      padding: 0 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
     }
     .forum-sub-sidebar::-webkit-scrollbar { display: none; }
     .forum-cat-header { display: none; }
     .forum-cat-item {
-      white-space: nowrap; border-left: none !important;
-      border-bottom: 2.5px solid transparent;
+      white-space: nowrap; flex-shrink: 0;
+      border-left: none !important; border-bottom: 2.5px solid transparent;
       padding: 0 12px; height: 42px; line-height: 42px;
-      border-radius: 0; font-size: 11px; flex-shrink: 0;
+      border-radius: 0; font-size: 11px;
     }
     .forum-cat-item.active { border-bottom-color: var(--accent); background: transparent; }
-    .forum-chat-area { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 
-    /* Chat messages */
-    .chat-messages { padding: 10px 12px 6px; gap: 10px; }
-    .bubble { font-size: 14px; padding: 8px 12px; max-width: 84vw; line-height: 1.5; }
+    /* Chat area fills remaining vertical space */
+    .forum-chat-area { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Messages scroll area */
+    .chat-messages {
+      flex: 1; min-height: 0;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 10px 12px 6px; gap: 10px;
+      overscroll-behavior-y: contain;
+    }
+    .bubble { font-size: 14px; padding: 8px 12px; max-width: 82vw; line-height: 1.5; }
     .msg-avatar { width: 28px; height: 28px; font-size: 10px; flex-shrink: 0; }
     .msg-meta { font-size: 10px; }
 
-    /* Chat input bar — sits above home bar */
+    /* Input bar — always visible at the bottom, safe area aware */
     .chat-input-bar {
-      padding: 10px 12px;
-      padding-bottom: max(10px, env(safe-area-inset-bottom, 10px));
+      flex-shrink: 0;
+      padding: 8px 10px;
+      padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
     }
-    .chat-input { font-size: 16px; padding: 10px 14px; border-radius: 22px; }
-    .send-btn { width: 40px; height: 40px; flex-shrink: 0; }
+    .chat-input { font-size: 16px !important; padding: 10px 14px; border-radius: 22px; }
+    .chat-send { width: 40px; height: 40px; min-width: 40px; border-radius: 50%; flex-shrink: 0; }
 
-    /* ── DM page ── */
-    .msg-page { flex-direction: column; }
+    /* ── DM PAGE ───────────────────────────────────────── */
+    .msg-page {
+      flex: 1; min-height: 0;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    /* DM contacts strip — horizontal avatars */
     .dm-list {
-      width: 100% !important; height: 56px;
-      flex-direction: row; border-right: none; border-bottom: 1px solid var(--border);
-      overflow-x: auto; overflow-y: hidden; flex-shrink: 0; scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
+      width: 100% !important;
+      height: 62px; min-height: 62px; flex-shrink: 0;
+      flex-direction: row !important;
+      border-right: none; border-bottom: 1px solid var(--border);
+      overflow-x: auto; overflow-y: hidden;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      align-items: center;
+      padding: 0 6px;
     }
     .dm-list::-webkit-scrollbar { display: none; }
     .dm-list-header { display: none; }
+
+    /* New DM button inside the strip */
+    .dm-entries { display: flex; flex-direction: row; align-items: center; gap: 4px; }
     .dm-entry {
-      padding: 6px 10px; white-space: nowrap;
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; flex-shrink: 0;
+      min-width: 54px; padding: 6px 8px;
       border-left: none !important; border-bottom: 3px solid transparent;
-      min-width: 54px; flex-direction: column; align-items: center;
-      justify-content: center; gap: 2px; flex-shrink: 0;
+      white-space: nowrap;
     }
     .dm-entry.active { border-bottom-color: var(--accent); background: transparent; }
-    .dm-info { display: flex; flex-direction: column; align-items: center; }
+    .dm-info { display: flex; flex-direction: column; align-items: center; gap: 2px; }
     .dm-preview { display: none; }
-    .dm-name { font-size: 9px; font-weight: 700; max-width: 52px; overflow: hidden; text-overflow: ellipsis; }
-    .dm-avatar { width: 30px; height: 30px; font-size: 10px; }
-    .dm-area { flex: 1; min-height: 0; }
-    .dm-unread-pill { top: 0; right: 0; }
+    .dm-name { font-size: 9px; font-weight: 700; max-width: 52px; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+    .dm-avatar { width: 32px; height: 32px; font-size: 11px; }
+    .dm-unread-pill { display: block; position: absolute; top: 2px; right: 4px; padding: 0 4px; font-size: 8px; }
 
-    /* DM input bar */
-    #dmInput { font-size: 16px; }
+    /* DM conversation area */
+    .dm-area { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    #dmConvo { flex: 1; min-height: 0; }
+    #dmMessages {
+      flex: 1; min-height: 0;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
 
-    /* ── Notifications panel — full-width sheet on mobile ── */
+    /* ── NOTIFICATIONS — slides up from bottom nav ── */
     .notif-panel {
       position: fixed !important;
-      top: auto !important;
-      bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
-      left: 8px !important; right: 8px !important;
-      width: auto !important;
-      border-radius: 16px 16px 0 0;
-      max-height: 70dvh;
-      overflow-y: auto;
+      top: auto !important; bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
+      left: 0 !important; right: 0 !important; width: 100% !important;
+      border-radius: 20px 20px 0 0; border-bottom: none;
+      max-height: 72dvh; overflow-y: auto;
+      box-shadow: 0 -4px 32px rgba(0,0,0,0.25);
     }
     .notif-list { max-height: none; }
-    .notif-item { padding: 14px 16px; }
+    .notif-item { padding: 14px 18px; min-height: 56px; }
+    .notif-avatar { width: 36px; height: 36px; font-size: 13px; }
 
-    /* ── Auth dropdown — full width sheet ── */
+    /* ── AUTH — slides up from bottom ── */
     .auth-dropdown {
       position: fixed !important;
-      top: auto !important;
-      bottom: 0 !important;
-      left: 0 !important; right: 0 !important;
-      width: 100% !important;
-      border-radius: 20px 20px 0 0;
-      max-height: 92dvh;
-      overflow-y: auto;
-      border-bottom: none;
+      top: auto !important; bottom: 0 !important;
+      left: 0 !important; right: 0 !important; width: 100% !important;
+      border-radius: 20px 20px 0 0; border-bottom: none;
+      max-height: 93dvh; overflow-y: auto;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
-    .auth-form { max-height: none; }
-    .auth-input { font-size: 16px; padding: 12px 14px; }
-    .auth-btn { padding: 13px; font-size: 14px; }
+    .auth-form { max-height: none; padding-bottom: 20px; }
+    .auth-input { padding: 12px 14px; }
+    .auth-btn { padding: 14px; font-size: 14px; }
 
-    /* ── Profile menu — bottom sheet ── */
+    /* ── PROFILE MENU ── */
     .profile-menu {
       position: fixed !important;
       top: auto !important;
       bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
-      right: 12px !important;
+      right: 12px !important; left: auto !important;
       width: 220px !important;
     }
-    .profile-menu-item { padding: 14px 18px; font-size: 13px; }
+    .profile-menu-item { padding: 14px 18px; font-size: 13px; min-height: 48px; }
 
-    /* ── Modals — slide up from bottom ── */
-    .modal-overlay { align-items: flex-end; padding: 0; }
-    .modal-box {
+    /* ── ALL MODALS — slide up, full-width sheets ── */
+    .modal-overlay, .new-post-modal { align-items: flex-end !important; padding: 0 !important; }
+    .modal-box, .new-post-box {
       width: 100% !important; max-width: 100% !important;
+      border-radius: 20px 20px 0 0 !important;
       max-height: 94dvh !important;
-      border-radius: 20px 20px 0 0;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
     .modal-head { padding: 20px 20px 0; }
-    .modal-body { padding: 16px 20px 24px; font-size: 14px; }
+    .modal-body { padding: 16px 20px 24px; font-size: 14px; line-height: 1.7; }
 
     /* Owner / Settings modals */
+    .owner-modal, .settings-modal { align-items: flex-end !important; padding: 0 !important; }
     .owner-box, .settings-box {
       width: 100% !important; max-width: 100% !important;
+      border-radius: 20px 20px 0 0 !important;
       max-height: 96dvh !important;
-      border-radius: 20px 20px 0 0;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
-    .owner-modal, .settings-modal { align-items: flex-end; padding: 0; }
-    .owner-tabs { overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
+    .owner-tabs, .settings-box > div:first-child {
+      overflow-x: auto; scrollbar-width: none; flex-shrink: 0;
+    }
     .owner-tabs::-webkit-scrollbar { display: none; }
-    .owner-tab { font-size: 9px; padding: 11px 6px; white-space: nowrap; min-width: 52px; }
-    .stab { font-size: 9px; padding: 11px 5px; }
+    .owner-tab { font-size: 9px; padding: 12px 6px; white-space: nowrap; min-width: 52px; min-height: 44px; }
+    .stab { font-size: 9px; padding: 12px 5px; min-height: 44px; }
     #ownerContent { padding: 14px; font-size: 13px; }
     .user-row { flex-wrap: wrap; gap: 6px; }
     .user-row-actions { flex-direction: row; flex-wrap: wrap; gap: 5px; width: 100%; padding-top: 4px; }
-    .action-btn { font-size: 11px; padding: 8px 12px; flex: 1; text-align: center; min-height: 36px; }
-
-    /* New post modal */
-    .new-post-modal { align-items: flex-end; padding: 0; }
-    .new-post-box {
-      width: 100% !important; max-width: 100% !important;
-      border-radius: 20px 20px 0 0;
-      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-    }
+    .action-btn { font-size: 11px; padding: 9px 12px; flex: 1; text-align: center; min-height: 40px; }
 
     /* New DM modal */
-    #newDmModal { align-items: flex-end; padding: 0; }
+    #newDmModal { align-items: flex-end !important; padding: 0 !important; }
     #newDmModal > div {
       width: 100% !important; max-width: 100% !important;
       border-radius: 20px 20px 0 0 !important;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    /* ── About page ── */
+    /* ── About ── */
     .about-wrap { padding: 24px 16px; width: 100%; }
     .about-card { padding: 24px 20px; }
     .about-card p { font-size: 15px; }
 
-    /* ── Misc ── */
+    /* ── Photos ── */
     .owner-photo-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+    .photo-post-img { max-height: 340px; }
 
-    /* Touch targets — nothing smaller than 44px */
-    .nav-icon, .forum-circle, .send-btn, .modal-close { min-width: 44px; min-height: 44px; }
-    .mbn-item { min-height: 44px; }
-    .vote-btn { min-height: 36px; padding: 6px 12px; }
-    .photo-action-btn { min-height: 36px; padding: 6px 10px; }
-
-    /* Prevent font size bump on input focus (iOS) */
-    input, select, textarea { font-size: 16px !important; }
+    /* ── Touch targets — Apple HIG minimum 44×44pt ── */
+    .nav-icon, .forum-circle, .chat-send, .modal-close,
+    .photo-comment-send, .dm-new-btn { min-width: 44px; min-height: 44px; }
+    .vote-btn { min-height: 40px; padding: 6px 14px; }
+    .photo-action-btn { min-height: 40px; padding: 6px 12px; }
+    .forum-btn { min-height: 52px; }
+    .auth-btn, .social-btn { min-height: 48px; }
   }
 
-  /* ── Very small phones (≤380px) ── */
+  /* ── Very small phones ≤380px ── */
   @media (max-width: 380px) {
     .hero h1 { font-size: 22px; }
     .news-card { grid-template-columns: 68px 1fr; }
     .news-img { width: 68px; height: 86px; font-size: 18px; }
-    .forum-grid { grid-template-columns: repeat(2, 1fr); }
     .forum-btn { padding: 12px 6px; font-size: 10px; }
     .bubble { max-width: 88vw; font-size: 13px; }
     .owner-tab { font-size: 8px; padding: 10px 4px; min-width: 44px; }
+    .forum-circle { width: 32px; height: 32px; font-size: 14px; }
+    .dm-avatar { width: 28px; height: 28px; }
   }
 
   /* ── Owner Panel ─────────────────────── */
