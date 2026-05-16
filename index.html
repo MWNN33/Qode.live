@@ -1881,6 +1881,7 @@ function applySession() {
     // We check both: username must match OWNER_USERNAME AND role must be 'owner' in DB
     // This prevents anyone just setting their username to OWNER_USERNAME from gaining access
     const isOwner = currentProfile.role === 'owner';
+    document.body.classList.toggle('is-owner', isOwner);
     const btn=document.getElementById('ownerPanelBtn');
     if(btn) btn.style.display=isOwner?'block':'none';
 
@@ -1915,6 +1916,7 @@ function applySession() {
     document.querySelectorAll('.nav-links a').forEach(a=>a.style.pointerEvents='');
     document.getElementById('authTrigger').style.display='flex';
     document.getElementById('profilePill').style.display='none';
+    document.body.classList.remove('is-owner');
     const btn=document.getElementById('ownerPanelBtn');
     if(btn) btn.style.display='none';
     const addNewsBtn=document.getElementById('addNewsBtn');
