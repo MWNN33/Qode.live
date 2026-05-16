@@ -13,12 +13,11 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #dff0ff; --bg-card: #c4e2fa; --border: #3d8fd4;
-    --text: #071828; --text-muted: #0d3658; --text-light: #1a5a96;
-    --accent: #1167c4; --shadow: 0 2px 10px rgba(0,80,200,0.18);
+    --bg: #EEEDFE; --bg-card: #CECBF6; --border: #7F77DD;
+    --text: #26215C; --text-muted: #3C3489; --text-light: #534AB7;
+    --accent: #534AB7; --shadow: 0 2px 10px rgba(83,74,183,0.18);
     --nav-h: 48px; --online: #16c060; --danger: #d9321f;
   }
-  html { overflow-x: hidden; }
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Kanit', sans-serif; font-size: 15px; line-height: 1.6; }
 
   /* NAV */
@@ -143,7 +142,7 @@
   /* FORUM inner layout */
   .forum-inner { display: flex; height: 100%; overflow: hidden; }
   .forum-sub-sidebar { width: 190px; border-right: 1px solid var(--border); background: var(--bg); overflow-y: auto; flex-shrink: 0; }
-  .forum-chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #b8d8f8; }
+  .forum-chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #DDDCFB; }
   .forum-cat-header { padding: 10px 14px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-light); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
   .forum-cat-item { padding: 9px 14px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: background 0.12s; display: flex; align-items: center; gap: 8px; font-family: 'Kanit', sans-serif; border-left: 3px solid transparent; }
   .forum-cat-item:hover { background: var(--bg-card); color: var(--text); }
@@ -172,7 +171,7 @@
   .dm-name { font-size: 12px; font-weight: 700; color: var(--text); }
   .dm-preview { font-size: 11px; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .dm-time { font-size: 10px; color: var(--text-light); flex-shrink: 0; }
-  .dm-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #b8d8f8; }
+  .dm-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #DDDCFB; }
   .dm-placeholder { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text-light); }
   .dm-placeholder svg { width: 48px; height: 48px; stroke: var(--border); fill: none; stroke-width: 1.5; }
 
@@ -188,7 +187,7 @@
   .bubble { padding: 8px 12px; border-radius: 16px; font-size: 13.5px; line-height: 1.45; color: var(--text); background: var(--bg-card); border: 1px solid var(--border); word-break: break-word; }
   .msg-row.mine .bubble { background: var(--accent); color: #fff; border-color: #2a5a90; }
   .chat-input-bar { border-top: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 10px; background: var(--bg-card); flex-shrink: 0; }
-  .chat-input { flex: 1; border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; font-family: 'Kanit', sans-serif; font-size: 13px; background: #b8d8f8; color: var(--text); outline: none; transition: border-color 0.2s; }
+  .chat-input { flex: 1; border: 1px solid var(--border); border-radius: 20px; padding: 8px 16px; font-family: 'Kanit', sans-serif; font-size: 13px; background: #DDDCFB; color: var(--text); outline: none; transition: border-color 0.2s; }
   .chat-input:focus { border-color: var(--accent); }
   .chat-input::placeholder { color: var(--text-light); }
   .chat-send { width: 34px; height: 34px; border-radius: 50%; border: none; background: var(--accent); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, transform 0.1s; flex-shrink: 0; }
@@ -941,49 +940,6 @@
     .auth-btn, .social-btn { min-height: 48px; }
   }
 
-  @media (max-width: 700px) {
-    /* ── Toast — clear the bottom nav ── */
-    .toast {
-      bottom: calc(58px + env(safe-area-inset-bottom, 0px) + 12px) !important;
-      font-size: 12px;
-      padding: 9px 16px;
-      max-width: 90vw;
-      white-space: normal;
-      text-align: center;
-    }
-
-    /* ── Banned box — reduce padding ── */
-    .banned-box { padding: 28px 20px; }
-    .banned-icon { font-size: 40px; }
-    .banned-title { font-size: 18px; }
-
-    /* ── Section label + button row — wrap ── */
-    .home-col > div[style*="space-between"] {
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    /* ── Photo feed — less padding ── */
-    #photoFeed { padding: 8px !important; gap: 8px !important; }
-    .photo-post-img { max-height: 280px; }
-    .photo-post-title { font-size: 14px; padding: 8px 12px 6px; }
-    .photo-post-actions { padding: 6px 12px; gap: 6px; }
-
-    /* ── dvh fallback for browsers without dvh support ── */
-    @supports not (height: 100dvh) {
-      .chat-outer {
-        height: calc(100vh - var(--nav-h) - 58px - env(safe-area-inset-bottom, 0px));
-      }
-    }
-
-    /* ── Settings body ── */
-    .settings-body { padding: 16px; }
-
-    /* ── Prevent any child from causing overflow ── */
-    .page > * { max-width: 100%; }
-
-  } /* end @media 700px */
-
   /* ── Very small phones ≤380px ── */
   @media (max-width: 380px) {
     .hero h1 { font-size: 22px; }
@@ -1541,6 +1497,7 @@
       <button class="owner-tab" id="otab-news" onclick="switchOwnerTab('news')">📰 News</button>
       <button class="owner-tab" id="otab-photos" onclick="switchOwnerTab('photos')">🖼 Photos</button>
       <button class="owner-tab" id="otab-channels" onclick="switchOwnerTab('channels')">📢 Channels</button>
+      <button class="owner-tab" id="otab-rooms" onclick="switchOwnerTab('rooms')">🏠 Rooms</button>
     </div>
     <div class="owner-content" id="ownerContent">
       <div style="color:var(--text-light);font-size:12px;">Loading...</div>
@@ -1881,7 +1838,6 @@ function applySession() {
     // We check both: username must match OWNER_USERNAME AND role must be 'owner' in DB
     // This prevents anyone just setting their username to OWNER_USERNAME from gaining access
     const isOwner = currentProfile.role === 'owner';
-    document.body.classList.toggle('is-owner', isOwner);
     const btn=document.getElementById('ownerPanelBtn');
     if(btn) btn.style.display=isOwner?'block':'none';
 
@@ -1916,7 +1872,6 @@ function applySession() {
     document.querySelectorAll('.nav-links a').forEach(a=>a.style.pointerEvents='');
     document.getElementById('authTrigger').style.display='flex';
     document.getElementById('profilePill').style.display='none';
-    document.body.classList.remove('is-owner');
     const btn=document.getElementById('ownerPanelBtn');
     if(btn) btn.style.display='none';
     const addNewsBtn=document.getElementById('addNewsBtn');
@@ -2162,6 +2117,7 @@ function switchOwnerTab(tab) {
   else if(tab==='news') loadOwnerNews();
   else if(tab==='photos') loadOwnerPhotos();
   else if(tab==='channels') loadOwnerChannels();
+  else if(tab==='rooms') loadOwnerRooms();
 }
 
 async function loadOwnerUsers() {
@@ -2527,7 +2483,7 @@ async function loadForumMessages(forumId) {
   msgs.innerHTML='<div style="text-align:center;color:var(--text-light);font-size:12px;padding:20px;">Loading...</div>';
   const {data,error}=await sb.from('forum_messages').select('*').eq('forum_id',forumId).order('created_at',{ascending:true}).limit(100);
   msgs.innerHTML='';
-  if(error){msgs.innerHTML=`<div style="padding:24px 16px;text-align:center;"><div style="font-size:28px;margin-bottom:8px;">⚠️</div><div style="color:var(--danger);font-size:13px;font-weight:700;margin-bottom:4px;">Couldn't load messages</div><div style="color:var(--text-light);font-size:11px;margin-bottom:14px;">${error.message||'Check your connection'}</div><button onclick="loadForumMessages('${forumId}')" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'Kanit',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Retry ↺</button></div>`;return;}
+  if(error){msgs.innerHTML='<div style="padding:16px;color:var(--danger);font-size:12px;">Error loading messages.</div>';return;}
   if(data.length===0){msgs.innerHTML='<div style="text-align:center;color:var(--text-light);font-size:12px;padding:20px;">No messages yet. Be the first to say something!</div>';return;}
   data.forEach(m=>appendForumMsg(m));
   msgs.scrollTop=msgs.scrollHeight;
@@ -3618,8 +3574,8 @@ if (_savedPage && document.getElementById('page-'+_savedPage)) {
   }
 
   // ── 2. Prevent body scroll when a modal / panel is open ──
-  const lockScroll = () => { document.documentElement.style.overflowY = 'hidden'; };
-  const unlockScroll = () => { document.documentElement.style.overflowY = ''; };
+  const lockScroll = () => { document.body.style.overflow = 'hidden'; };
+  const unlockScroll = () => { document.body.style.overflow = ''; };
 
   // Observe open class on overlays
   const mo = new MutationObserver(() => {
@@ -3639,14 +3595,12 @@ if (_savedPage && document.getElementById('page-'+_savedPage)) {
     const authTrig   = document.getElementById('authTrigger');
     const profMenu   = document.getElementById('profileMenu');
     const profPill   = document.getElementById('profilePill');
-    const mbnNotif   = document.getElementById('mbn-notif');
-    const mbnProfile = document.getElementById('mbn-profile');
 
-    if (notifPanel?.classList.contains('open') && !notifPanel.contains(e.target) && !notifBell?.contains(e.target) && !mbnNotif?.contains(e.target))
+    if (notifPanel?.classList.contains('open') && !notifPanel.contains(e.target) && !notifBell?.contains(e.target))
       notifPanel.classList.remove('open');
-    if (authDD?.classList.contains('open') && !authDD.contains(e.target) && !authTrig?.contains(e.target) && !mbnProfile?.contains(e.target))
+    if (authDD?.classList.contains('open') && !authDD.contains(e.target) && !authTrig?.contains(e.target))
       authDD.classList.remove('open');
-    if (profMenu?.classList.contains('open') && !profMenu.contains(e.target) && !profPill?.contains(e.target) && !mbnProfile?.contains(e.target))
+    if (profMenu?.classList.contains('open') && !profMenu.contains(e.target) && !profPill?.contains(e.target))
       profMenu.classList.remove('open');
   }, { passive: true });
 
@@ -3703,41 +3657,287 @@ if (_savedPage && document.getElementById('page-'+_savedPage)) {
       }
     };
   }
-
-
-  // ── 7. Visual Viewport API — fix layout when mobile keyboard opens ──
-  // Shrinks chat area so input bar stays visible above the keyboard
-  if (window.visualViewport && isMobile()) {
-    const chatOuters = document.querySelectorAll('.chat-outer');
-    const onResize = () => {
-      const vv = window.visualViewport;
-      const keyboardH = window.innerHeight - vv.height;
-      chatOuters.forEach(el => {
-        if (keyboardH > 80) {
-          // keyboard is open: shrink by keyboard height
-          el.style.height = `calc(${vv.height}px - var(--nav-h) - 58px)`;
-        } else {
-          el.style.height = '';
-        }
-      });
-    };
-    window.visualViewport.addEventListener('resize', onResize);
-    window.visualViewport.addEventListener('scroll', onResize);
-  }
-
-  // ── 8. Scroll to bottom of chat when input is focused on mobile ──
-  ['chatInput', 'dmInput'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el || !isMobile()) return;
-    el.addEventListener('focus', () => {
-      setTimeout(() => {
-        const msgs = el.closest('.chat-outer')?.querySelector('.chat-messages, #dmMessages');
-        if (msgs) msgs.scrollTop = msgs.scrollHeight;
-      }, 350);
-    });
-  });
-
 })();
+
+// ══════════════════════════════════════════════════════════════════
+// ROOM MANAGEMENT (owner only)
+// Rooms = top-level forum categories (ALL_FORUMS array)
+// Owner can: create new rooms, rename existing rooms, change emoji,
+//            delete rooms (with confirmation), reorder (drag not needed — up/down arrows)
+// Changes are persisted to the `forum_rooms` Supabase table and
+// reloaded on startup just like channels.
+// ══════════════════════════════════════════════════════════════════
+
+// ── Load rooms from DB on startup ──────────────────────────────
+async function loadRoomsFromDB() {
+  try {
+    const { data, error } = await sb.from('forum_rooms').select('*').order('position', { ascending: true });
+    if (error || !data || data.length === 0) return;
+    ALL_FORUMS.length = 0;
+    data.forEach(row => {
+      ALL_FORUMS.push({ id: row.room_id, name: row.name, emoji: row.emoji });
+      if (!FORUM_CHANNELS[row.room_id]) FORUM_CHANNELS[row.room_id] = [{ id: row.room_id, label: 'general', type: 'chat' }];
+    });
+  } catch(e) { console.warn('loadRoomsFromDB:', e.message); }
+}
+
+async function saveRoomsToDB() {
+  try {
+    const rows = ALL_FORUMS.map((f, idx) => ({ room_id: f.id, name: f.name, emoji: f.emoji, position: idx }));
+    await sb.from('forum_rooms').upsert(rows, { onConflict: 'room_id' });
+    const validIds = rows.map(r => r.room_id);
+    if (validIds.length) {
+      await sb.from('forum_rooms').delete().not('room_id', 'in', '(' + validIds.map(id => `"${id}"`).join(',') + ')');
+    }
+  } catch(e) { console.warn('saveRoomsToDB:', e.message); }
+}
+
+// ── Owner Rooms tab renderer ────────────────────────────────────
+function loadOwnerRooms() {
+  const content = document.getElementById('ownerContent');
+  content.innerHTML = '';
+
+  // ── Create new room form ──
+  const createBox = document.createElement('div');
+  createBox.style.cssText = 'margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border);';
+  createBox.innerHTML = `
+    <div class="section-divider" style="margin-top:0;">➕ Create New Room</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center;">
+      <input class="auth-input" id="newRoomEmoji" type="text" value="💬" maxlength="2"
+        style="width:54px;text-align:center;font-size:20px;padding:8px 6px;flex-shrink:0;">
+      <input class="auth-input" id="newRoomName" type="text" placeholder="Room name (e.g. Design)"
+        style="flex:1;min-width:140px;">
+      <input class="auth-input" id="newRoomId" type="text" placeholder="room-id (e.g. design)"
+        style="flex:1;min-width:120px;">
+    </div>
+    <div style="font-size:11px;color:var(--text-light);margin-bottom:10px;">
+      Room ID: lowercase letters and hyphens only, no spaces. Cannot be changed later.
+    </div>
+    <button class="auth-btn" style="width:auto;padding:9px 22px;font-size:12px;" onclick="ownerCreateRoom()">
+      + Create Room
+    </button>
+  `;
+  content.appendChild(createBox);
+
+  // ── Room list ──
+  const header = document.createElement('div');
+  header.className = 'section-divider';
+  header.textContent = '🏠 All Rooms (' + ALL_FORUMS.length + ')';
+  content.appendChild(header);
+
+  const list = document.createElement('div');
+  list.id = 'ownerRoomList';
+  ALL_FORUMS.forEach((f, idx) => {
+    list.appendChild(buildRoomRow(f, idx));
+  });
+  content.appendChild(list);
+}
+
+function buildRoomRow(f, idx) {
+  const row = document.createElement('div');
+  row.className = 'user-row';
+  row.id = 'room-row-' + f.id;
+  row.style.cssText = 'padding:10px 0;flex-wrap:wrap;gap:8px;';
+  row.innerHTML = `
+    <div style="font-size:22px;flex-shrink:0;width:32px;text-align:center;">${f.emoji}</div>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);">${f.name}</div>
+      <div style="font-size:10px;color:var(--text-light);">id: ${f.id} &nbsp;·&nbsp; ${(FORUM_CHANNELS[f.id]||[]).length} channels</div>
+    </div>
+    <div style="display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;">
+      <button class="action-btn" onclick="ownerMoveRoom('${f.id}',-1)" title="Move up" ${idx===0?'disabled':''}>↑</button>
+      <button class="action-btn" onclick="ownerMoveRoom('${f.id}',1)" title="Move down" ${idx===ALL_FORUMS.length-1?'disabled':''}>↓</button>
+      <button class="action-btn" onclick="ownerToggleEditRoom('${f.id}')">✏️ Edit</button>
+      <button class="action-btn danger" onclick="ownerDeleteRoom('${f.id}')">Remove</button>
+    </div>
+  `;
+  // Edit form (hidden)
+  const editRow = document.createElement('div');
+  editRow.id = 'room-edit-' + f.id;
+  editRow.style.cssText = 'display:none;width:100%;padding:10px 0 4px;gap:8px;flex-wrap:wrap;align-items:center;';
+  editRow.innerHTML = `
+    <input class="auth-input" id="edit-room-emoji-${f.id}" type="text" value="${f.emoji}" maxlength="2"
+      style="width:54px;text-align:center;font-size:20px;padding:8px 6px;flex-shrink:0;">
+    <input class="auth-input" id="edit-room-name-${f.id}" type="text" value="${f.name}"
+      placeholder="Room name" style="flex:1;min-width:120px;font-size:13px;">
+    <button class="action-btn ok" onclick="ownerSaveRoom('${f.id}')">✓ Save</button>
+    <button class="action-btn" onclick="ownerToggleEditRoom('${f.id}')">Cancel</button>
+  `;
+  // Wrap both in a container
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'border-bottom:1px solid var(--border);';
+  wrap.appendChild(row);
+  wrap.appendChild(editRow);
+  return wrap;
+}
+
+function ownerToggleEditRoom(roomId) {
+  // Close all other edit forms
+  document.querySelectorAll('[id^="room-edit-"]').forEach(el => el.style.display = 'none');
+  const form = document.getElementById('room-edit-' + roomId);
+  if (!form) return;
+  form.style.display = form.style.display === 'flex' ? 'none' : 'flex';
+}
+
+async function ownerSaveRoom(roomId) {
+  const nameEl = document.getElementById('edit-room-name-' + roomId);
+  const emojiEl = document.getElementById('edit-room-emoji-' + roomId);
+  const newName = nameEl?.value.trim();
+  const newEmoji = emojiEl?.value.trim() || '💬';
+  if (!newName) { toast('Room name cannot be empty.'); return; }
+  const f = ALL_FORUMS.find(x => x.id === roomId);
+  if (!f) return;
+  f.name = newName;
+  f.emoji = newEmoji;
+  toast('Room updated ✓');
+  await saveRoomsToDB();
+  buildForumSidebar();
+  buildForumSubSidebar();
+  loadOwnerRooms();
+}
+
+async function ownerCreateRoom() {
+  const nameEl = document.getElementById('newRoomName');
+  const idEl = document.getElementById('newRoomId');
+  const emojiEl = document.getElementById('newRoomEmoji');
+  const name = nameEl.value.trim();
+  const rawId = idEl.value.trim();
+  const emoji = emojiEl.value.trim() || '💬';
+  const roomId = rawId.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  if (!name) { toast('Enter a room name.'); return; }
+  if (!roomId) { toast('Enter a valid room ID.'); return; }
+  if (ALL_FORUMS.find(f => f.id === roomId)) { toast('A room with that ID already exists.'); return; }
+  ALL_FORUMS.push({ id: roomId, name, emoji });
+  FORUM_CHANNELS[roomId] = [{ id: roomId, label: 'general', type: 'chat' }];
+  nameEl.value = ''; idEl.value = ''; emojiEl.value = '💬';
+  toast('Room created ✓');
+  await saveRoomsToDB();
+  await saveChannelsToDB();
+  buildForumSidebar();
+  buildForumSubSidebar();
+  loadOwnerRooms();
+}
+
+async function ownerDeleteRoom(roomId) {
+  const f = ALL_FORUMS.find(x => x.id === roomId);
+  if (!f) return;
+  if (!confirm(`Remove the "${f.name}" room and ALL its channels and messages? This cannot be undone.`)) return;
+  const idx = ALL_FORUMS.findIndex(x => x.id === roomId);
+  ALL_FORUMS.splice(idx, 1);
+  delete FORUM_CHANNELS[roomId];
+  if (activeForum === roomId) {
+    activeForum = ALL_FORUMS[0]?.id || '';
+    activeChannel = '';
+  }
+  toast('Room removed ✓');
+  await saveRoomsToDB();
+  await saveChannelsToDB();
+  buildForumSidebar();
+  buildForumSubSidebar();
+  loadOwnerRooms();
+}
+
+async function ownerMoveRoom(roomId, dir) {
+  const idx = ALL_FORUMS.findIndex(x => x.id === roomId);
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= ALL_FORUMS</html><!DOCTYPE html>
+  .photo-post-title { padding:10px 14px 8px; font-size:15px; font-weight:700; color:var(--text); line-height:1.3; }
+  .photo-post-img { width:100%; max-height:480px; object-fit:cover; display:block; cursor:pointer; }
+  .photo-post-img-placeholder { width:100%; height:200px; background:linear-gradient(135deg,var(--bg),var(--border)); display:flex; align-items:center; justify-content:center; font-size:40px; }
+  .photo-post-body { padding:10px 14px; font-size:13px; color:var(--text-muted); line-height:1.6; display:none; }
+  .photo-post-body.open { display:block; }
+  .photo-post-actions { padding:8px 14px; border-top:1px solid var(--border); display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .vote-bar { display:flex; align-items:center; gap:4px; }
+  .vote-btn { display:flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; border:1px solid var(--border); background:transparent; font-family:'Kanit',sans-serif; font-size:11px; font-weight:700; cursor:pointer; color:var(--text-muted); transition:all 0.15s; line-height:1.4; }
+  .vote-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .vote-btn.up.voted { background:rgba(39,174,96,0.13); border-color:#27ae60; color:#27ae60; }
+  .vote-btn.down.voted { background:rgba(231,76,60,0.13); border-color:#e74c3c; color:#e74c3c; }
+  .vote-sep { width:1px; height:14px; background:var(--border); margin:0 2px; }
+  body.dark .vote-btn { color:var(--text-muted); border-color:var(--border-hi); }
+  body.dark .vote-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .photo-action-btn { background:none; border:none; font-family:'Kanit',sans-serif; font-size:11px; font-weight:700; color:var(--text-light); cursor:pointer; padding:4px 8px; border-radius:6px; letter-spacing:0.04em; transition:background 0.15s; }
+  .photo-action-btn:hover { background:var(--border); color:var(--text); }
+  .photo-comments { padding:10px 14px; border-top:1px solid var(--border); display:none; flex-direction:column; gap:8px; }
+  .photo-comments.open { display:flex; }
+  .photo-comment { display:flex; gap:8px; align-items:flex-start; }
+  .photo-comment-av { width:22px; height:22px; border-radius:50%; color:#fff; font-size:8px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+  .photo-comment-body { flex:1; }
+  .photo-comment-user { font-size:11px; font-weight:700; color:var(--text-muted); }
+  .photo-comment-text { font-size:12px; color:var(--text); line-height:1.4; }
+  .photo-comment-input-row { display:flex; gap:8px; margin-top:6px; }
+  .photo-comment-input { flex:1; border:1px solid var(--border); border-radius:16px; padding:6px 12px; font-family:'Kanit',sans-serif; font-size:12px; background:var(--bg); color:var(--text); outline:none; }
+  .photo-comment-input:focus { border-color:var(--accent); }
+  .photo-comment-send { width:28px; height:28px; border-radius:50%; border:none; background:var(--accent); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .photo-comment-send svg { width:12px; height:12px; stroke:#fff; fill:none; stroke-width:2; }
+
+  /* New Post Modal */
+  .new-post-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:800; align-items:center; justify-content:center; }
+  .new-post-modal.open { display:flex; }
+  .new-post-box { background:var(--bg); border:1.5px solid var(--border); border-radius:14px; width:480px; max-width:94vw; max-height:88vh; overflow-y:auto; padding:24px; box-shadow:0 8px 40px rgba(0,0,0,0.25); animation:modalIn 0.18s ease; display:flex; flex-direction:column; gap:14px; }
+  .new-post-box h3 { font-size:15px; font-weight:700; margin-bottom:0; }
+  .photo-upload-zone { border:2px dashed var(--border); border-radius:8px; padding:28px; text-align:center; cursor:pointer; transition:border-color 0.2s, background 0.2s; background:var(--bg-card); }
+  .photo-upload-zone:hover { border-color:var(--accent); background:rgba(58,110,168,0.08); }
+  .photo-upload-zone img { max-width:100%; max-height:200px; border-radius:6px; object-fit:cover; }
+
+  /* Social auth */
+  .social-auth-row { display:flex; flex-direction:column; gap:8px; }
+  .social-btn { width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:8px; background:var(--bg-card); font-family:'Kanit',sans-serif; font-size:12px; font-weight:700; color:var(--text); cursor:pointer; display:flex; align-items:center; gap:10px; transition:background 0.15s; }
+  .social-btn:hover { background:var(--border); }
+  .social-btn svg { width:16px; height:16px; flex-shrink:0; }
+  .phone-input-row { display:flex; gap:6px; }
+  .phone-prefix { width:70px; padding:9px 8px; border:1px solid var(--border); border-radius:6px; background:var(--bg-card); font-family:'Kanit',sans-serif; font-size:13px; color:var(--text); outline:none; }
+  .otp-row { display:flex; gap:8px; align-items:center; }
+  .otp-input { flex:1; }
+
+  ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  /* ── TOGGLE SWITCH ─────────────────────── */
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
+  .toggle-row:last-child { border-bottom:none; }
+  .toggle-label { font-size:13px; font-weight:600; color:var(--text); }
+  .toggle-sub { font-size:11px; color:var(--text-light); margin-top:2px; }
+  .toggle { position:relative; width:40px; height:22px; flex-shrink:0; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; inset:0; background:var(--border-hi,#ccc); border-radius:22px; cursor:pointer; transition:background 0.2s; }
+  .toggle-slider::before { content:''; position:absolute; width:16px; height:16px; left:3px; top:3px; background:#fff; border-radius:50%; transition:transform 0.2s; }
+  .toggle input:checked + .toggle-slider { background:var(--accent); }
+  .toggle input:checked + .toggle-slider::before { transform:translateX(18px); }
+
+  /* ── BANNED OVERLAY ─────────────────────── */
+  body.banned .chat-input, body.banned .photo-upload-zone,
+  body.banned #newPostBtn, body.banned .send-btn,
+  body.banned .vote-btn, body.banned .photo-action-btn { opacity:0.4; pointer-events:none; cursor:not-allowed; }
+  .banned-banner { display:none; background:#e74c3c; color:#fff; text-align:center; font-size:12px; font-weight:700; padding:8px; letter-spacing:0.05em; position:fixed; top:var(--nav-h); left:0; right:0; z-index:500; }
+  body.banned .banned-banner { display:block; }
+
+
+  /* ── MOBILE BOTTOM NAV ───────────────────── */
+  .mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 58px;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    z-index: 200;
+    align-items: stretch;
+    justify-content: space-around;
+    padding: 0 4px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+  }
+  .mbn-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+.length) return;
+  const temp = ALL_FORUMS[idx];
+  ALL_FORUMS[idx] = ALL_FORUMS[newIdx];
+  ALL_FORUMS[newIdx] = temp;
+  await saveRoomsToDB();
+  buildForumSidebar();
+  buildForumSubSidebar();
+  loadOwnerRooms();
+}
 
 </script>
 </body>
