@@ -18,6 +18,7 @@
     --accent: #1167c4; --shadow: 0 2px 10px rgba(0,80,200,0.18);
     --nav-h: 48px; --online: #16c060; --danger: #d9321f;
   }
+  html { overflow-x: hidden; }
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Kanit', sans-serif; font-size: 15px; line-height: 1.6; }
 
   /* NAV */
@@ -939,6 +940,49 @@
     .forum-btn { min-height: 52px; }
     .auth-btn, .social-btn { min-height: 48px; }
   }
+
+  @media (max-width: 700px) {
+    /* ── Toast — clear the bottom nav ── */
+    .toast {
+      bottom: calc(58px + env(safe-area-inset-bottom, 0px) + 12px) !important;
+      font-size: 12px;
+      padding: 9px 16px;
+      max-width: 90vw;
+      white-space: normal;
+      text-align: center;
+    }
+
+    /* ── Banned box — reduce padding ── */
+    .banned-box { padding: 28px 20px; }
+    .banned-icon { font-size: 40px; }
+    .banned-title { font-size: 18px; }
+
+    /* ── Section label + button row — wrap ── */
+    .home-col > div[style*="space-between"] {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* ── Photo feed — less padding ── */
+    #photoFeed { padding: 8px !important; gap: 8px !important; }
+    .photo-post-img { max-height: 280px; }
+    .photo-post-title { font-size: 14px; padding: 8px 12px 6px; }
+    .photo-post-actions { padding: 6px 12px; gap: 6px; }
+
+    /* ── dvh fallback for browsers without dvh support ── */
+    @supports not (height: 100dvh) {
+      .chat-outer {
+        height: calc(100vh - var(--nav-h) - 58px - env(safe-area-inset-bottom, 0px));
+      }
+    }
+
+    /* ── Settings body ── */
+    .settings-body { padding: 16px; }
+
+    /* ── Prevent any child from causing overflow ── */
+    .page > * { max-width: 100%; }
+
+  } /* end @media 700px */
 
   /* ── Very small phones ≤380px ── */
   @media (max-width: 380px) {
@@ -2481,7 +2525,7 @@ async function loadForumMessages(forumId) {
   msgs.innerHTML='<div style="text-align:center;color:var(--text-light);font-size:12px;padding:20px;">Loading...</div>';
   const {data,error}=await sb.from('forum_messages').select('*').eq('forum_id',forumId).order('created_at',{ascending:true}).limit(100);
   msgs.innerHTML='';
-  if(error){msgs.innerHTML='<div style="padding:16px;color:var(--danger);font-size:12px;">Error loading messages.</div>';return;}
+  if(error){msgs.innerHTML=`<div style="padding:24px 16px;text-align:center;"><div style="font-size:28px;margin-bottom:8px;">⚠️</div><div style="color:var(--danger);font-size:13px;font-weight:700;margin-bottom:4px;">Couldn't load messages</div><div style="color:var(--text-light);font-size:11px;margin-bottom:14px;">${error.message||'Check your connection'}</div><button onclick="loadForumMessages('${forumId}')" style="padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'Kanit',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Retry ↺</button></div>`;return;}
   if(data.length===0){msgs.innerHTML='<div style="text-align:center;color:var(--text-light);font-size:12px;padding:20px;">No messages yet. Be the first to say something!</div>';return;}
   data.forEach(m=>appendForumMsg(m));
   msgs.scrollTop=msgs.scrollHeight;
@@ -3572,8 +3616,8 @@ if (_savedPage && document.getElementById('page-'+_savedPage)) {
   }
 
   // ── 2. Prevent body scroll when a modal / panel is open ──
-  const lockScroll = () => { document.body.style.overflow = 'hidden'; };
-  const unlockScroll = () => { document.body.style.overflow = ''; };
+  const lockScroll = () => { document.documentElement.style.overflowY = 'hidden'; };
+  const unlockScroll = () => { document.documentElement.style.overflowY = ''; };
 
   // Observe open class on overlays
   const mo = new MutationObserver(() => {
@@ -3593,12 +3637,14 @@ if (_savedPage && document.getElementById('page-'+_savedPage)) {
     const authTrig   = document.getElementById('authTrigger');
     const profMenu   = document.getElementById('profileMenu');
     const profPill   = document.getElementById('profilePill');
+    const mbnNotif   = document.getElementById('mbn-notif');
+    const mbnProfile = document.getElementById('mbn-profile');
 
-    if (notifPanel?.classList.contains('open') && !notifPanel.contains(e.target) && !notifBell?.contains(e.target))
+    if (notifPanel?.classList.contains('open') && !notifPanel.contains(e.target) && !notifBell?.contains(e.target) && !mbnNotif?.contains(e.target))
       notifPanel.classList.remove('open');
-    if (authDD?.classList.contains('open') && !authDD.contains(e.target) && !authTrig?.contains(e.target))
+    if (authDD?.classList.contains('open') && !authDD.contains(e.target) && !authTrig?.contains(e.target) && !mbnProfile?.contains(e.target))
       authDD.classList.remove('open');
-    if (profMenu?.classList.contains('open') && !profMenu.contains(e.target) && !profPill?.contains(e.target))
+    if (profMenu?.classList.contains('open') && !profMenu.contains(e.target) && !profPill?.contains(e.target) && !mbnProfile?.contains(e.target))
       profMenu.classList.remove('open');
   }, { passive: true });
 
@@ -3655,6 +3701,40 @@ if (_savedPage && document.getElementById('page-'+_savedPage)) {
       }
     };
   }
+
+
+  // ── 7. Visual Viewport API — fix layout when mobile keyboard opens ──
+  // Shrinks chat area so input bar stays visible above the keyboard
+  if (window.visualViewport && isMobile()) {
+    const chatOuters = document.querySelectorAll('.chat-outer');
+    const onResize = () => {
+      const vv = window.visualViewport;
+      const keyboardH = window.innerHeight - vv.height;
+      chatOuters.forEach(el => {
+        if (keyboardH > 80) {
+          // keyboard is open: shrink by keyboard height
+          el.style.height = `calc(${vv.height}px - var(--nav-h) - 58px)`;
+        } else {
+          el.style.height = '';
+        }
+      });
+    };
+    window.visualViewport.addEventListener('resize', onResize);
+    window.visualViewport.addEventListener('scroll', onResize);
+  }
+
+  // ── 8. Scroll to bottom of chat when input is focused on mobile ──
+  ['chatInput', 'dmInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || !isMobile()) return;
+    el.addEventListener('focus', () => {
+      setTimeout(() => {
+        const msgs = el.closest('.chat-outer')?.querySelector('.chat-messages, #dmMessages');
+        if (msgs) msgs.scrollTop = msgs.scrollHeight;
+      }, 350);
+    });
+  });
+
 })();
 
 </script>
