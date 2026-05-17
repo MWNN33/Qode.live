@@ -506,13 +506,32 @@
   .photo-detail-comment-field:focus { border-color:var(--accent); }
   .photo-detail-send { width:36px; height:36px; border-radius:50%; background:var(--accent); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
   .photo-detail-send svg { width:14px; height:14px; stroke:#fff; fill:none; stroke-width:2; }
-  .photo-detail-comment { display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); }
+  .photo-detail-comment { display:flex; gap:10px; align-items:flex-start; padding:12px 0; border-bottom:1px solid var(--border); }
   .photo-detail-comment:last-child { border-bottom:none; }
   .photo-detail-comment-av2 { width:32px; height:32px; border-radius:50%; color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
-  .photo-detail-comment-body { flex:1; }
+  .photo-detail-comment-body { flex:1; min-width:0; }
   .photo-detail-comment-user { font-size:12px; font-weight:700; color:var(--text); }
   .photo-detail-comment-time { font-size:10px; color:var(--text-light); margin-left:6px; }
   .photo-detail-comment-text { font-size:13px; color:var(--text-muted); line-height:1.55; margin-top:3px; }
+  .photo-detail-comment-actions { display:flex; gap:10px; margin-top:6px; align-items:center; }
+  .photo-detail-reply-btn { background:none; border:none; font-size:11px; font-weight:700; color:var(--text-light); cursor:pointer; font-family:'Kanit',sans-serif; padding:0; letter-spacing:.03em; transition:color .12s; }
+  .photo-detail-reply-btn:hover { color:var(--accent); }
+  /* Reply input row */
+  .photo-detail-reply-form { display:none; flex-direction:row; gap:8px; align-items:center; margin-top:8px; padding-left:2px; }
+  .photo-detail-reply-form.open { display:flex; }
+  .photo-detail-reply-input { flex:1; border:1px solid var(--border); border-radius:16px; padding:7px 12px; font-size:12px; font-family:'Kanit',sans-serif; background:var(--bg-card); color:var(--text); outline:none; transition:border-color .15s; }
+  .photo-detail-reply-input:focus { border-color:var(--accent); }
+  .photo-detail-reply-send { width:30px; height:30px; border-radius:50%; background:var(--accent); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .photo-detail-reply-send svg { width:12px; height:12px; stroke:#fff; fill:none; stroke-width:2; }
+  /* Nested replies */
+  .photo-detail-replies { margin-top:8px; padding-left:16px; border-left:2px solid var(--border); display:flex; flex-direction:column; gap:0; }
+  .photo-detail-reply { display:flex; gap:8px; align-items:flex-start; padding:8px 0; border-bottom:1px solid var(--border); }
+  .photo-detail-reply:last-child { border-bottom:none; }
+  .photo-detail-reply-av { width:24px; height:24px; border-radius:50%; color:#fff; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+  .photo-detail-reply-body { flex:1; }
+  .photo-detail-reply-user { font-size:11px; font-weight:700; color:var(--text); }
+  .photo-detail-reply-time { font-size:9px; color:var(--text-light); margin-left:5px; }
+  .photo-detail-reply-text { font-size:12px; color:var(--text-muted); line-height:1.5; margin-top:2px; }
   .photo-detail-close { display:none; }
   .photo-post-header { padding:10px 14px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); }
   .photo-post-user { font-size:12px; font-weight:700; color:var(--text); }
@@ -3150,10 +3169,10 @@ async function loadDetailVotes(postId) {
 async function loadDetailComments(postId) {
   const list = document.getElementById('photoDetailCommentsList');
   list.innerHTML = '<div style="color:var(--text-light);font-size:12px;padding:8px 0;">Loading…</div>';
+
   const { data } = await sb.from('photo_comments').select('*').eq('post_id', postId).order('created_at', {ascending:true});
   list.innerHTML = '';
 
-  // Update comment count button
   const countEl = document.getElementById('detail-comment-count-'+postId);
   if (countEl) countEl.textContent = (data?.length||0) + ' Comments';
 
@@ -3161,19 +3180,88 @@ async function loadDetailComments(postId) {
     list.innerHTML = '<div style="color:var(--text-light);font-size:13px;padding:12px 0;">No comments yet — be the first!</div>';
     return;
   }
-  data.forEach(c => {
+
+  for (const c of data) {
     const el = document.createElement('div');
     el.className = 'photo-detail-comment';
+    el.id = 'comment-block-' + c.id;
     const color = stringToColor(c.username||'?');
+    const initials = (c.username||'?').slice(0,2).toUpperCase();
+    const replyBtnId = 'reply-btn-' + c.id;
+    const replyFormId = 'reply-form-' + c.id;
+    const replyInputId = 'reply-input-' + c.id;
+    const repliesId = 'replies-' + c.id;
+
     el.innerHTML = `
-      <div class="photo-detail-comment-av2" style="background:${color}">${(c.username||'?').slice(0,2).toUpperCase()}</div>
+      <div class="photo-detail-comment-av2" style="background:${color}">${initials}</div>
       <div class="photo-detail-comment-body">
         <span class="photo-detail-comment-user">${c.username||'Unknown'}</span>
         <span class="photo-detail-comment-time">${fmtTime(c.created_at)}</span>
         <div class="photo-detail-comment-text">${c.content.replace(/</g,'&lt;')}</div>
+        <div class="photo-detail-comment-actions">
+          <button class="photo-detail-reply-btn" id="${replyBtnId}" onclick="toggleReplyForm('${c.id}')">↩ Reply</button>
+        </div>
+        <div class="photo-detail-reply-form" id="${replyFormId}">
+          <input class="photo-detail-reply-input" id="${replyInputId}" type="text" placeholder="Write a reply…" onkeydown="if(event.key==='Enter')submitReply('${c.id}','${postId}')">
+          <button class="photo-detail-reply-send" onclick="submitReply('${c.id}','${postId}')">
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+        <div class="photo-detail-replies" id="${repliesId}"></div>
       </div>`;
     list.appendChild(el);
+    // Load replies for this comment
+    loadReplies(c.id);
+  }
+}
+
+function toggleReplyForm(commentId) {
+  if (!currentUser) { toast('Log in to reply.'); return; }
+  const form = document.getElementById('reply-form-' + commentId);
+  if (!form) return;
+  const isOpen = form.classList.toggle('open');
+  if (isOpen) document.getElementById('reply-input-' + commentId)?.focus();
+}
+
+async function loadReplies(commentId) {
+  const container = document.getElementById('replies-' + commentId);
+  if (!container) return;
+  const { data } = await sb.from('photo_comment_replies')
+    .select('*').eq('comment_id', commentId).order('created_at', {ascending:true});
+  container.innerHTML = '';
+  if (!data || data.length === 0) return;
+  data.forEach(r => {
+    const el = document.createElement('div');
+    el.className = 'photo-detail-reply';
+    const color = stringToColor(r.username||'?');
+    el.innerHTML = `
+      <div class="photo-detail-reply-av" style="background:${color}">${(r.username||'?').slice(0,2).toUpperCase()}</div>
+      <div class="photo-detail-reply-body">
+        <span class="photo-detail-reply-user">${r.username||'Unknown'}</span>
+        <span class="photo-detail-reply-time">${fmtTime(r.created_at)}</span>
+        <div class="photo-detail-reply-text">${r.content.replace(/</g,'&lt;')}</div>
+      </div>`;
+    container.appendChild(el);
   });
+}
+
+async function submitReply(commentId, postId) {
+  if (!currentUser) { toast('Log in to reply.'); return; }
+  const input = document.getElementById('reply-input-' + commentId);
+  const text = input?.value.trim();
+  if (!text) return;
+  input.value = '';
+  const { error } = await sb.from('photo_comment_replies').insert({
+    comment_id: commentId,
+    post_id: postId,
+    user_id: currentUser.id,
+    username: currentProfile.username,
+    content: text
+  });
+  if (error) { toast('Error: ' + error.message); return; }
+  // Close form and reload replies
+  document.getElementById('reply-form-' + commentId)?.classList.remove('open');
+  await loadReplies(commentId);
 }
 
 async function submitDetailComment() {
