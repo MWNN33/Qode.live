@@ -458,22 +458,21 @@
   body.dark .action-btn.ok:hover { background: rgba(35,209,139,0.08); }
 
   /* Photo room */
-  /* ── Photo feed — Reddit-style vertical cards ── */
-  .photo-feed { display:flex; flex-direction:column; gap:0; max-width:740px; margin:0 auto; padding:0; }
-  .photo-post { border-bottom:1px solid var(--border); background:var(--bg-card); cursor:pointer; transition:background .12s; }
-  .photo-post:hover { background:var(--bg); }
-  .photo-post-header { padding:12px 16px 6px; display:flex; align-items:center; gap:8px; }
+  /* ── Photo feed — compact Instagram-style grid ── */
+  .photo-feed { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:3px; padding:3px; }
+  .photo-post { position:relative; aspect-ratio:1/1; overflow:hidden; cursor:pointer; background:var(--bg-card); }
+  .photo-post:hover .photo-post-overlay { opacity:1; }
+  .photo-post-thumb { width:100%; height:100%; object-fit:cover; display:block; transition:transform .2s; }
+  .photo-post:hover .photo-post-thumb { transform:scale(1.04); }
+  .photo-post-thumb-placeholder { width:100%; height:100%; background:linear-gradient(135deg,var(--bg),var(--border)); display:flex; align-items:center; justify-content:center; font-size:40px; }
+  .photo-post-overlay { position:absolute; inset:0; background:rgba(0,0,0,.45); display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; padding:10px; opacity:0; transition:opacity .18s; }
+  .photo-post-overlay-user { font-size:11px; font-weight:700; color:#fff; }
+  .photo-post-overlay-title { font-size:12px; color:rgba(255,255,255,.85); margin-top:2px; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  /* Keep these for detail page references */
   .photo-post-av { width:32px; height:32px; border-radius:50%; color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .photo-post-meta { display:flex; flex-direction:column; gap:1px; }
   .photo-post-user { font-size:13px; font-weight:700; color:var(--text); }
   .photo-post-time { font-size:11px; color:var(--text-light); }
-  .photo-post-title { padding:0 16px 10px; font-size:17px; font-weight:700; color:var(--text); line-height:1.35; }
-  .photo-post-thumb { width:100%; max-height:560px; object-fit:cover; display:block; }
-  .photo-post-thumb-placeholder { width:100%; height:220px; background:linear-gradient(135deg,var(--bg),var(--border)); display:flex; align-items:center; justify-content:center; font-size:48px; }
-  .photo-post-foot { padding:10px 16px; display:flex; align-items:center; gap:14px; }
-  .photo-post-foot-btn { display:flex; align-items:center; gap:5px; background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:5px 12px; font-size:12px; font-weight:700; color:var(--text-muted); cursor:pointer; font-family:'Kanit',sans-serif; transition:background .12s,color .12s; }
-  .photo-post-foot-btn:hover { background:var(--border); color:var(--text); }
-  .photo-post-foot-btn svg { width:14px; height:14px; }
+  .photo-post-title { font-size:17px; font-weight:700; color:var(--text); line-height:1.35; }
 
   /* ── Photo detail — full page ── */
   .photo-detail-overlay { position:fixed; inset:0; background:var(--bg); z-index:900; display:flex; flex-direction:column; overflow-y:auto; opacity:0; pointer-events:none; transition:opacity .18s; }
@@ -1020,10 +1019,8 @@
 
     /* ── Photos ── */
     .owner-photo-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
-    .photo-post-thumb { max-height: 340px; }
-    .photo-post-title { font-size:15px; padding:0 12px 8px; }
-    .photo-post-header { padding:10px 12px 4px; }
-    .photo-post-foot { padding:8px 12px; gap:10px; }
+    .photo-feed { grid-template-columns:repeat(3,1fr); gap:2px; padding:2px; }
+    .photo-post-thumb { max-height:none; }
 
     /* ── Touch targets — Apple HIG minimum 44×44pt ── */
     .nav-icon, .forum-circle, .chat-send, .modal-close,
@@ -3034,39 +3031,21 @@ async function loadPhotoRoom(channelId) {
 }
 
 function buildPostCard(post) {
-  const card=document.createElement('div');
-  card.className='photo-post';
-  const color=stringToColor(post.username||'?');
-  const initials=(post.username||'?').slice(0,2).toUpperCase();
-  card.innerHTML=`
-    <div class="photo-post-header">
-      <div class="photo-post-av" style="background:${color}">${initials}</div>
-      <div class="photo-post-meta">
-        <span class="photo-post-user">${post.username||'Unknown'}</span>
-        <span class="photo-post-time">${fmtTime(post.created_at)}</span>
-      </div>
-    </div>
-    <div class="photo-post-title">${post.title.replace(/</g,'&lt;')}</div>
-    ${post.image_url
-      ? `<img class="photo-post-thumb" src="${post.image_url}" alt="${post.title.replace(/"/g,'')}" loading="lazy" onclick="openPhotoDetail(event,${JSON.stringify(post).replace(/`/g,'\`')})">`
-      : `<div class="photo-post-thumb-placeholder" onclick="openPhotoDetail(event,${JSON.stringify(post).replace(/`/g,'\`')})">📷</div>`}
-    <div class="photo-post-foot">
-      <div class="vote-bar" style="border-radius:20px;overflow:hidden;">
-        <button class="vote-btn up" id="up-${post.id}" onclick="event.stopPropagation();votePost('${post.id}',1)" title="Upvote">
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M12 4l8 8H4z"/></svg>
-          <span id="up-count-${post.id}">0</span>
-        </button>
-        <div class="vote-sep"></div>
-        <button class="vote-btn down" id="down-${post.id}" onclick="event.stopPropagation();votePost('${post.id}',-1)" title="Downvote">
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M12 20l-8-8h16z"/></svg>
-          <span id="down-count-${post.id}">0</span>
-        </button>
-      </div>
-      <button class="photo-post-foot-btn" onclick="openPhotoDetail(event,${JSON.stringify(post).replace(/`/g,'\`')})">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Comments
-      </button>
-    </div>`;
+  const card = document.createElement('div');
+  card.className = 'photo-post';
+  card.onclick = () => openPhotoDetail(null, post);
+  const safe = post.title.replace(/</g,'&lt;');
+  card.innerHTML = post.image_url
+    ? `<img class="photo-post-thumb" src="${post.image_url}" alt="" loading="lazy">
+       <div class="photo-post-overlay">
+         <div class="photo-post-overlay-user">${post.username||'Unknown'}</div>
+         <div class="photo-post-overlay-title">${safe}</div>
+       </div>`
+    : `<div class="photo-post-thumb-placeholder">📷</div>
+       <div class="photo-post-overlay">
+         <div class="photo-post-overlay-user">${post.username||'Unknown'}</div>
+         <div class="photo-post-overlay-title">${safe}</div>
+       </div>`;
   return card;
 }
 
