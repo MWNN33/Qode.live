@@ -458,12 +458,40 @@
   body.dark .action-btn.ok:hover { background: rgba(35,209,139,0.08); }
 
   /* Photo room */
-  .photo-post { border:1px solid var(--border); border-radius:10px; background:var(--bg-card); overflow:hidden; box-shadow:var(--shadow); }
+  /* ── Photo feed — compact grid cards ── */
+  .photo-feed { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; padding:14px; }
+  .photo-post { border:1px solid var(--border); border-radius:10px; background:var(--bg-card); overflow:hidden; box-shadow:var(--shadow); cursor:pointer; transition:transform .15s,box-shadow .15s; }
+  .photo-post:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(83,74,183,.18); }
+  .photo-post-thumb { width:100%; aspect-ratio:1/1; object-fit:cover; display:block; }
+  .photo-post-thumb-placeholder { width:100%; aspect-ratio:1/1; background:linear-gradient(135deg,var(--bg),var(--border)); display:flex; align-items:center; justify-content:center; font-size:40px; }
+  .photo-post-foot { padding:8px 10px; display:flex; align-items:center; gap:7px; }
+  .photo-post-av { width:22px; height:22px; border-radius:50%; color:#fff; font-size:8px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .photo-post-user { font-size:11px; font-weight:700; color:var(--text); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .photo-post-time { font-size:9px; color:var(--text-light); }
+  .photo-post-title { padding:0 10px 8px; font-size:12px; font-weight:700; color:var(--text); line-height:1.3; }
+
+  /* ── Photo detail page ── */
+  .photo-detail-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:900; display:flex; align-items:flex-start; justify-content:center; overflow-y:auto; padding:0; opacity:0; pointer-events:none; transition:opacity .2s; }
+  .photo-detail-overlay.open { opacity:1; pointer-events:all; }
+  .photo-detail-box { background:var(--bg); width:100%; max-width:760px; min-height:100vh; display:flex; flex-direction:column; }
+  .photo-detail-img-wrap { width:100%; background:#000; flex-shrink:0; }
+  .photo-detail-img { width:100%; max-height:62vh; object-fit:contain; display:block; }
+  .photo-detail-img-placeholder { width:100%; height:300px; background:linear-gradient(135deg,var(--bg-card),var(--border)); display:flex; align-items:center; justify-content:center; font-size:60px; }
+  .photo-detail-body { flex:1; padding:20px 24px 40px; }
+  .photo-detail-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .photo-detail-av { width:36px; height:36px; border-radius:50%; color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .photo-detail-user { font-size:14px; font-weight:700; color:var(--text); }
+  .photo-detail-time { font-size:11px; color:var(--text-light); margin-left:auto; }
+  .photo-detail-close { width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--bg-card); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--text); flex-shrink:0; }
+  .photo-detail-title { font-size:20px; font-weight:700; color:var(--text); margin-bottom:10px; line-height:1.3; }
+  .photo-detail-desc { font-size:14px; color:var(--text-muted); line-height:1.7; margin-bottom:20px; white-space:pre-wrap; }
+  .photo-detail-actions { display:flex; gap:10px; align-items:center; padding:12px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); margin-bottom:20px; }
+  .photo-detail-comments { display:flex; flex-direction:column; gap:10px; }
+  .photo-detail-comments-title { font-size:13px; font-weight:700; color:var(--text); letter-spacing:.05em; text-transform:uppercase; margin-bottom:8px; }
   .photo-post-header { padding:10px 14px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); }
-  .photo-post-av { width:28px; height:28px; border-radius:50%; color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .photo-post-user { font-size:12px; font-weight:700; color:var(--text); }
   .photo-post-time { font-size:10px; color:var(--text-light); margin-left:auto; }
-  .photo-post-title { padding:10px 14px 8px; font-size:15px; font-weight:700; color:var(--text); line-height:1.3; }
+  .photo-post-title-old { padding:10px 14px 8px; font-size:15px; font-weight:700; color:var(--text); line-height:1.3; }
   .photo-post-img { width:100%; max-height:480px; object-fit:cover; display:block; cursor:pointer; }
   .photo-post-img-placeholder { width:100%; height:200px; background:linear-gradient(135deg,var(--bg),var(--border)); display:flex; align-items:center; justify-content:center; font-size:40px; }
   .photo-post-body { padding:10px 14px; font-size:13px; color:var(--text-muted); line-height:1.6; display:none; }
@@ -2963,7 +2991,7 @@ async function submitPost() {
 }
 
 async function loadPhotoRoom(channelId) {
-  const feed=document.getElementById('photoFeed');
+  const feed=document.getElementById('photoFeed'); feed.className='photo-feed';
   feed.innerHTML='<div style="text-align:center;color:var(--text-light);font-size:12px;padding:24px;">Loading posts...</div>';
   const {data,error}=await sb.from('forum_posts').select('*').eq('forum_id',channelId).order('created_at',{ascending:false}).limit(30);
   feed.innerHTML='';
@@ -2978,44 +3006,132 @@ async function loadPhotoRoom(channelId) {
 function buildPostCard(post) {
   const card=document.createElement('div');
   card.className='photo-post';
+  card.onclick=()=>openPhotoDetail(post);
   const color=stringToColor(post.username||'?');
   const initials=(post.username||'?').slice(0,2).toUpperCase();
-  const hasBody=post.body&&post.body.trim();
   card.innerHTML=`
-    <div class="photo-post-header">
+    ${post.image_url
+      ? `<img class="photo-post-thumb" src="${post.image_url}" alt="${post.title.replace(/"/g,'')}" loading="lazy">`
+      : `<div class="photo-post-thumb-placeholder">📷</div>`}
+    <div class="photo-post-title">${post.title.replace(/</g,'&lt;')}</div>
+    <div class="photo-post-foot">
       <div class="photo-post-av" style="background:${color}">${initials}</div>
       <span class="photo-post-user">${post.username||'Unknown'}</span>
       <span class="photo-post-time">${fmtTime(post.created_at)}</span>
-    </div>
-    <div class="photo-post-title">${post.title.replace(/</g,'&lt;')}</div>
-    ${post.image_url?`<img class="photo-post-img" src="${post.image_url}" alt="Post image" onclick="this.style.maxHeight=this.style.maxHeight==='none'?'480px':'none'">`:
-    `<div class="photo-post-img-placeholder">📷</div>`}
-    ${hasBody?`<div class="photo-post-body" id="body-${post.id}">${post.body.replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>`:''}
-    <div class="photo-post-actions">
-      <div class="vote-bar">
-        <button class="vote-btn up" id="up-${post.id}" onclick="votePost('${post.id}',1)" title="Upvote">
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M12 4l8 8H4z"/></svg>
-          <span id="up-count-${post.id}">0</span>
-        </button>
-        <div class="vote-sep"></div>
-        <button class="vote-btn down" id="down-${post.id}" onclick="votePost('${post.id}',-1)" title="Downvote">
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M12 20l-8-8h16z"/></svg>
-          <span id="down-count-${post.id}">0</span>
-        </button>
-      </div>
-      ${hasBody?`<button class="photo-action-btn" onclick="togglePostBody('${post.id}')">▾ Read more</button>`:''}
-      <button class="photo-action-btn" onclick="toggleComments('${post.id}', this)">💬 Comments</button>
-    </div>
-    <div class="photo-comments" id="comments-${post.id}">
-      <div id="comments-list-${post.id}" style="display:flex;flex-direction:column;gap:8px;"></div>
-      <div class="photo-comment-input-row">
-        <input class="photo-comment-input" id="comment-input-${post.id}" type="text" placeholder="Add a comment..." onkeydown="if(event.key==='Enter')submitComment('${post.id}')">
-        <button class="photo-comment-send" onclick="submitComment('${post.id}')">
-          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        </button>
-      </div>
     </div>`;
   return card;
+}
+
+// ── Photo detail overlay ─────────────────────────────────────────
+let _detailPost = null;
+
+async function openPhotoDetail(post) {
+  _detailPost = post;
+  const overlay = document.getElementById('photoDetailOverlay');
+  const color = stringToColor(post.username||'?');
+  const initials = (post.username||'?').slice(0,2).toUpperCase();
+
+  // Image
+  const imgWrap = document.getElementById('photoDetailImgWrap');
+  imgWrap.innerHTML = post.image_url
+    ? `<img class="photo-detail-img" src="${post.image_url}" alt="${post.title.replace(/"/g,'')}">`
+    : `<div class="photo-detail-img-placeholder">📷</div>`;
+
+  // Header
+  document.getElementById('photoDetailAv').style.background = color;
+  document.getElementById('photoDetailAv').textContent = initials;
+  document.getElementById('photoDetailUser').textContent = post.username||'Unknown';
+  document.getElementById('photoDetailTime').textContent = fmtTime(post.created_at);
+
+  // Title + desc
+  document.getElementById('photoDetailTitle').textContent = post.title||'';
+  document.getElementById('photoDetailDesc').textContent = post.body||'';
+  document.getElementById('photoDetailDesc').style.display = post.body?.trim() ? 'block' : 'none';
+
+  // Votes
+  const actionsEl = document.getElementById('photoDetailActions');
+  actionsEl.innerHTML = `
+    <div class="vote-bar">
+      <button class="vote-btn up" id="detail-up-${post.id}" onclick="votePost('${post.id}',1);loadDetailVotes('${post.id}')" title="Upvote">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M12 4l8 8H4z"/></svg>
+        <span id="detail-up-count-${post.id}">0</span>
+      </button>
+      <div class="vote-sep"></div>
+      <button class="vote-btn down" id="detail-down-${post.id}" onclick="votePost('${post.id}',-1);loadDetailVotes('${post.id}')" title="Downvote">
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M12 20l-8-8h16z"/></svg>
+        <span id="detail-down-count-${post.id}">0</span>
+      </button>
+    </div>
+    <span style="font-size:11px;color:var(--text-light);margin-left:4px;">votes</span>`;
+  loadDetailVotes(post.id);
+
+  // Comments
+  await loadDetailComments(post.id);
+
+  // Show
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('photoDetailBox').scrollTop = 0;
+}
+
+function closePhotoDetail(e) {
+  if (e && e.target !== document.getElementById('photoDetailOverlay')) return;
+  document.getElementById('photoDetailOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  _detailPost = null;
+}
+
+async function loadDetailVotes(postId) {
+  const { data: votes } = await sb.from('post_votes').select('vote, user_id').eq('post_id', postId);
+  if (!votes) return;
+  const ups   = votes.filter(v=>v.vote===1).length;
+  const downs = votes.filter(v=>v.vote===-1).length;
+  const mine  = currentUser ? (votes.find(v=>v.user_id===currentUser.id)?.vote||0) : 0;
+  const upEl    = document.getElementById('detail-up-count-'+postId);
+  const downEl  = document.getElementById('detail-down-count-'+postId);
+  const upBtn   = document.getElementById('detail-up-'+postId);
+  const downBtn = document.getElementById('detail-down-'+postId);
+  if (upEl)   upEl.textContent   = ups;
+  if (downEl) downEl.textContent = downs;
+  if (upBtn)  upBtn.classList.toggle('voted', mine===1);
+  if (downBtn)downBtn.classList.toggle('voted', mine===-1);
+  // Also sync the grid card
+  const gridUp   = document.getElementById('up-count-'+postId);
+  const gridDown = document.getElementById('down-count-'+postId);
+  if (gridUp)   gridUp.textContent   = ups;
+  if (gridDown) gridDown.textContent = downs;
+}
+
+async function loadDetailComments(postId) {
+  const list = document.getElementById('photoDetailCommentsList');
+  list.innerHTML = '<div style="color:var(--text-light);font-size:12px;">Loading…</div>';
+  const { data } = await sb.from('photo_comments').select('*').eq('post_id', postId).order('created_at', {ascending:true});
+  list.innerHTML = '';
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div style="color:var(--text-light);font-size:12px;">No comments yet. Be the first!</div>';
+    return;
+  }
+  data.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'photo-comment';
+    const color = stringToColor(c.username||'?');
+    el.innerHTML = `<div class="photo-comment-av" style="background:${color}">${(c.username||'?').slice(0,2).toUpperCase()}</div><div class="photo-comment-body"><span class="photo-comment-user">${c.username||'Unknown'} </span><span class="photo-comment-text">${c.content.replace(/</g,'&lt;')}</span></div>`;
+    list.appendChild(el);
+  });
+}
+
+async function submitDetailComment() {
+  if (!_detailPost) return;
+  const input = document.getElementById('photoDetailInput');
+  const text = input?.value.trim();
+  if (!text || !currentUser) { if(!currentUser) toast('Log in to comment.'); return; }
+  input.value = '';
+  const { error } = await sb.from('photo_comments').insert({
+    post_id: _detailPost.id, user_id: currentUser.id,
+    username: currentProfile.username, content: text
+  });
+  if (error) { toast('Error: ' + error.message); return; }
+  await loadDetailComments(_detailPost.id);
 }
 
 function togglePostBody(postId) {
@@ -3027,9 +3143,7 @@ function togglePostBody(postId) {
 async function toggleComments(postId, btn) {
   const c=document.getElementById('comments-'+postId);
   const isOpen=c.classList.toggle('open');
-  if(isOpen){
-    await loadComments(postId);
-  }
+  if(isOpen){ await loadComments(postId); }
 }
 
 // ─── VOTES ───
@@ -4169,5 +4283,36 @@ if (typeof _origGoTo === 'function') {
 }
 
 </script>
+
+<!-- ── Photo detail overlay ── -->
+<div class="photo-detail-overlay" id="photoDetailOverlay" onclick="closePhotoDetail(event)">
+  <div class="photo-detail-box" id="photoDetailBox">
+    <div class="photo-detail-img-wrap" id="photoDetailImgWrap"></div>
+    <div class="photo-detail-body">
+      <div class="photo-detail-header">
+        <div class="photo-detail-av" id="photoDetailAv"></div>
+        <div>
+          <div class="photo-detail-user" id="photoDetailUser"></div>
+          <div class="photo-detail-time" id="photoDetailTime"></div>
+        </div>
+        <button class="photo-detail-close" onclick="closePhotoDetail()">✕</button>
+      </div>
+      <div class="photo-detail-title" id="photoDetailTitle"></div>
+      <div class="photo-detail-desc" id="photoDetailDesc"></div>
+      <div class="photo-detail-actions" id="photoDetailActions"></div>
+      <div class="photo-detail-comments">
+        <div class="photo-detail-comments-title">Comments</div>
+        <div id="photoDetailCommentsList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;"></div>
+        <div class="photo-comment-input-row" id="photoDetailCommentInput">
+          <input class="photo-comment-input" id="photoDetailInput" type="text" placeholder="Add a comment…" onkeydown="if(event.key==='Enter')submitDetailComment()">
+          <button class="photo-comment-send" onclick="submitDetailComment()">
+            <svg viewBox="0 0 24 24" width="12" height="12" stroke="#fff" fill="none" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
