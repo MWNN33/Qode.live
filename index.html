@@ -97,7 +97,8 @@
   /* ── News cards — bigger, richer ── */
   .news-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg-card); display: grid; grid-template-columns: 72px 1fr; box-shadow: var(--shadow); cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
   .news-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(83,74,183,0.18); }
-  .news-img { width: 72px; height: 100px; background: linear-gradient(135deg, var(--accent), var(--border)); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+  .news-img { width: 72px; height: 100px; background: linear-gradient(135deg, var(--accent), var(--border)); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; overflow:hidden; }
+  .news-img img { width:100%; height:100%; object-fit:cover; display:block; }
   .news-body { padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; }
   .news-title { font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 4px; color: var(--text); }
   .news-date { font-size: 9px; font-weight: 700; color: var(--text-light); letter-spacing: 0.06em; margin-bottom: 4px; display: block; text-transform: uppercase; }
@@ -3454,7 +3455,7 @@ async function loadNewsArticles() {
     const card=document.createElement('div');
     card.className='news-card';
     const imgHtml=a.image_url
-      ?`<div class="news-img" style="background:none;padding:0;overflow:hidden;"><img src="${a.image_url}" style="width:120px;height:140px;object-fit:cover;" alt=""></div>`
+      ?`<div class="news-img" style="background:none;padding:0;"><img src="${a.image_url}" alt=""></div>`
       :`<div class="news-img">📰</div>`;
     card.innerHTML=`${imgHtml}<div class="news-body"><div class="news-title">${a.title.replace(/</g,'&lt;')}</div><span class="news-date">${a.date_label||''}${a.tag?' · '+a.tag:''}</span><p class="news-text">${(a.summary||'').replace(/</g,'&lt;')}</p></div>`;
     card.onclick=()=>openDynamicArticle(a);
