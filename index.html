@@ -769,49 +769,67 @@
     flex-shrink: 0;
   }
 
-  /* ══════════════════════════════════════════
-     MOBILE — best-in-class phone optimisation
-     ══════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════════════
+     MOBILE — Discord-inspired phone experience
+     ══════════════════════════════════════════════════════ */
 
   @media (max-width: 700px) {
-    /* ── Global resets ── */
+    /* ── Global ── */
     html { -webkit-text-size-adjust: 100%; }
     * { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-    /* Prevent iOS zoom on input focus — must be exactly 16px */
     input, select, textarea { font-size: 16px !important; }
 
-    /* ── Nav ── */
+    /* ── Top nav — minimal, just logo + icons ── */
     nav {
-      padding-left: max(12px, env(safe-area-inset-left));
-      padding-right: max(12px, env(safe-area-inset-right));
+      padding-left: max(14px, env(safe-area-inset-left));
+      padding-right: max(14px, env(safe-area-inset-right));
       gap: 6px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
     }
     .nav-links, .nav-line { display: none; }
-    .logo { font-size: 17px; flex: 1; }
+    .logo { font-size: 16px; font-weight: 800; letter-spacing: .08em; flex: 1; }
     #authTrigger { margin-left: auto; }
-    .profile-pill { margin-left: auto; padding: 4px 10px 4px 5px; }
+    .profile-pill {
+      margin-left: 8px; padding: 3px 8px 3px 4px;
+      border-radius: 20px;
+    }
     .profile-name, .profile-status-dot { display: none !important; }
+    .nav-icon { width: 36px; height: 36px; margin-left: 4px; }
 
-    /* ── Bottom nav — respects home indicator ── */
+    /* ── Bottom nav — Discord-style: bigger icons, pill active indicator ── */
     .mobile-bottom-nav {
       display: flex;
-      height: calc(58px + env(safe-area-inset-bottom, 0px));
+      height: calc(60px + env(safe-area-inset-bottom, 0px));
       padding-bottom: env(safe-area-inset-bottom, 0px);
-      padding-left: env(safe-area-inset-left, 0px);
-      padding-right: env(safe-area-inset-right, 0px);
+      padding-left: max(4px, env(safe-area-inset-left));
+      padding-right: max(4px, env(safe-area-inset-right));
+      background: var(--bg-card);
+      border-top: 1.5px solid var(--border);
     }
-    .mbn-item { min-height: 44px; flex: 1; }
-    .mbn-label { font-size: 9px; }
+    .mbn-item {
+      flex: 1; min-height: 48px;
+      border-radius: 12px;
+      margin: 4px 2px;
+      gap: 2px;
+      transition: background .15s;
+    }
+    .mbn-item.active {
+      background: rgba(83,74,183,.15);
+    }
+    .mbn-item svg { width: 22px; height: 22px; }
+    .mbn-label { font-size: 8px; font-weight: 800; letter-spacing: .05em; }
+    .mbn-badge { top: 4px; right: calc(50% - 18px); }
 
-    /* Pages clear the bottom nav + home indicator */
-    .page { padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px)); }
+    /* Pages clear bottom nav */
+    .page { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
 
     /* ── Hero ── */
     .hero { padding: 28px 18px 20px; }
-    .hero h1 { font-size: 28px; line-height: 1.15; }
+    .hero h1 { font-size: 26px; line-height: 1.15; }
     .hero p { font-size: 13px; }
 
-    /* ── Home grid ── */
+    /* ── Home grid — stack columns ── */
     .home-grid { grid-template-columns: 1fr; gap: 0; background: none; }
     .home-col { padding: 16px !important; border-left: none !important; }
     .home-col + .home-col { border-top: 1px solid var(--border); border-left: none !important; }
@@ -820,215 +838,318 @@
     .news-title { font-size: 13px; }
     .news-text { font-size: 11px; }
     .forum-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
-    .forum-btn { padding: 14px 10px; font-size: 11px; min-height: 48px; }
-    .section-label { font-size: 16px; }
+    .forum-btn { padding: 14px 10px; font-size: 12px; min-height: 52px; }
+    .section-label { font-size: 15px; }
     .qm-widget { height: 300px; }
 
-    /* ── FORUM PAGE ─────────────────────────────────────────
-       Full-height column stack: forum strip → channel strip → messages → input
-       Using dvh so it actually fills the screen on mobile browsers
-    ─────────────────────────────────────────────────────── */
-    #page-forum, #page-messages {
-      padding-bottom: 0; /* these pages have their own internal layout */
-    }
+    /* ════════════════════════════════════════
+       FORUM PAGE — Discord layout
+       Left rail (rooms) + channel drawer + chat
+       ════════════════════════════════════════ */
+    #page-forum, #page-messages { padding-bottom: 0; }
+
     .chat-outer {
       padding: 0;
-      /* dvh = dynamic viewport height — shrinks when browser chrome appears */
-      height: calc(100dvh - var(--nav-h) - 58px - env(safe-area-inset-bottom, 0px));
+      height: calc(100dvh - var(--nav-h) - 60px - env(safe-area-inset-bottom, 0px));
+      position: relative; overflow: hidden;
     }
-    /* Kill the desktop grid, switch to a pure flex column */
+
+    /* Shell: pure flex column on mobile */
     .chat-shell {
       display: flex !important;
-      flex-direction: column !important;
+      flex-direction: row !important;
       grid-template-columns: unset !important;
       border-radius: 0; border: none;
       height: 100%; overflow: hidden;
+      position: relative;
     }
 
-    /* Forum icon strip — horizontal scrollable row */
+    /* ── Left rail — Discord server icons, narrow strip ── */
     .chat-sidebar {
-      width: 100% !important;
-      height: 50px; min-height: 50px; flex-shrink: 0;
-      flex-direction: row !important;
-      border-right: none; border-bottom: 1px solid var(--border);
-      padding: 6px 10px; gap: 8px;
-      overflow-x: auto; overflow-y: hidden;
+      width: 58px !important;
+      min-width: 58px;
+      height: 100% !important;
+      flex-direction: column !important;
+      border-right: 1px solid var(--border);
+      border-bottom: none;
+      padding: 8px 0; gap: 6px;
+      overflow-x: hidden; overflow-y: auto;
       scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      align-items: center;
+      background: var(--bg-card);
+      flex-shrink: 0;
     }
     .chat-sidebar::-webkit-scrollbar { display: none; }
-    .side-sep { display: none; }
-    .forum-circle { width: 36px; height: 36px; font-size: 16px; flex-shrink: 0; }
-    /* Hide the mail icon inside forum sidebar on mobile — nav handles it */
+    .side-sep { display: block; width: 32px; height: 1px; background: var(--border); margin: 2px auto; }
     #page-forum .chat-sidebar .side-icon { display: none; }
-    /* Messages page sidebar — just hide it entirely, nav handles switching */
     #page-messages .chat-sidebar { display: none !important; }
 
-    /* chat-main fills remaining space */
-    .chat-main { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    /* Forum circles — Discord server icon style */
+    .forum-circle {
+      width: 40px; height: 40px; font-size: 18px; flex-shrink: 0;
+      border-radius: 16px;
+      transition: border-radius .2s, background .15s;
+    }
+    .forum-circle.active { border-radius: 12px; }
 
-    /* forum-inner fills chat-main */
-    .forum-inner { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+    /* ── Channel drawer — slides over chat from left ── */
+    .chat-main {
+      flex: 1; min-height: 0;
+      display: flex; flex-direction: row;
+      overflow: hidden; position: relative;
+    }
 
-    /* Channel pill strip */
+    /* Sub-sidebar becomes a slide-in drawer */
     .forum-sub-sidebar {
-      width: 100% !important;
-      height: 42px; min-height: 42px; flex-shrink: 0;
-      flex-direction: row !important;
-      border-right: none; border-bottom: 1px solid var(--border);
-      overflow-x: auto; overflow-y: hidden;
-      padding: 0 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      position: absolute !important;
+      top: 0; left: 0; bottom: 0;
+      width: 220px !important;
+      height: 100% !important;
+      flex-direction: column !important;
+      border-right: 1px solid var(--border);
+      border-bottom: none;
+      overflow-x: hidden; overflow-y: auto;
+      padding: 0; scrollbar-width: none;
+      background: var(--bg);
+      z-index: 10;
+      transform: translateX(-100%);
+      transition: transform .22s cubic-bezier(.4,0,.2,1);
+      box-shadow: 4px 0 24px rgba(0,0,0,.18);
+    }
+    .forum-sub-sidebar.mobile-open {
+      transform: translateX(0);
     }
     .forum-sub-sidebar::-webkit-scrollbar { display: none; }
-    .forum-cat-header { display: none; }
+    .forum-cat-header {
+      display: block;
+      padding: 14px 14px 6px;
+      font-size: 10px; font-weight: 800;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text-light);
+    }
     .forum-cat-item {
       white-space: nowrap; flex-shrink: 0;
-      border-left: none !important; border-bottom: 2.5px solid transparent;
-      padding: 0 12px; height: 42px; line-height: 42px;
-      border-radius: 0; font-size: 11px;
+      border-left: none !important;
+      border-bottom: none;
+      padding: 10px 14px; height: auto; line-height: 1.4;
+      border-radius: 6px; font-size: 13px; font-weight: 600;
+      margin: 1px 6px; display: block;
     }
-    .forum-cat-item.active { border-bottom-color: var(--accent); background: transparent; }
+    .forum-cat-item.active {
+      background: rgba(83,74,183,.18);
+      color: var(--accent);
+    }
 
-    /* Chat area fills remaining vertical space */
+    /* Scrim — tap to close drawer */
+    .mobile-drawer-scrim {
+      display: none;
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,.4);
+      z-index: 9;
+    }
+    .mobile-drawer-scrim.open { display: block; }
+
+    /* Forum/chat area */
+    .forum-inner { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
     .forum-chat-area { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 
-    /* Messages scroll area */
+    /* ── Chat header — shows channel name + hamburger to open drawer ── */
+    .chat-header {
+      display: flex !important;
+      align-items: center;
+      padding: 0 12px;
+      height: 44px; flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+      background: var(--bg);
+    }
+    .chat-header-menu-btn {
+      display: flex;
+      width: 36px; height: 36px; border-radius: 8px;
+      align-items: center; justify-content: center;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); flex-shrink: 0;
+    }
+    .chat-header-menu-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+    #chatHeaderName { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; }
+
+    /* ── Messages ── */
     .chat-messages {
       flex: 1; min-height: 0;
       overflow-y: auto; -webkit-overflow-scrolling: touch;
-      padding: 10px 12px 6px; gap: 10px;
+      padding: 10px 12px 6px; gap: 8px;
       overscroll-behavior-y: contain;
     }
-    .bubble { font-size: 14px; padding: 8px 12px; max-width: 82vw; line-height: 1.5; }
-    .msg-avatar { width: 28px; height: 28px; font-size: 10px; flex-shrink: 0; }
+    .bubble { font-size: 14px; padding: 8px 12px; max-width: 80vw; line-height: 1.5; }
+    .msg-avatar { width: 30px; height: 30px; font-size: 10px; flex-shrink: 0; }
     .msg-meta { font-size: 10px; }
 
-    /* Input bar — always visible at the bottom, safe area aware */
+    /* ── Input bar ── */
     .chat-input-bar {
       flex-shrink: 0;
       padding: 8px 10px;
       padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
       background: var(--bg-card);
       border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
     }
-    .chat-input { font-size: 16px !important; padding: 10px 14px; border-radius: 22px; }
+    .chat-input {
+      font-size: 16px !important; padding: 10px 14px;
+      border-radius: 22px; flex: 1;
+      background: var(--bg);
+    }
     .chat-send { width: 40px; height: 40px; min-width: 40px; border-radius: 50%; flex-shrink: 0; }
 
-    /* ── DM PAGE ───────────────────────────────────────── */
-    .msg-page {
-      flex: 1; min-height: 0;
-      display: flex; flex-direction: column; overflow: hidden;
-    }
+    /* ════════════════════════════════════════
+       DM PAGE — like Discord DMs
+       ════════════════════════════════════════ */
+    .msg-page { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 
-    /* DM contacts strip — horizontal avatars */
+    /* DM list — full screen until convo selected (Discord style) */
     .dm-list {
       width: 100% !important;
-      height: 62px; min-height: 62px; flex-shrink: 0;
-      flex-direction: row !important;
-      border-right: none; border-bottom: 1px solid var(--border);
-      overflow-x: auto; overflow-y: hidden;
+      height: 100% !important;
+      flex-direction: column !important;
+      border-right: none; border-bottom: none;
+      overflow-x: hidden; overflow-y: auto;
       scrollbar-width: none; -webkit-overflow-scrolling: touch;
-      align-items: center;
-      padding: 0 6px;
+      padding: 8px 0;
+      background: var(--bg);
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 5;
+      transition: transform .22s cubic-bezier(.4,0,.2,1);
     }
+    .dm-list.hidden { transform: translateX(-100%); }
     .dm-list::-webkit-scrollbar { display: none; }
-    .dm-list-header { display: none; }
-
-    /* New DM button inside the strip */
-    .dm-entries { display: flex; flex-direction: row; align-items: center; gap: 4px; }
+    .dm-list-header {
+      display: flex !important;
+      align-items: center; justify-content: space-between;
+      padding: 12px 16px 8px;
+      font-size: 12px; font-weight: 800;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--text-light);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+    .dm-entries { display: flex; flex-direction: column; }
     .dm-entry {
-      flex-direction: column; align-items: center; justify-content: center;
-      gap: 3px; flex-shrink: 0;
-      min-width: 54px; padding: 6px 8px;
-      border-left: none !important; border-bottom: 3px solid transparent;
+      flex-direction: row !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 12px; padding: 10px 16px;
+      border-left: none !important; border-bottom: none;
+      border-radius: 6px; margin: 1px 6px;
+      min-width: unset;
       white-space: nowrap;
     }
-    .dm-entry.active { border-bottom-color: var(--accent); background: transparent; }
-    .dm-info { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-    .dm-preview { display: none; }
-    .dm-name { font-size: 9px; font-weight: 700; max-width: 52px; overflow: hidden; text-overflow: ellipsis; text-align: center; }
-    .dm-avatar { width: 32px; height: 32px; font-size: 11px; }
-    .dm-unread-pill { display: block; position: absolute; top: 2px; right: 4px; padding: 0 4px; font-size: 8px; }
+    .dm-entry.active { background: rgba(83,74,183,.15); }
+    .dm-info { display: flex; flex-direction: column; align-items: flex-start !important; gap: 1px; flex: 1; min-width: 0; }
+    .dm-preview { display: block !important; font-size: 11px; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dm-name { font-size: 13px; font-weight: 700; max-width: none; text-align: left; }
+    .dm-avatar { width: 38px; height: 38px; font-size: 13px; border-radius: 50%; }
+    .dm-unread-pill { position: static; margin-left: auto; }
 
-    /* DM conversation area */
-    .dm-area { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
-    #dmConvo { flex: 1; min-height: 0; }
+    /* DM conversation — slides in from right */
+    .dm-area {
+      flex: 1; min-height: 0;
+      display: flex; flex-direction: column; overflow: hidden;
+      position: absolute; inset: 0; z-index: 6;
+      background: var(--bg);
+      transform: translateX(100%);
+      transition: transform .22s cubic-bezier(.4,0,.2,1);
+    }
+    .dm-area.visible { transform: translateX(0); }
+
+    /* DM header — back button */
+    .dm-header {
+      display: flex !important;
+      align-items: center; gap: 10px;
+      padding: 0 12px; height: 48px; flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .dm-back-btn {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); flex-shrink: 0;
+    }
+    .dm-back-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    #dmConvo { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     #dmMessages {
       flex: 1; min-height: 0;
       overflow-y: auto; -webkit-overflow-scrolling: touch;
       overscroll-behavior-y: contain;
     }
 
-    /* ── NOTIFICATIONS — slides up from bottom nav ── */
+    /* ── NOTIFICATIONS ── */
     .notif-panel {
       position: fixed !important;
-      top: auto !important; bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
+      top: auto !important; bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
       left: 0 !important; right: 0 !important; width: 100% !important;
-      border-radius: 20px 20px 0 0; border-bottom: none;
+      border-radius: 24px 24px 0 0; border-bottom: none;
       max-height: 72dvh; overflow-y: auto;
-      box-shadow: 0 -4px 32px rgba(0,0,0,0.25);
+      box-shadow: 0 -4px 32px rgba(0,0,0,.25);
     }
     .notif-list { max-height: none; }
     .notif-item { padding: 14px 18px; min-height: 56px; }
-    .notif-avatar { width: 36px; height: 36px; font-size: 13px; }
+    .notif-avatar { width: 38px; height: 38px; font-size: 13px; }
 
-    /* ── AUTH — slides up from bottom ── */
+    /* ── AUTH — slides up ── */
     .auth-dropdown {
       position: fixed !important;
       top: auto !important; bottom: 0 !important;
       left: 0 !important; right: 0 !important; width: 100% !important;
-      border-radius: 20px 20px 0 0; border-bottom: none;
-      max-height: 93dvh; overflow-y: auto;
+      border-radius: 24px 24px 0 0; border-bottom: none;
+      max-height: 94dvh; overflow-y: auto;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
-    .auth-form { max-height: none; padding-bottom: 20px; }
-    .auth-input { padding: 12px 14px; }
-    .auth-btn { padding: 14px; font-size: 14px; }
+    .auth-form { max-height: none; padding-bottom: 24px; }
+    .auth-input { padding: 13px 14px; }
+    .auth-btn { padding: 14px; font-size: 14px; min-height: 50px; }
 
     /* ── PROFILE MENU ── */
     .profile-menu {
       position: fixed !important;
       top: auto !important;
-      bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important;
+      bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
       right: 12px !important; left: auto !important;
-      width: 220px !important;
+      width: 230px !important;
+      border-radius: 16px;
     }
-    .profile-menu-item { padding: 14px 18px; font-size: 13px; min-height: 48px; }
+    .profile-menu-item { padding: 14px 18px; font-size: 13px; min-height: 50px; }
 
-    /* ── ALL MODALS — slide up, full-width sheets ── */
+    /* ── MODALS — sheets ── */
     .modal-overlay, .new-post-modal { align-items: flex-end !important; padding: 0 !important; }
     .modal-box, .new-post-box {
       width: 100% !important; max-width: 100% !important;
-      border-radius: 20px 20px 0 0 !important;
+      border-radius: 24px 24px 0 0 !important;
       max-height: 94dvh !important;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
     .modal-head { padding: 20px 20px 0; }
-    .modal-body { padding: 16px 20px 24px; font-size: 14px; line-height: 1.7; }
+    .modal-body { padding: 16px 20px 28px; font-size: 14px; line-height: 1.7; }
 
-    /* Owner / Settings modals */
     .owner-modal, .settings-modal { align-items: flex-end !important; padding: 0 !important; }
     .owner-box, .settings-box {
       width: 100% !important; max-width: 100% !important;
-      border-radius: 20px 20px 0 0 !important;
+      border-radius: 24px 24px 0 0 !important;
       max-height: 96dvh !important;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
-    .owner-tabs, .settings-box > div:first-child {
-      overflow-x: auto; scrollbar-width: none; flex-shrink: 0;
-    }
+    .owner-tabs, .settings-box > div:first-child { overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
     .owner-tabs::-webkit-scrollbar { display: none; }
-    .owner-tab { font-size: 9px; padding: 12px 6px; white-space: nowrap; min-width: 52px; min-height: 44px; }
-    .stab { font-size: 9px; padding: 12px 5px; min-height: 44px; }
+    .owner-tab { font-size: 9px; padding: 13px 6px; white-space: nowrap; min-width: 52px; min-height: 48px; }
+    .stab { font-size: 9px; padding: 13px 5px; min-height: 48px; }
     #ownerContent { padding: 14px; font-size: 13px; }
     .user-row { flex-wrap: wrap; gap: 6px; }
     .user-row-actions { flex-direction: row; flex-wrap: wrap; gap: 5px; width: 100%; padding-top: 4px; }
-    .action-btn { font-size: 11px; padding: 9px 12px; flex: 1; text-align: center; min-height: 40px; }
+    .action-btn { font-size: 11px; padding: 10px 12px; flex: 1; text-align: center; min-height: 42px; }
 
-    /* New DM modal */
     #newDmModal { align-items: flex-end !important; padding: 0 !important; }
     #newDmModal > div {
       width: 100% !important; max-width: 100% !important;
-      border-radius: 20px 20px 0 0 !important;
+      border-radius: 24px 24px 0 0 !important;
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
@@ -1038,29 +1159,28 @@
     .about-card p { font-size: 15px; }
 
     /* ── Photos ── */
+    .photo-feed { grid-template-columns: repeat(3,1fr); gap: 2px; padding: 2px; }
+    .photo-post-thumb { max-height: none; }
     .owner-photo-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
-    .photo-feed { grid-template-columns:repeat(3,1fr); gap:2px; padding:2px; }
-    .photo-post-thumb { max-height:none; }
 
-    /* ── Touch targets — Apple HIG minimum 44×44pt ── */
+    /* ── Touch targets ── */
     .nav-icon, .forum-circle, .chat-send, .modal-close,
     .photo-comment-send, .dm-new-btn { min-width: 44px; min-height: 44px; }
     .vote-btn { min-height: 40px; padding: 6px 14px; }
     .photo-action-btn { min-height: 40px; padding: 6px 12px; }
-    .forum-btn { min-height: 52px; }
     .auth-btn, .social-btn { min-height: 48px; }
   }
 
   /* ── Very small phones ≤380px ── */
   @media (max-width: 380px) {
-    .hero h1 { font-size: 22px; }
-    .news-card { grid-template-columns: 68px 1fr; }
-    .news-img { width: 68px; height: 86px; font-size: 18px; }
-    .forum-btn { padding: 12px 6px; font-size: 10px; }
+    .hero h1 { font-size: 21px; }
+    .news-card { grid-template-columns: 64px 1fr; }
+    .news-img { width: 64px; height: 84px; font-size: 18px; }
+    .forum-btn { padding: 10px 6px; font-size: 10px; }
     .bubble { max-width: 88vw; font-size: 13px; }
     .owner-tab { font-size: 8px; padding: 10px 4px; min-width: 44px; }
-    .forum-circle { width: 32px; height: 32px; font-size: 14px; }
-    .dm-avatar { width: 28px; height: 28px; }
+    .forum-circle { width: 36px; height: 36px; font-size: 15px; }
+    .dm-avatar { width: 32px; height: 32px; }
   }
 
   /* ── Owner Panel ─────────────────────── */
@@ -3904,67 +4024,137 @@ if (_savedPage && document.getElementById('page-'+_savedPage)) {
   goTo(_savedPage);
 }
 
-// ══════════════════════════════════════════════════════════════════
-// MOBILE JS — keyboard, scroll, touch optimisations
-// ══════════════════════════════════════════════════════════════════
 
+// ══════════════════════════════════════════════════════════════════
+// DISCORD-STYLE MOBILE JS
+// ══════════════════════════════════════════════════════════════════
 (function() {
-  const isMobile = () => window.innerWidth <= 700;
+  const mob = () => window.innerWidth <= 700;
 
-  // ── 1. iOS virtual keyboard — scroll active chat to bottom when keyboard opens ──
-  // When the viewport shrinks (keyboard opens), scroll messages into view.
+  // ── Show hamburger only on mobile ──
+  function updateMobileUI() {
+    const btn = document.getElementById('chatHeaderMenuBtn');
+    const dmBack = document.getElementById('dmBackBtn');
+    if (btn) btn.style.display = mob() ? 'flex' : 'none';
+    if (dmBack) dmBack.style.display = mob() ? 'flex' : 'none';
+  }
+  window.addEventListener('resize', updateMobileUI);
+  setTimeout(updateMobileUI, 100);
+
+  // ── Channel drawer (forum sub-sidebar) ──
+  window.openChannelDrawer = function() {
+    const drawer = document.querySelector('.forum-sub-sidebar');
+    const scrim  = document.getElementById('mobileDrawerScrim');
+    if (drawer) drawer.classList.add('mobile-open');
+    if (scrim)  scrim.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeChannelDrawer = function() {
+    const drawer = document.querySelector('.forum-sub-sidebar');
+    const scrim  = document.getElementById('mobileDrawerScrim');
+    if (drawer) drawer.classList.remove('mobile-open');
+    if (scrim)  scrim.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  // Close drawer when a channel is selected
+  document.addEventListener('click', e => {
+    if (!mob()) return;
+    const item = e.target.closest('.forum-cat-item');
+    if (item) setTimeout(closeChannelDrawer, 80);
+  });
+
+  // ── DM slide-in/out ──
+  window.openDMConvoMobile = function() {
+    if (!mob()) return;
+    const area = document.querySelector('.dm-area');
+    const list = document.querySelector('.dm-list');
+    if (area) area.classList.add('visible');
+    if (list) list.classList.add('hidden');
+  };
+
+  window.closeDMConvo = function() {
+    const area = document.querySelector('.dm-area');
+    const list = document.querySelector('.dm-list');
+    if (area) area.classList.remove('visible');
+    if (list) list.classList.remove('hidden');
+  };
+
+  // Hook into dm-entry clicks to trigger slide
+  document.addEventListener('click', e => {
+    if (!mob()) return;
+    if (e.target.closest('.dm-entry')) {
+      setTimeout(openDMConvoMobile, 60);
+    }
+  });
+
+  // ── Swipe gestures ──
+  let touchStartX = 0, touchStartY = 0;
+
+  document.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!mob()) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dy) > Math.abs(dx) * 1.4) return; // mostly vertical — ignore
+
+    const activePage = document.querySelector('.page.active');
+
+    // Forum page: swipe right from left edge opens channel drawer
+    if (activePage?.id === 'page-forum') {
+      if (dx > 60 && touchStartX < 70) openChannelDrawer();
+      if (dx < -60) closeChannelDrawer();
+    }
+
+    // DM page: swipe right = back to dm list; swipe left = open convo
+    if (activePage?.id === 'page-messages') {
+      const area = document.querySelector('.dm-area');
+      const convoVisible = area?.classList.contains('visible');
+      if (dx > 70 && convoVisible) closeDMConvo();
+    }
+  }, { passive: true });
+
+  // ── Keyboard pushes chat up (visualViewport) ──
   if (window.visualViewport) {
     let lastVH = window.visualViewport.height;
     window.visualViewport.addEventListener('resize', () => {
+      if (!mob()) return;
       const newVH = window.visualViewport.height;
-      const shrunk = newVH < lastVH - 50; // keyboard appeared
+      const shrunk = newVH < lastVH - 50;
       lastVH = newVH;
-      if (!isMobile()) return;
-      if (shrunk) {
-        // Scroll active message list to bottom
-        ['chatMessages','dmMessages'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
-        });
-        // Shift the chat-outer up by the keyboard height
-        const offset = window.innerHeight - newVH;
-        const co = document.querySelector('.chat-outer');
-        if (co) co.style.marginBottom = offset + 'px';
-        const dmArea = document.querySelector('.dm-area');
-        if (dmArea) dmArea.style.marginBottom = offset + 'px';
-      } else {
-        // Keyboard closed — reset
-        const co = document.querySelector('.chat-outer');
-        if (co) co.style.marginBottom = '';
-        const dmArea = document.querySelector('.dm-area');
-        if (dmArea) dmArea.style.marginBottom = '';
-      }
+      const offset = shrunk ? window.innerHeight - newVH : 0;
+      ['chatMessages','dmMessages'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && shrunk) requestAnimationFrame(() => el.scrollTop = el.scrollHeight);
+      });
+      const co = document.querySelector('.chat-outer');
+      if (co) co.style.marginBottom = offset ? offset + 'px' : '';
     }, { passive: true });
   }
 
-  // ── 2. Prevent body scroll when a modal / panel is open ──
-  const lockScroll = () => { document.body.style.overflow = 'hidden'; };
-  const unlockScroll = () => { document.body.style.overflow = ''; };
-
-  // Observe open class on overlays
+  // ── Scroll lock when modals open ──
   const mo = new MutationObserver(() => {
-    const anyOpen = document.querySelector(
-      '.modal-overlay.open, .owner-modal.open, .settings-modal.open, .new-post-modal.open'
+    const open = document.querySelector(
+      '.modal-overlay.open,.owner-modal.open,.settings-modal.open,.new-post-modal.open'
     );
-    anyOpen ? lockScroll() : unlockScroll();
+    document.body.style.overflow = open ? 'hidden' : '';
   });
   mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] });
 
-  // ── 3. Close dropdowns on outside tap (mobile-friendly) ──
+  // ── Outside tap closes dropdowns ──
   document.addEventListener('touchstart', e => {
-    if (!isMobile()) return;
+    if (!mob()) return;
     const notifPanel = document.getElementById('notifPanel');
     const notifBell  = document.getElementById('notifBell');
     const authDD     = document.getElementById('authDropdown');
     const authTrig   = document.getElementById('authTrigger');
     const profMenu   = document.getElementById('profileMenu');
     const profPill   = document.getElementById('profilePill');
-
     if (notifPanel?.classList.contains('open') && !notifPanel.contains(e.target) && !notifBell?.contains(e.target))
       notifPanel.classList.remove('open');
     if (authDD?.classList.contains('open') && !authDD.contains(e.target) && !authTrig?.contains(e.target))
@@ -3973,59 +4163,53 @@ if (_savedPage && document.getElementById('page-'+_savedPage)) {
       profMenu.classList.remove('open');
   }, { passive: true });
 
-  // ── 4. Swipe-down to close bottom-sheet modals ──
-  function addSwipeDownClose(selector) {
-    document.querySelectorAll(selector).forEach(overlay => {
-      let startY = 0, box = null;
-      overlay.addEventListener('touchstart', e => {
-        box = overlay.querySelector('.modal-box, .owner-box, .settings-box, .new-post-box');
-        startY = e.touches[0].clientY;
-      }, { passive: true });
-      overlay.addEventListener('touchend', e => {
-        if (!box) return;
-        const dy = e.changedTouches[0].clientY - startY;
-        if (dy > 80) overlay.classList.remove('open'); // swipe down 80px = close
-      }, { passive: true });
-    });
-  }
-
-  // Run after DOM ready and also attach to dynamically opened modals
-  setTimeout(() => {
-    addSwipeDownClose('.modal-overlay');
-    addSwipeDownClose('.owner-modal');
-    addSwipeDownClose('.settings-modal');
-    addSwipeDownClose('.new-post-modal');
-  }, 500);
-
-  // ── 5. Momentum scroll on custom scrollable containers ──
-  document.querySelectorAll(
-    '.chat-messages, .dm-list, .chat-sidebar, .forum-sub-sidebar, .dm-messages, #ownerContent, .notif-list'
-  ).forEach(el => {
-    el.style.webkitOverflowScrolling = 'touch';
+  // ── Swipe down to close bottom sheets ──
+  ['modal-overlay','owner-modal','settings-modal','new-post-modal'].forEach(cls => {
+    setTimeout(() => {
+      document.querySelectorAll('.'+cls).forEach(overlay => {
+        let sy = 0;
+        overlay.addEventListener('touchstart', e => { sy = e.touches[0].clientY; }, { passive: true });
+        overlay.addEventListener('touchend', e => {
+          const dy = e.changedTouches[0].clientY - sy;
+          if (dy > 90) overlay.classList.remove('open');
+        }, { passive: true });
+      });
+    }, 500);
   });
 
-  // ── 6. Auto-scroll new messages into view on mobile ──
-  // Override appendForumMsg and appendDMMsg to always scroll on mobile
-  const _origAppendForum = window.appendForumMsg;
-  if (typeof _origAppendForum === 'function') {
+  // ── Auto-scroll messages ──
+  const _oForum = window.appendForumMsg;
+  if (typeof _oForum === 'function') {
     window.appendForumMsg = function(m) {
-      _origAppendForum(m);
-      if (isMobile()) {
-        const msgs = document.getElementById('chatMessages');
-        if (msgs) requestAnimationFrame(() => msgs.scrollTop = msgs.scrollHeight);
+      _oForum(m);
+      if (mob()) {
+        const el = document.getElementById('chatMessages');
+        if (el) requestAnimationFrame(() => el.scrollTop = el.scrollHeight);
       }
     };
   }
-  const _origAppendDM = window.appendDMMsg;
-  if (typeof _origAppendDM === 'function') {
+  const _oDM = window.appendDMMsg;
+  if (typeof _oDM === 'function') {
     window.appendDMMsg = function(m) {
-      _origAppendDM(m);
-      if (isMobile()) {
-        const msgs = document.getElementById('dmMessages');
-        if (msgs) requestAnimationFrame(() => msgs.scrollTop = msgs.scrollHeight);
+      _oDM(m);
+      if (mob()) {
+        const el = document.getElementById('dmMessages');
+        if (el) requestAnimationFrame(() => el.scrollTop = el.scrollHeight);
       }
     };
   }
+
+  // ── ESC closes photo detail ──
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const ov = document.getElementById('photoDetailOverlay');
+      if (ov?.classList.contains('open')) {
+        ov.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+    }
+  });
+
 })();
 
 // ══════════════════════════════════════════════════════════════════
