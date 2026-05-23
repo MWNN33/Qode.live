@@ -534,6 +534,16 @@
   .photo-detail-reply-time { font-size:9px; color:var(--text-light); margin-left:5px; }
   .photo-detail-reply-text { font-size:12px; color:var(--text-muted); line-height:1.5; margin-top:2px; }
   .photo-detail-close { display:none; }
+  .profile-page-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 15px 20px; cursor: pointer;
+    font-size: 14px; font-weight: 600; color: var(--text);
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+  }
+  .profile-page-row:last-child { border-bottom: none; }
+  .profile-page-row:hover, .profile-page-row:active { background: var(--bg-card); }
+  .profile-page-row.danger { color: var(--danger); }
   .photo-post-header { padding:10px 14px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); }
   .photo-post-user { font-size:12px; font-weight:700; color:var(--text); }
   .photo-post-time { font-size:10px; color:var(--text-light); margin-left:auto; }
@@ -853,6 +863,11 @@
       height: calc(100dvh - var(--nav-h) - 60px - env(safe-area-inset-bottom, 0px));
       position: relative; overflow: hidden;
     }
+    /* Fill the gap below input bar with its own background */
+    .chat-input-bar, .dm-input-bar {
+      padding-bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) + 8px)) !important;
+      background: var(--bg-card) !important;
+    }
 
     /* Shell: pure flex column on mobile */
     .chat-shell {
@@ -988,10 +1003,21 @@
     .chat-input-bar {
       flex-shrink: 0;
       padding: 8px 10px;
-      padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
+      padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
       background: var(--bg-card);
       border-top: 1px solid var(--border);
       display: flex; align-items: center; gap: 8px;
+      /* extend background into safe area below */
+      margin-bottom: 0;
+      position: relative;
+    }
+    .chat-input-bar::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: env(safe-area-inset-bottom, 0px);
+      background: var(--bg-card);
+      pointer-events: none;
     }
     .chat-input {
       font-size: 16px !important; padding: 10px 14px;
@@ -1404,7 +1430,7 @@
     <span class="mbn-label">Notifs</span>
     <div class="mbn-badge" id="mbnNotifBadge"></div>
   </div>
-  <div class="mbn-item" id="mbn-profile" onclick="currentUser ? toggleProfileMenu() : toggleAuthDropdown()">
+  <div class="mbn-item" id="mbn-profile" onclick="goToProfilePage()">
     <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     <span class="mbn-label" id="mbnProfileLabel">Profile</span>
   </div>
@@ -1537,6 +1563,74 @@
 </div>
 
 <!-- ABOUT -->
+<div class="page" id="page-profile">
+  <div style="max-width:480px;margin:0 auto;padding:0 0 32px;">
+
+    <!-- Hero header -->
+    <div id="profilePageHero" style="background:linear-gradient(135deg,var(--accent),var(--border));padding:40px 24px 20px;position:relative;">
+      <div id="profilePageAv" style="width:72px;height:72px;border-radius:50%;background:var(--bg-card);color:var(--accent);font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center;border:3px solid var(--bg);margin-bottom:12px;">?</div>
+      <div id="profilePageName" style="font-size:20px;font-weight:800;color:#fff;margin-bottom:2px;">Guest</div>
+      <div id="profilePageRole" style="font-size:11px;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.7);text-transform:uppercase;"></div>
+      <div id="profilePageStatus" style="display:flex;align-items:center;gap:6px;margin-top:8px;">
+        <div id="profilePageDot" style="width:10px;height:10px;border-radius:50%;background:#6b7280;border:2px solid rgba(255,255,255,.4);"></div>
+        <span id="profilePageStatusText" style="font-size:11px;color:rgba(255,255,255,.75);">Offline</span>
+      </div>
+    </div>
+
+    <!-- Guest view -->
+    <div id="profilePageGuest" style="padding:24px 20px;display:flex;flex-direction:column;gap:12px;">
+      <p style="font-size:14px;color:var(--text-muted);line-height:1.6;text-align:center;">Log in or create an account to join forums, send messages, and get notifications.</p>
+      <button class="auth-btn" onclick="switchTab('login');toggleAuthDropdown();">Log In</button>
+      <button class="auth-btn secondary" onclick="switchTab('register');toggleAuthDropdown();">Create Account</button>
+    </div>
+
+    <!-- Logged-in view -->
+    <div id="profilePageLoggedIn" style="display:none;">
+      <!-- Quick stats -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border);">
+        <div style="padding:16px;text-align:center;border-right:1px solid var(--border);">
+          <div id="profileStatPosts" style="font-size:20px;font-weight:800;color:var(--text);">—</div>
+          <div style="font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;">Posts</div>
+        </div>
+        <div style="padding:16px;text-align:center;border-right:1px solid var(--border);">
+          <div id="profileStatMsgs" style="font-size:20px;font-weight:800;color:var(--text);">—</div>
+          <div style="font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;">Messages</div>
+        </div>
+        <div style="padding:16px;text-align:center;">
+          <div id="profileStatJoined" style="font-size:13px;font-weight:800;color:var(--text);">—</div>
+          <div style="font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;">Joined</div>
+        </div>
+      </div>
+
+      <!-- Settings list -->
+      <div style="padding:8px 0;">
+        <div style="padding:10px 20px;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text-light);">Account</div>
+        <div class="profile-page-row" onclick="openSettings()">
+          <span style="font-size:18px;">⚙️</span>
+          <span>Settings</span>
+          <svg style="margin-left:auto;opacity:.4;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div id="profilePageOwnerRow" class="profile-page-row" onclick="openOwnerPanel()" style="display:none;">
+          <span style="font-size:18px;">⚡</span>
+          <span>Owner Panel</span>
+          <svg style="margin-left:auto;opacity:.4;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div style="padding:10px 20px;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text-light);margin-top:8px;">Appearance</div>
+        <div class="profile-page-row" onclick="toggleTheme()">
+          <span style="font-size:18px;">🌓</span>
+          <span>Toggle Dark Mode</span>
+          <svg style="margin-left:auto;opacity:.4;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div style="padding:10px 20px;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text-light);margin-top:8px;">Session</div>
+        <div class="profile-page-row danger" onclick="doLogout()">
+          <span style="font-size:18px;">🚪</span>
+          <span>Log Out</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="page" id="page-about">
   <div class="about-wrap">
     <span class="section-label">About Us</span>
@@ -2155,6 +2249,8 @@ function applySession() {
     loadNotifsFromDB();
     // Refresh quick message widget on home
     setTimeout(qmInit, 200);
+    // Update profile page if visible
+    setTimeout(updateProfilePage, 100);
 
     // ── Mobile bottom nav profile label ──
     const mbnLabel=document.getElementById('mbnProfileLabel');
@@ -3873,11 +3969,20 @@ function renderNotifPanel() {
       <div class="notif-time">${fmtTime(n.ts.toISOString())}</div>`;
     el.onclick=()=>{
       n.read=true;
-      const profile=allProfiles.find(p=>p.id===n.fromId);
-      if(profile){ goTo('messages'); openDM(profile); }
       document.getElementById('notifPanel').classList.remove('open');
       updateNotifBadge();
       renderNotifPanel();
+      // Navigate to the conversation
+      const prof = allProfiles.find(p=>p.id===n.fromId);
+      if(prof) {
+        goTo('messages');
+        setTimeout(()=>{ openDM(prof); }, 150);
+      } else {
+        // Profile not in cache — fetch it
+        sb.from('profiles').select('*').eq('id', n.fromId).single().then(({data})=>{
+          if(data) { goTo('messages'); setTimeout(()=>{ openDM(data); }, 150); }
+        });
+      }
     };
     list.appendChild(el);
   });
@@ -4611,6 +4716,66 @@ if (typeof _origGoTo === 'function') {
   };
 }
 
+
+// ── Profile page ─────────────────────────────────────────────────
+function goToProfilePage() {
+  goTo('profile');
+  updateProfilePage();
+}
+
+function updateProfilePage() {
+  const avEl    = document.getElementById('profilePageAv');
+  const nameEl  = document.getElementById('profilePageName');
+  const roleEl  = document.getElementById('profilePageRole');
+  const dotEl   = document.getElementById('profilePageDot');
+  const stEl    = document.getElementById('profilePageStatusText');
+  const guest   = document.getElementById('profilePageGuest');
+  const loggedIn= document.getElementById('profilePageLoggedIn');
+  const ownerRow= document.getElementById('profilePageOwnerRow');
+
+  if (!currentUser || !currentProfile) {
+    if (avEl)   { avEl.textContent = '?'; avEl.style.background = 'var(--bg-card)'; avEl.style.color = 'var(--accent)'; }
+    if (nameEl) nameEl.textContent = 'Guest';
+    if (roleEl) roleEl.textContent = '';
+    if (guest)  guest.style.display = 'flex';
+    if (loggedIn) loggedIn.style.display = 'none';
+    return;
+  }
+
+  const u = currentProfile;
+  const initials = (u.username||'?').slice(0,2).toUpperCase();
+  const color = stringToColor(u.username||'?');
+
+  if (avEl)   { avEl.textContent = initials; avEl.style.color = '#fff'; avEl.style.background = color; }
+  if (nameEl) nameEl.textContent = u.username || 'User';
+  if (roleEl) roleEl.textContent = u.role || 'Member';
+  if (dotEl)  dotEl.style.background = isUserOnline(u) ? 'var(--online)' : '#6b7280';
+  if (stEl)   stEl.textContent = isUserOnline(u) ? 'Online' : 'Offline';
+  if (guest)  guest.style.display = 'none';
+  if (loggedIn) loggedIn.style.display = 'block';
+  if (ownerRow) ownerRow.style.display = u.role === 'owner' ? 'flex' : 'none';
+
+  const joinedEl = document.getElementById('profileStatJoined');
+  if (joinedEl && u.created_at) {
+    const d = new Date(u.created_at);
+    joinedEl.textContent = d.toLocaleDateString('en', {month:'short', year:'numeric'});
+  }
+  loadProfileStats();
+}
+
+async function loadProfileStats() {
+  if (!currentUser) return;
+  const postsEl = document.getElementById('profileStatPosts');
+  const msgsEl  = document.getElementById('profileStatMsgs');
+  try {
+    const [{ count: posts }, { count: msgs }] = await Promise.all([
+      sb.from('forum_posts').select('id', {count:'exact',head:true}).eq('user_id', currentUser.id),
+      sb.from('direct_messages').select('id', {count:'exact',head:true}).eq('sender_id', currentUser.id)
+    ]);
+    if (postsEl) postsEl.textContent = posts ?? '0';
+    if (msgsEl)  msgsEl.textContent  = msgs  ?? '0';
+  } catch(e) {}
+}
 </script>
 
 <!-- ── Photo detail — full page ── -->
