@@ -622,6 +622,7 @@
   .mobile-bottom-nav {
     display: none;
     position: fixed;
+    top: auto;
     bottom: 0; left: 0; right: 0;
     height: 58px;
     background: var(--bg-card);
@@ -795,7 +796,7 @@
     input, select, textarea { font-size: 16px !important; }
 
     /* ── Top nav — minimal, just logo + icons ── */
-    nav {
+    nav:not(.mobile-bottom-nav) {
       padding-left: max(14px, env(safe-area-inset-left));
       padding-right: max(14px, env(safe-area-inset-right));
       gap: 6px;
