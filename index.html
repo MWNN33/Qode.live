@@ -1134,7 +1134,8 @@
       left: 0 !important; right: 0 !important; width: 100% !important;
       border-radius: 24px 24px 0 0; border-bottom: none;
       max-height: 94dvh; overflow-y: auto;
-      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+      z-index: 600 !important;
     }
     .auth-form { max-height: none; padding-bottom: 24px; }
     .auth-input { padding: 13px 14px; }
@@ -1365,8 +1366,6 @@
         <button class="auth-btn" onclick="verifyPhoneOTP()">Verify &amp; Log In</button>
       </div>
     </div>
-    <div class="auth-divider">or</div>
-    <button class="auth-btn secondary" onclick="switchTab('register')">Create account</button>
   </div>
   <div class="auth-form" id="registerForm">
     <div>
@@ -1585,8 +1584,8 @@
     <!-- Guest view -->
     <div id="profilePageGuest" style="padding:24px 20px;display:flex;flex-direction:column;gap:12px;">
       <p style="font-size:14px;color:var(--text-muted);line-height:1.6;text-align:center;">Log in or create an account to join forums, send messages, and get notifications.</p>
-      <button class="auth-btn" onclick="switchTab('login');document.getElementById('authDropdown').classList.add('open');">Log In</button>
-      <button class="auth-btn secondary" onclick="switchTab('register');document.getElementById('authDropdown').classList.add('open');">Create Account</button>
+      <button class="auth-btn" onclick="event.stopPropagation();switchTab('login');document.getElementById('authDropdown').classList.add('open');">Log In</button>
+      <button class="auth-btn secondary" onclick="event.stopPropagation();switchTab('register');document.getElementById('authDropdown').classList.add('open');">Create Account</button>
     </div>
 
     <!-- Logged-in view -->
@@ -3698,7 +3697,7 @@ function openDynamicArticle(a) {
 
 // ─── CLICK OUTSIDE ───
 document.addEventListener('click',e=>{
-  if(!e.target.closest('#authDropdown')&&!e.target.closest('#authTrigger')) document.getElementById('authDropdown').classList.remove('open');
+  if(!e.target.closest('#authDropdown')&&!e.target.closest('#authTrigger')&&!e.target.closest('#profilePageGuest')) document.getElementById('authDropdown').classList.remove('open');
   if(!e.target.closest('#profileMenu')&&!e.target.closest('#profilePill')&&!e.target.closest('.mbn-item:last-child')) document.getElementById('profileMenu').classList.remove('open');
   if(!e.target.closest('#notifPanel')&&!e.target.closest('#notifBell')&&!e.target.closest('#mbn-notif')){
     const p=document.getElementById('notifPanel'); if(p) p.classList.remove('open');
@@ -4268,7 +4267,7 @@ if (_savedPage && document.getElementById('page-'+_savedPage)) {
     const mbnNotif = document.getElementById('mbn-notif');
     if (notifPanel?.classList.contains('open') && !notifPanel.contains(e.target) && !notifBell?.contains(e.target) && !mbnNotif?.contains(e.target))
       notifPanel.classList.remove('open');
-    if (authDD?.classList.contains('open') && !authDD.contains(e.target) && !authTrig?.contains(e.target))
+    if (authDD?.classList.contains('open') && !authDD.contains(e.target) && !authTrig?.contains(e.target) && !e.target.closest('#profilePageGuest'))
       authDD.classList.remove('open');
     if (profMenu?.classList.contains('open') && !profMenu.contains(e.target) && !profPill?.contains(e.target))
       profMenu.classList.remove('open');
