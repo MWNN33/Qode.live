@@ -32,6 +32,13 @@
   .nav-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
   #themeIcon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
 
+  /* AUTH NAV TRIGGER */
+  #authTrigger { display: flex; align-items: center; gap: 8px; margin-left: 16px; }
+  .auth-nav-btn { padding: 6px 14px; border-radius: 6px; font-family: 'Kanit', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); }
+  .auth-nav-btn:hover { background: var(--border); color: var(--text); }
+  .auth-nav-btn.accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .auth-nav-btn.accent:hover { background: #2a5a90; border-color: #2a5a90; }
+
   /* AUTH */
   .auth-dropdown { position: fixed; top: calc(var(--nav-h) + 8px); right: 16px; width: 340px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); z-index: 500; overflow: hidden; display: none; animation: dropIn 0.18s ease; }
   @keyframes dropIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
@@ -805,7 +812,7 @@
     }
     .nav-links, .nav-line { display: none; }
     .logo { font-size: 16px; font-weight: 800; letter-spacing: .08em; flex: 1; }
-    #authTrigger { margin-left: auto; }
+    #authTrigger { display: none !important; }
     .profile-pill {
       margin-left: 8px; padding: 3px 8px 3px 4px;
       border-radius: 20px;
@@ -1318,6 +1325,9 @@
   </div>
   <div class="nav-icon" onclick="toggleTheme()" title="Toggle theme" style="margin-left:8px;">
     <span id="themeIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+  </div>
+  <div id="authTrigger" class="nav-icon" onclick="toggleAuthDropdown()" title="Log In / Register" style="margin-left:12px;">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
   </div>
   <div id="profilePill" class="profile-pill" onclick="toggleProfileMenu()" style="display:none;">
     <div class="profile-avatar" id="profileAvatar">?</div>
