@@ -1393,6 +1393,9 @@
   <div class="auth-form active" id="loginForm">
     <div><label class="auth-label">Email</label><input class="auth-input" id="loginEmail" type="email" placeholder="you@example.com"></div>
     <div><label class="auth-label">Password</label><input class="auth-input" id="loginPass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div style="text-align:right;margin-top:-6px;">
+      <a onclick="openForgotPassword()" style="font-size:11px;color:var(--text-light);cursor:pointer;text-decoration:underline;">Forgot password?</a>
+    </div>
     <div class="auth-error" id="loginError"></div>
     <button class="auth-btn" id="loginBtn" onclick="doLogin()">Log In</button>
     <div class="auth-divider">or continue with</div>
@@ -1593,6 +1596,39 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div class="new-post-modal" id="forgotPassModal" onclick="if(event.target===this)closeForgotPassword()">
+  <div class="new-post-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <h3>🔑 Reset Password</h3>
+      <button class="modal-close" onclick="closeForgotPassword()">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-light);margin:-6px 0 0;">Enter your account email and we'll send you a reset link.</p>
+    <div><label class="auth-label">Email</label><input class="auth-input" id="forgotPassEmail" type="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')sendPasswordReset()"></div>
+    <div class="auth-error" id="forgotPassError"></div>
+    <div class="auth-success" id="forgotPassSuccess" style="display:none;">Reset link sent — check your inbox.</div>
+    <button class="auth-btn" id="forgotPassBtn" onclick="sendPasswordReset()">Send Reset Link</button>
+  </div>
+</div>
+
+<!-- SET NEW PASSWORD MODAL (opened automatically from the reset-link redirect) -->
+<div class="new-post-modal" id="setNewPassModal">
+  <div class="new-post-box" onclick="event.stopPropagation()">
+    <h3>🔑 Set a New Password</h3>
+    <p style="font-size:12px;color:var(--text-light);margin:-6px 0 0;">You're verified via your reset link. Choose a new password below.</p>
+    <div>
+      <label class="auth-label">New Password</label>
+      <input class="auth-input" id="setNewPass1" type="password" placeholder="min. 6 characters">
+    </div>
+    <div>
+      <label class="auth-label">Confirm New Password</label>
+      <input class="auth-input" id="setNewPass2" type="password" placeholder="repeat new password" onkeydown="if(event.key==='Enter')submitNewPasswordFromRecovery()">
+    </div>
+    <div class="auth-error" id="setNewPassError"></div>
+    <button class="auth-btn" id="setNewPassBtn" onclick="submitNewPasswordFromRecovery()">Set New Password</button>
   </div>
 </div>
 
@@ -2430,6 +2466,50 @@ async function doRegister() {
   if(error){errEl.textContent=error.message;errEl.style.display='block';return;}
   okEl.style.display='block';
   setTimeout(()=>switchTab('login'), 2000);
+}
+
+// ─── FORGOT / RESET PASSWORD ───
+function openForgotPassword(){
+  document.getElementById('forgotPassEmail').value = document.getElementById('loginEmail').value.trim();
+  document.getElementById('forgotPassError').style.display='none';
+  document.getElementById('forgotPassSuccess').style.display='none';
+  document.getElementById('forgotPassModal').classList.add('open');
+}
+function closeForgotPassword(){ document.getElementById('forgotPassModal').classList.remove('open'); }
+
+async function sendPasswordReset(){
+  const email = document.getElementById('forgotPassEmail').value.trim();
+  const errEl = document.getElementById('forgotPassError');
+  const okEl  = document.getElementById('forgotPassSuccess');
+  const btn   = document.getElementById('forgotPassBtn');
+  errEl.style.display='none'; okEl.style.display='none';
+  if(!email){ errEl.textContent='Enter your email first.'; errEl.style.display='block'; return; }
+  btn.innerHTML='<span class="spin"></span>Sending...'; btn.disabled=true;
+  // redirectTo must exactly match a URL allow-listed in Supabase → Authentication → URL Configuration
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  btn.innerHTML='Send Reset Link'; btn.disabled=false;
+  if(error){ errEl.textContent=error.message; errEl.style.display='block'; return; }
+  okEl.style.display='block';
+}
+
+async function submitNewPasswordFromRecovery(){
+  const p1 = document.getElementById('setNewPass1').value;
+  const p2 = document.getElementById('setNewPass2').value;
+  const errEl = document.getElementById('setNewPassError');
+  const btn = document.getElementById('setNewPassBtn');
+  errEl.style.display='none';
+  if(!p1 || p1.length<6){ errEl.textContent='Password must be at least 6 characters.'; errEl.style.display='block'; return; }
+  if(p1!==p2){ errEl.textContent='Passwords do not match.'; errEl.style.display='block'; return; }
+  btn.innerHTML='<span class="spin"></span>Saving...'; btn.disabled=true;
+  const { error } = await sb.auth.updateUser({ password:p1 });
+  btn.innerHTML='Set New Password'; btn.disabled=false;
+  if(error){ errEl.textContent=error.message; errEl.style.display='block'; return; }
+  document.getElementById('setNewPassModal').classList.remove('open');
+  document.getElementById('setNewPass1').value='';
+  document.getElementById('setNewPass2').value='';
+  toast('Password updated ✓ You are now logged in.');
 }
 
 async function doLogout() {
@@ -4154,6 +4234,12 @@ async function loadProfile(userId, meta={}) {
 sb.auth.onAuthStateChange(async (event, session) => {
   // TOKEN_REFRESHED fires silently in background — skip to avoid double-builds
   if(event === 'TOKEN_REFRESHED') return;
+
+  // Fired automatically when the user lands here via a password-reset email link
+  if(event === 'PASSWORD_RECOVERY') {
+    document.getElementById('authDropdown').classList.remove('open');
+    document.getElementById('setNewPassModal').classList.add('open');
+  }
 
   if(session?.user) {
     currentUser = session.user;
