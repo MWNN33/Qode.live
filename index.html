@@ -18,7 +18,9 @@
     --accent: #534AB7; --shadow: 0 2px 10px rgba(83,74,183,0.18);
     --nav-h: 48px; --online: #16c060; --danger: #d9321f;
   }
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Kanit', sans-serif; font-size: 15px; line-height: 1.6; }
+  html { min-height: 100%; background: var(--bg); }
+  html, body { background: var(--bg); color: var(--text); font-family: 'Kanit', sans-serif; font-size: 15px; line-height: 1.6; }
+  body { min-height: 100%; }
 
   /* NAV */
   nav { position: sticky; top: 0; z-index: 100; background: var(--bg); height: var(--nav-h); display: flex; align-items: center; padding: 0 28px; border-bottom: 1px solid var(--border); }
@@ -68,6 +70,43 @@
   .field-hint.show { display: block; }
   .field-hint.ok { color: #1a6b3c; }
   .field-hint.err { color: #c0392b; }
+
+  /* FOOTER */
+  .site-footer { border-top: 1px solid var(--border); margin-top: 40px; padding: 28px 28px 90px; }
+  .footer-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
+  .footer-links { display: flex; flex-wrap: wrap; gap: 18px; list-style: none; }
+  .footer-links a { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--text); }
+  .footer-copy { font-size: 11px; color: var(--text-light); }
+  @media (max-width: 700px) { .site-footer { padding-bottom: 90px; } .footer-inner { flex-direction: column; align-items: flex-start; } }
+
+  /* LEGAL PAGE */
+  .legal-wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 60px; }
+  .legal-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
+  .legal-tab { padding: 7px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); transition: background 0.15s, color 0.15s; }
+  .legal-tab:hover { background: var(--border); color: var(--text); }
+  .legal-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .legal-doc { display: none; }
+  .legal-doc.active { display: block; }
+  .legal-doc h1 { font-size: 22px; margin-bottom: 6px; }
+  .legal-doc .legal-updated { font-size: 11px; color: var(--text-light); margin-bottom: 20px; }
+  .legal-doc h2 { font-size: 15px; margin: 22px 0 8px; color: var(--text); }
+  .legal-doc p, .legal-doc li { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+  .legal-doc ul { padding-left: 20px; margin-bottom: 10px; }
+  .legal-doc strong { color: var(--text); }
+  .legal-placeholder { background: var(--bg-card); border: 1px dashed var(--border); border-radius: 4px; padding: 0 4px; color: var(--text); font-style: italic; }
+
+  /* COOKIE BANNER */
+  .cookie-banner { position: fixed; left: 16px; right: 16px; bottom: 16px; max-width: 480px; margin: 0 auto; background: var(--bg-elevated, var(--bg-card)); border: 1.5px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 16px 18px; z-index: 900; display: none; animation: dropIn 0.2s ease; }
+  .cookie-banner.open { display: block; }
+  .cookie-banner p { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5; }
+  .cookie-banner .cookie-actions { display: flex; gap: 10px; }
+  .cookie-banner .cookie-actions button { flex: 1; }
+  body.dark .cookie-banner { border-color: var(--border-hi); box-shadow: 0 16px 56px rgba(0,0,0,0.7); }
+  @media (max-width: 700px) { .cookie-banner { bottom: calc(58px + 12px + env(safe-area-inset-bottom, 0px)); } }
+  .consent-row { display: flex; align-items: flex-start; gap: 8px; font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+  .consent-row input { margin-top: 2px; }
+  .consent-row a { color: var(--text); text-decoration: underline; cursor: pointer; }
 
   /* Category chips */
   .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 140px; overflow-y: auto; }
@@ -1299,6 +1338,14 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- COOKIE / LOCAL STORAGE NOTICE -->
+<div class="cookie-banner" id="cookieBanner">
+  <p>QODE uses your browser's local storage for things like theme and privacy preferences, and essential session data to keep you logged in. No third-party ad tracking. See our <a onclick="openLegal('cookies')" style="color:var(--text);text-decoration:underline;cursor:pointer;">Cookie Notice</a>.</p>
+  <div class="cookie-actions">
+    <button class="auth-btn" onclick="dismissCookieBanner()">Got it</button>
+  </div>
+</div>
+
 <!-- BANNED OVERLAY — blocks all interaction when user is banned -->
 <div id="bannedOverlay">
   <div class="banned-box">
@@ -1401,6 +1448,10 @@
     <div>
       <label class="auth-label" style="margin-bottom:8px;">Join Forums</label>
       <div class="cat-grid" id="regCatGrid"></div>
+    </div>
+    <div class="consent-row">
+      <input type="checkbox" id="regConsent">
+      <span>I confirm I am at least 13 years old and agree to the <a onclick="openLegal('terms')">Terms of Service</a> and <a onclick="openLegal('privacy')">Privacy Policy</a>.</span>
     </div>
     <div class="auth-error" id="registerError"></div>
     <div class="auth-success" id="registerSuccess">Account created! Check your email to confirm, then log in.</div>
@@ -1545,6 +1596,37 @@
   </div>
 </div>
 
+<!-- REPORT MODAL -->
+<div class="new-post-modal" id="reportModal" onclick="if(event.target===this)closeReportModal()">
+  <div class="new-post-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <h3>🚩 Report Content</h3>
+      <button class="modal-close" onclick="closeReportModal()">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-light);margin:-6px 0 0;">Reporting: <strong id="reportTargetLabel">—</strong></p>
+    <div>
+      <label class="auth-label">Reason</label>
+      <select class="auth-input" id="reportReason">
+        <option value="spam">Spam or scam</option>
+        <option value="harassment">Harassment or bullying</option>
+        <option value="hate_speech">Hate speech</option>
+        <option value="sexual_content">Sexual or explicit content</option>
+        <option value="violence">Violence or dangerous behavior</option>
+        <option value="impersonation">Impersonation</option>
+        <option value="copyright">Copyright infringement</option>
+        <option value="other">Something else</option>
+      </select>
+    </div>
+    <div>
+      <label class="auth-label">Additional details (optional)</label>
+      <textarea class="auth-input" id="reportDetails" rows="3" placeholder="Anything that helps us review this..." style="resize:vertical;min-height:70px;"></textarea>
+    </div>
+    <div class="auth-error" id="reportError"></div>
+    <div class="auth-success" id="reportSuccess" style="display:none;">Report submitted. Thanks for helping keep QODE safe.</div>
+    <button class="auth-btn" id="reportSubmitBtn" onclick="submitReport()">Submit Report</button>
+  </div>
+</div>
+
 <!-- NEWS UPLOAD MODAL -->
 <div class="new-post-modal" id="newsUploadModal" onclick="if(event.target===this)closeNewsUploadModal()">
   <div class="new-post-box">
@@ -1657,6 +1739,153 @@
   </div>
 </div>
 
+<!-- LEGAL -->
+<div class="page" id="page-legal">
+  <div class="legal-wrap">
+    <div class="legal-tabs">
+      <button class="legal-tab active" data-legal="terms" onclick="openLegal('terms')">Terms of Service</button>
+      <button class="legal-tab" data-legal="privacy" onclick="openLegal('privacy')">Privacy Policy</button>
+      <button class="legal-tab" data-legal="cookies" onclick="openLegal('cookies')">Cookies</button>
+      <button class="legal-tab" data-legal="copyright" onclick="openLegal('copyright')">Copyright / DMCA</button>
+      <button class="legal-tab" data-legal="contact" onclick="openLegal('contact')">Contact</button>
+    </div>
+
+    <div class="legal-doc active" id="legal-terms">
+      <h1>Terms of Service</h1>
+      <div class="legal-updated">Last updated: <span class="legal-placeholder">[DATE]</span></div>
+      <p>These Terms of Service ("Terms") govern your access to and use of <strong>QODE</strong> (the "Service"), operated by <span class="legal-placeholder">[COMPANY / OPERATOR NAME]</span> ("we", "us"). By creating an account or using the Service, you agree to these Terms.</p>
+
+      <h2>1. Eligibility</h2>
+      <p>You must be at least 13 years old to use QODE. If you are under the age of majority in your jurisdiction, you confirm you have permission from a parent or guardian.</p>
+
+      <h2>2. Your Account</h2>
+      <p>You are responsible for maintaining the confidentiality of your login credentials and for all activity that occurs under your account. Notify us immediately of any unauthorized use.</p>
+
+      <h2>3. User Content</h2>
+      <p>You retain ownership of the posts, messages, photos, and other content you submit ("User Content"). By posting content, you grant us a non-exclusive, worldwide, royalty-free license to host, store, display, and distribute it solely for the purpose of operating and improving the Service.</p>
+      <p>You are solely responsible for your User Content and confirm you have the rights necessary to post it.</p>
+
+      <h2>4. Acceptable Use</h2>
+      <p>You agree not to:</p>
+      <ul>
+        <li>Post unlawful, harassing, hateful, or sexually explicit content;</li>
+        <li>Impersonate another person or misrepresent your identity;</li>
+        <li>Upload malware or attempt to disrupt or gain unauthorized access to the Service;</li>
+        <li>Use the Service to spam, scrape, or harvest other users' data.</li>
+      </ul>
+
+      <h2>5. Moderation &amp; Termination</h2>
+      <p>We may remove content or suspend/ban accounts that violate these Terms, at our discretion, with or without notice.</p>
+
+      <h2>6. Disclaimers</h2>
+      <p>The Service is provided "as is" without warranties of any kind. We do not guarantee the Service will be uninterrupted, secure, or error-free.</p>
+
+      <h2>7. Limitation of Liability</h2>
+      <p>To the maximum extent permitted by law, <span class="legal-placeholder">[COMPANY / OPERATOR NAME]</span> shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Service.</p>
+
+      <h2>8. Changes to These Terms</h2>
+      <p>We may update these Terms from time to time. Continued use of the Service after changes take effect constitutes acceptance of the revised Terms.</p>
+
+      <h2>9. Governing Law</h2>
+      <p>These Terms are governed by the laws of <span class="legal-placeholder">[JURISDICTION]</span>, without regard to conflict-of-law principles.</p>
+
+      <h2>10. Contact</h2>
+      <p>Questions about these Terms can be sent to <span class="legal-placeholder">[CONTACT EMAIL]</span>.</p>
+    </div>
+
+    <div class="legal-doc" id="legal-privacy">
+      <h1>Privacy Policy</h1>
+      <div class="legal-updated">Last updated: <span class="legal-placeholder">[DATE]</span></div>
+      <p>This Privacy Policy explains how <strong>QODE</strong>, operated by <span class="legal-placeholder">[COMPANY / OPERATOR NAME]</span>, collects, uses, and protects your information.</p>
+
+      <h2>1. Information We Collect</h2>
+      <ul>
+        <li><strong>Account data:</strong> username, email address, and password (stored securely and hashed by our authentication provider).</li>
+        <li><strong>Content you provide:</strong> forum posts, direct messages, photos, comments, and profile information.</li>
+        <li><strong>Usage data:</strong> online/offline status, timestamps, and basic device/browser information.</li>
+        <li><strong>Local storage:</strong> theme and privacy preferences saved in your browser (see our Cookie notice).</li>
+      </ul>
+
+      <h2>2. How We Use Your Information</h2>
+      <ul>
+        <li>To create and secure your account and authenticate you;</li>
+        <li>To operate core features such as forums, messaging, notifications, and photo sharing;</li>
+        <li>To maintain safety, prevent abuse, and enforce our Terms of Service;</li>
+        <li>To improve and troubleshoot the Service.</li>
+      </ul>
+
+      <h2>3. How We Store Your Information</h2>
+      <p>Account and content data is stored with our database provider, Supabase. We take reasonable technical and organizational measures to protect your data, but no method of transmission or storage is 100% secure.</p>
+
+      <h2>4. Sharing of Information</h2>
+      <p>We do not sell your personal information. We may share data with service providers who help us operate the Service (e.g. hosting, authentication), or when required by law.</p>
+
+      <h2>5. Your Rights</h2>
+      <p>Depending on your location, you may have the right to access, correct, export, or delete your personal data, and to object to or restrict certain processing. To exercise these rights, contact us at <span class="legal-placeholder">[CONTACT EMAIL]</span>.</p>
+
+      <h2>6. Data Retention</h2>
+      <p>We retain your account and content data for as long as your account is active, or as needed to comply with legal obligations. You may request account deletion at any time.</p>
+
+      <h2>7. Children's Privacy</h2>
+      <p>QODE is not directed at children under 13, and we do not knowingly collect data from children under that age.</p>
+
+      <h2>8. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy periodically. Material changes will be reflected by updating the "Last updated" date above.</p>
+
+      <h2>9. Contact</h2>
+      <p>Questions about this Privacy Policy can be sent to <span class="legal-placeholder">[CONTACT EMAIL]</span>.</p>
+    </div>
+
+    <div class="legal-doc" id="legal-cookies">
+      <h1>Cookie &amp; Local Storage Notice</h1>
+      <div class="legal-updated">Last updated: <span class="legal-placeholder">[DATE]</span></div>
+      <p>QODE uses your browser's local storage (not tracking cookies) to remember a small amount of information on your device:</p>
+      <ul>
+        <li><strong>Theme preference</strong> (light/dark mode);</li>
+        <li><strong>Privacy settings</strong>, such as whether your online status is visible to others;</li>
+        <li><strong>Last visited page</strong>, so the app can restore your place when you return.</li>
+      </ul>
+      <p>This information stays on your device and is not used for advertising or third-party tracking. Authentication itself is handled securely by our backend provider, Supabase, which may set its own essential session cookies/tokens required for you to stay logged in.</p>
+      <p>You can clear this data at any time by clearing your browser's site data for QODE.</p>
+    </div>
+
+    <div class="legal-doc" id="legal-copyright">
+      <h1>Copyright &amp; DMCA Policy</h1>
+      <div class="legal-updated">Last updated: <span class="legal-placeholder">[DATE]</span></div>
+      <p><strong>QODE</strong> respects the intellectual property rights of others and expects users to do the same. We respond to clear notices of alleged copyright infringement.</p>
+
+      <h2>1. Reporting Infringing Content</h2>
+      <p>If you believe content on QODE (a post, photo, or comment) infringes your copyright, you can report it directly from the post using the 🚩 <strong>Report</strong> button and selecting "Copyright infringement," or send a written notice to <span class="legal-placeholder">[CONTACT EMAIL]</span> including:</p>
+      <ul>
+        <li>Identification of the copyrighted work you claim has been infringed;</li>
+        <li>A link or clear description of the material on QODE you claim is infringing, and its location;</li>
+        <li>Your contact information (name, address, email, phone);</li>
+        <li>A statement that you have a good-faith belief the use is not authorized by the copyright owner, its agent, or the law;</li>
+        <li>A statement, under penalty of perjury, that the information in the notice is accurate and that you are the copyright owner or authorized to act on their behalf;</li>
+        <li>Your physical or electronic signature.</li>
+      </ul>
+
+      <h2>2. Our Response</h2>
+      <p>Upon receiving a valid notice, we will review it and, where appropriate, remove or disable access to the reported content, and may notify the user who posted it.</p>
+
+      <h2>3. Counter-Notices</h2>
+      <p>If you believe content was removed in error, you may submit a counter-notice to <span class="legal-placeholder">[CONTACT EMAIL]</span> identifying the removed material and explaining why it does not infringe.</p>
+
+      <h2>4. Repeat Infringers</h2>
+      <p>We may suspend or terminate accounts of users found to repeatedly infringe others' copyrights.</p>
+    </div>
+
+    <div class="legal-doc" id="legal-contact">
+      <h1>Contact Us</h1>
+      <div class="legal-updated">Last updated: <span class="legal-placeholder">[DATE]</span></div>
+      <p>For legal, privacy, support, or general inquiries, reach out to:</p>
+      <p><strong>Operator:</strong> <span class="legal-placeholder">[COMPANY / OPERATOR NAME]</span></p>
+      <p><strong>Email:</strong> <span class="legal-placeholder">[CONTACT EMAIL]</span></p>
+      <p><strong>Address:</strong> <span class="legal-placeholder">[BUSINESS ADDRESS, IF APPLICABLE]</span></p>
+    </div>
+  </div>
+</div>
+
 <!-- FORUM -->
 <div class="page" id="page-forum">
   <div class="chat-outer">
@@ -1740,6 +1969,7 @@
                   <span class="online-dot" id="dmOnlineDot" style="display:none;"></span>
                 </div>
                 <span class="chat-header-sub" id="dmHeaderStatus"></span>
+                <button class="modal-close" style="width:26px;height:26px;font-size:12px;margin-left:8px;" title="Report user" onclick="reportActiveDMUser()">🚩</button>
               </div>
               <div class="chat-messages" id="dmMessages"></div>
               <div class="chat-input-bar">
@@ -1823,6 +2053,7 @@
       <button class="stab" id="stab-password" onclick="switchSettingsTab('password')">🔒 Password</button>
       <button class="stab" id="stab-privacy" onclick="switchSettingsTab('privacy')">🕵️ Privacy</button>
       <button class="stab" id="stab-forums" onclick="switchSettingsTab('forums')">💬 Forums</button>
+      <button class="stab" id="stab-data" onclick="switchSettingsTab('data')">📦 Data</button>
     </div>
     <div class="settings-body">
       <!-- PROFILE TAB -->
@@ -1891,6 +2122,23 @@
         <div class="cat-grid" id="settingsCatGrid"></div>
         <button class="auth-btn" style="margin-top:16px;" onclick="saveSettings()">Save Forums</button>
       </div>
+      <!-- DATA TAB -->
+      <div id="settings-data-tab" style="display:none;">
+        <div class="settings-section-title">Your Data</div>
+        <p style="font-size:12px;color:var(--text-light);margin-bottom:14px;">Download a copy of everything tied to your account — profile, posts, comments, messages, votes and notifications.</p>
+        <button class="auth-btn secondary" id="exportDataBtn" onclick="exportMyData()">⬇️ Export My Data (JSON)</button>
+
+        <div style="border-top:1px solid var(--border);margin:22px 0 14px;"></div>
+        <div class="settings-section-title" style="color:var(--danger);">Danger Zone</div>
+        <p style="font-size:12px;color:var(--text-light);margin-bottom:12px;">Permanently deletes your profile, posts, comments, photos, messages and votes. This cannot be undone.</p>
+        <div id="deleteAccountConfirmWrap" style="display:none;margin-bottom:10px;">
+          <label class="auth-label">Type <strong>DELETE</strong> to confirm</label>
+          <input class="auth-input" id="deleteAccountConfirmInput" type="text" placeholder="DELETE" oninput="document.getElementById('deleteAccountFinalBtn').disabled=this.value.trim()!=='DELETE';">
+        </div>
+        <div class="auth-error" id="deleteAccountError" style="margin-bottom:8px;"></div>
+        <button class="auth-btn" style="background:var(--danger);" id="deleteAccountBtn" onclick="startDeleteAccount()">Delete My Account</button>
+        <button class="auth-btn" style="background:var(--danger);display:none;margin-top:8px;" id="deleteAccountFinalBtn" disabled onclick="confirmDeleteAccount()">Permanently Delete Account</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1908,6 +2156,7 @@
       <button class="owner-tab" id="otab-photos" onclick="switchOwnerTab('photos')">🖼 Photos</button>
       <button class="owner-tab" id="otab-channels" onclick="switchOwnerTab('channels')">📢 Channels</button>
       <button class="owner-tab" id="otab-rooms" onclick="switchOwnerTab('rooms')">🏠 Rooms</button>
+      <button class="owner-tab" id="otab-reports" onclick="switchOwnerTab('reports')">🚩 Reports</button>
     </div>
     <div class="owner-content" id="ownerContent">
       <div style="color:var(--text-light);font-size:12px;">Loading...</div>
@@ -2156,6 +2405,10 @@ async function doRegister() {
     document.getElementById('registerError').textContent='Please fix the errors above.';
     document.getElementById('registerError').style.display='block'; return;
   }
+  if(!document.getElementById('regConsent').checked) {
+    document.getElementById('registerError').textContent='Please agree to the Terms of Service and Privacy Policy to continue.';
+    document.getElementById('registerError').style.display='block'; return;
+  }
   const username = document.getElementById('regUser').value.trim();
   const email    = document.getElementById('regEmail').value.trim();
   const pass     = document.getElementById('regPass').value;
@@ -2306,6 +2559,7 @@ function goTo(page) {
   document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
   const map={home:'nav-news',forum:'nav-forum',messages:'nav-messages',about:'nav-about'};
   if(map[page]) document.getElementById(map[page]).classList.add('active');
+  window.scrollTo(0,0);
   // Sync mobile bottom nav
   document.querySelectorAll('.mbn-item').forEach(el=>el.classList.remove('active'));
   const mbnMap={home:'mbn-home',forum:'mbn-forum',messages:'mbn-messages',about:'mbn-about'};
@@ -2313,6 +2567,63 @@ function goTo(page) {
   if(page==='forum'){buildForumSidebar();buildForumSubSidebar();loadForumMessages(activeForum);}
   if(page==='messages'){loadDMList();clearUnreadFrom(null);} // mark all read when opening messages
   localStorage.setItem('qode-page', page);
+}
+function dismissCookieBanner(){
+  localStorage.setItem('qode-cookie-ack', '1');
+  document.getElementById('cookieBanner').classList.remove('open');
+}
+(function initCookieBanner(){
+  if(!localStorage.getItem('qode-cookie-ack')){
+    document.addEventListener('DOMContentLoaded', ()=>{
+      document.getElementById('cookieBanner').classList.add('open');
+    });
+  }
+})();
+function reportActiveDMUser(){
+  if(!activeDMUser){toast('Open a conversation first.');return;}
+  openReportModal('profile', activeDMUser.id, activeDMUser.username||'user');
+}
+// ─── REPORT CONTENT ───
+let _reportTarget = null; // {type, id, label}
+function openReportModal(type, id, label){
+  if(!currentUser){toast('Log in to report content.');return;}
+  _reportTarget = {type, id: String(id), label: label||type};
+  document.getElementById('reportTargetLabel').textContent = label||type;
+  document.getElementById('reportReason').value='spam';
+  document.getElementById('reportDetails').value='';
+  document.getElementById('reportError').style.display='none';
+  document.getElementById('reportSuccess').style.display='none';
+  document.getElementById('reportModal').classList.add('open');
+}
+function closeReportModal(){ document.getElementById('reportModal').classList.remove('open'); }
+async function submitReport(){
+  if(!currentUser||!_reportTarget){toast('Log in first.');return;}
+  const errEl=document.getElementById('reportError');
+  const okEl=document.getElementById('reportSuccess');
+  const btn=document.getElementById('reportSubmitBtn');
+  errEl.style.display='none'; okEl.style.display='none';
+  const reason=document.getElementById('reportReason').value;
+  const details=document.getElementById('reportDetails').value.trim();
+  btn.innerHTML='<span class="spin"></span>Submitting...'; btn.disabled=true;
+  const {error}=await sb.from('reports').insert({
+    reporter_id: currentUser.id,
+    reporter_username: currentProfile?.username||null,
+    target_type: _reportTarget.type,
+    target_id: _reportTarget.id,
+    reason,
+    details: details||null
+  });
+  btn.innerHTML='Submit Report'; btn.disabled=false;
+  if(error){errEl.textContent=error.message;errEl.style.display='block';return;}
+  okEl.style.display='block';
+  setTimeout(()=>{closeReportModal();},1400);
+}
+
+function openLegal(doc){
+  document.getElementById('authDropdown').classList.remove('open');
+  goTo('legal');
+  document.querySelectorAll('.legal-tab').forEach(t=>t.classList.toggle('active', t.dataset.legal===doc));
+  document.querySelectorAll('.legal-doc').forEach(d=>d.classList.toggle('active', d.id==='legal-'+doc));
 }
 function toggleTheme(){
   const isDark=document.body.classList.toggle('dark');
@@ -2390,7 +2701,14 @@ function switchSettingsTab(tab) {
   document.getElementById('settings-password-tab').style.display=tab==='password'?'block':'none';
   document.getElementById('settings-privacy-tab').style.display=tab==='privacy'?'block':'none';
   document.getElementById('settings-forums-tab').style.display=tab==='forums'?'block':'none';
+  document.getElementById('settings-data-tab').style.display=tab==='data'?'block':'none';
   if(tab==='privacy') loadPrivacySettings();
+  if(tab==='data'){
+    document.getElementById('deleteAccountConfirmWrap').style.display='none';
+    document.getElementById('deleteAccountBtn').style.display='inline-block';
+    document.getElementById('deleteAccountFinalBtn').style.display='none';
+    document.getElementById('deleteAccountError').style.display='none';
+  }
 }
 
 function openSettings(){
@@ -2504,6 +2822,72 @@ function savePrivacySettings() {
   toast('Privacy settings saved ✓');
 }
 
+// ─── DATA EXPORT ───
+async function exportMyData() {
+  if(!currentUser){toast('Log in first.');return;}
+  const btn=document.getElementById('exportDataBtn');
+  btn.innerHTML='<span class="spin"></span>Preparing export...'; btn.disabled=true;
+  try {
+    const uid=currentUser.id;
+    const [profile, posts, comments, replies, photoComments, dms, votes, notifs] = await Promise.all([
+      sb.from('profiles').select('*').eq('id',uid).maybeSingle(),
+      sb.from('forum_posts').select('*').eq('user_id',uid),
+      sb.from('forum_comments').select('*').eq('user_id',uid),
+      sb.from('photo_comment_replies').select('*').eq('user_id',uid),
+      sb.from('photo_comments').select('*').eq('user_id',uid),
+      sb.from('direct_messages').select('*').or(`sender_id.eq.${uid},receiver_id.eq.${uid}`),
+      sb.from('post_votes').select('*').eq('user_id',uid),
+      sb.from('notifications').select('*').eq('user_id',uid)
+    ]);
+    const payload = {
+      exported_at: new Date().toISOString(),
+      profile: profile.data||null,
+      forum_posts: posts.data||[],
+      forum_comments: comments.data||[],
+      photo_comment_replies: replies.data||[],
+      photo_comments: photoComments.data||[],
+      direct_messages: dms.data||[],
+      post_votes: votes.data||[],
+      notifications: notifs.data||[]
+    };
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=`qode-data-export-${(currentProfile?.username||'account')}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast('Export ready ✓ Check your downloads.');
+  } catch(e) {
+    toast('Export failed: '+e.message);
+  }
+  btn.innerHTML='⬇️ Export My Data (JSON)'; btn.disabled=false;
+}
+
+// ─── ACCOUNT DELETION ───
+function startDeleteAccount() {
+  document.getElementById('deleteAccountConfirmWrap').style.display='block';
+  document.getElementById('deleteAccountBtn').style.display='none';
+  document.getElementById('deleteAccountFinalBtn').style.display='inline-block';
+  document.getElementById('deleteAccountConfirmInput').value='';
+}
+async function confirmDeleteAccount() {
+  if(!currentUser){toast('Log in first.');return;}
+  const input=document.getElementById('deleteAccountConfirmInput');
+  const errEl=document.getElementById('deleteAccountError');
+  const btn=document.getElementById('deleteAccountFinalBtn');
+  errEl.style.display='none';
+  if(input.value.trim()!=='DELETE'){errEl.textContent='Type DELETE exactly to confirm.';errEl.style.display='block';return;}
+  btn.innerHTML='<span class="spin"></span>Deleting account...'; btn.disabled=true;
+  const {error} = await sb.rpc('delete_my_account');
+  if(error){
+    errEl.textContent='Error: '+error.message;errEl.style.display='block';
+    btn.innerHTML='Permanently Delete Account'; btn.disabled=false; return;
+  }
+  toast('Your account has been deleted.');
+  await sb.auth.signOut();
+  setTimeout(()=>{ window.location.reload(); }, 800);
+}
+
 // ─── OWNER PANEL ───
 let ownerActiveTab='users';
 
@@ -2532,6 +2916,7 @@ function switchOwnerTab(tab) {
   else if(tab==='photos') loadOwnerPhotos();
   else if(tab==='channels') loadOwnerChannels();
   else if(tab==='rooms') loadOwnerRooms();
+  else if(tab==='reports') loadOwnerReports();
 }
 
 async function loadOwnerUsers() {
@@ -3349,6 +3734,10 @@ async function openPhotoDetail(evtOrPost, post) {
     <button class="photo-detail-action-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span id="detail-comment-count-${post.id}">Comments</span>
+    </button>
+    <button class="photo-detail-action-btn" style="margin-left:auto;" title="Report this post" onclick="openReportModal('forum_post','${post.id}','${(post.title||'post').replace(/</g,'&lt;').replace(/'/g,"\\'")}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+      <span>Report</span>
     </button>`;
   loadDetailVotes(post.id);
 
@@ -4406,6 +4795,65 @@ function loadOwnerRooms() {
   content.appendChild(list);
 }
 
+// ── OWNER: REPORTS ──
+async function loadOwnerReports() {
+  const content = document.getElementById('ownerContent');
+  content.innerHTML = '<div style="color:var(--text-light);font-size:12px;">Loading reports...</div>';
+  const {data, error} = await sb.from('reports').select('*').order('created_at',{ascending:false}).limit(200);
+  if(error){ content.innerHTML = '<div style="color:var(--danger);font-size:12px;">Error: '+error.message+'</div>'; return; }
+  const reports = data||[];
+  content.innerHTML = '';
+
+  const filterBar = document.createElement('div');
+  filterBar.style.cssText = 'display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;';
+  ['open','reviewing','resolved','dismissed','all'].forEach(s=>{
+    const b=document.createElement('button');
+    b.className='action-btn'+(s==='open'?' warning':'');
+    b.textContent=s[0].toUpperCase()+s.slice(1);
+    b.onclick=()=>{ content.querySelectorAll('.report-row').forEach(r=>{ r.style.display=(s==='all'||r.dataset.status===s)?'block':'none'; }); };
+    filterBar.appendChild(b);
+  });
+  content.appendChild(filterBar);
+
+  if(reports.length===0){
+    const empty=document.createElement('div');
+    empty.style.cssText='color:var(--text-light);font-size:12px;';
+    empty.textContent='No reports yet.';
+    content.appendChild(empty);
+    return;
+  }
+
+  reports.forEach(r=>{
+    const row=document.createElement('div');
+    row.className='report-row';
+    row.dataset.status=r.status;
+    row.style.cssText='border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;'+(r.status!=='open'?'display:none;':'');
+    const statusColor = r.status==='open'?'var(--danger)':r.status==='reviewing'?'#e0a020':'var(--text-light)';
+    row.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text);">${(r.target_type||'').replace(/_/g,' ')} · ${(r.reason||'').replace(/_/g,' ')}</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:2px;">Reported by ${r.reporter_username||'unknown'} · target ID ${r.target_id}</div>
+          ${r.details?`<div style="font-size:12px;color:var(--text-muted);margin-top:6px;">"${r.details.replace(/</g,'&lt;')}"</div>`:''}
+        </div>
+        <span style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:${statusColor};flex-shrink:0;">${r.status}</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:10px;">
+        <button class="action-btn" onclick="resolveReport('${r.id}','reviewing')">Reviewing</button>
+        <button class="action-btn ok" onclick="resolveReport('${r.id}','resolved')">Resolve</button>
+        <button class="action-btn" onclick="resolveReport('${r.id}','dismissed')">Dismiss</button>
+      </div>`;
+    content.appendChild(row);
+  });
+}
+async function resolveReport(id, status) {
+  if(!currentProfile || currentProfile.role !== 'owner') return;
+  const {error} = await sb.from('reports').update({status}).eq('id',id);
+  if(error){ toast('Error: '+error.message); return; }
+  toast('Report marked '+status);
+  loadOwnerReports();
+}
+
 function buildRoomRow(f, idx) {
   const row = document.createElement('div');
   row.className = 'user-row';
@@ -4792,6 +5240,19 @@ async function loadProfileStats() {
   } catch(e) {}
 }
 </script>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span class="footer-copy">© <span id="footerYear"></span> QODE. All rights reserved.</span>
+    <ul class="footer-links">
+      <li><a onclick="openLegal('terms')">Terms of Service</a></li>
+      <li><a onclick="openLegal('privacy')">Privacy Policy</a></li>
+      <li><a onclick="openLegal('cookies')">Cookies</a></li>
+      <li><a onclick="openLegal('contact')">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+<script>document.getElementById('footerYear').textContent = new Date().getFullYear();</script>
 
 <!-- ── Photo detail — full page ── -->
 <div class="photo-detail-overlay" id="photoDetailOverlay">
