@@ -18,9 +18,9 @@
     --accent: #534AB7; --shadow: 0 2px 10px rgba(83,74,183,0.18);
     --nav-h: 48px; --online: #16c060; --danger: #d9321f;
   }
-  html { min-height: 100%; background: var(--bg); }
+  html { min-height: 100vh; background: var(--bg); }
   html, body { background: var(--bg); color: var(--text); font-family: 'Kanit', sans-serif; font-size: 15px; line-height: 1.6; }
-  body { min-height: 100%; }
+  body { min-height: 100vh; }
 
   /* NAV */
   nav { position: sticky; top: 0; z-index: 100; background: var(--bg); height: var(--nav-h); display: flex; align-items: center; padding: 0 28px; border-bottom: 1px solid var(--border); }
@@ -143,6 +143,12 @@
   .landing-cursor { display: inline-block; width: 7px; height: 15px; background: var(--accent); vertical-align: middle; animation: cursorBlink 1s steps(1) infinite; margin-left: 2px; }
   @keyframes lineIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes cursorBlink { 50% { opacity: 0; } }
+
+  /* Mission / closing CTA */
+  .landing-mission { max-width: 640px; margin: 0 auto; padding: 20px 24px 88px; text-align: center; }
+  .landing-mission-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500; color: var(--accent); margin-bottom: 16px; }
+  .landing-mission h2 { font-size: 26px; font-weight: 700; line-height: 1.3; margin-bottom: 16px; }
+  .landing-mission p { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 26px; }
 
   /* Feature strip */
   .landing-features { max-width: 1180px; margin: 0 auto; padding: 0 48px 80px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
@@ -362,7 +368,7 @@
   /* don't animate transforms/positions */
   .bubble, .auth-dropdown, .profile-menu, .settings-modal, .owner-modal, .modal-overlay { transition: none !important; }
 
-  body.dark {
+  body.dark, html.dark {
     --bg:          #0e1117;
     --bg-card:     #151922;
     --bg-elevated: #1c2130;
@@ -1629,7 +1635,7 @@
     <h1>One place.<br>Endless possibilities.</h1>
     <p>Discover the latest in tech, design and innovation.</p>
   </div>
-  <div class="home-grid">
+  <div class="home-grid" id="dashboardGrid">
 
     <!-- COL 1: News -->
     <div class="home-col">
@@ -1717,6 +1723,14 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- MISSION / CLOSING CTA (logged-out only) -->
+  <div class="landing-mission" id="landingMission" style="display:none;">
+    <div class="landing-mission-eyebrow">// why qode exists</div>
+    <h2>Built to be used.<br>Not built to farm your attention.</h2>
+    <p>Most platforms make money by keeping you scrolling as long as possible. QODE won't. If something here ever costs money, it's because servers aren't free — not because we're selling your time back to you. No feed ranking your friends by rage-bait, no algorithm deciding what you see. Just forums, DMs, and a gallery that work the way you'd expect.</p>
+    <button class="landing-btn primary" onclick="openAuthFromLanding('register', event)">Get Started — it's free</button>
   </div>
 </div>
 
@@ -2731,6 +2745,10 @@ function applySession() {
     if(lh) lh.style.display='none';
     if(lf) lf.style.display='none';
     if(ph) ph.style.display='block';
+    const dg=document.getElementById('dashboardGrid');
+    if(dg) dg.style.display='grid';
+    const lm=document.getElementById('landingMission');
+    if(lm) lm.style.display='none';
 
     // ── Online status dot ──
     const privacyShowMyDot=localStorage.getItem('qode-privacy-myDot');
@@ -2761,6 +2779,10 @@ function applySession() {
     if(lh) lh.style.display='grid';
     if(lf) lf.style.display='grid';
     if(ph) ph.style.display='none';
+    const dg=document.getElementById('dashboardGrid');
+    if(dg) dg.style.display='none';
+    const lm=document.getElementById('landingMission');
+    if(lm) lm.style.display='block';
     const dot=document.getElementById('profileStatusDot');
     if(dot){ dot.classList.remove('online'); }
   }
@@ -2841,6 +2863,7 @@ function openLegal(doc){
 }
 function toggleTheme(){
   const isDark=document.body.classList.toggle('dark');
+  document.documentElement.classList.toggle('dark', isDark);
   localStorage.setItem('qode-theme', isDark ? 'dark' : 'light');
   updateThemeIcon(isDark);
 }
@@ -2857,6 +2880,7 @@ function updateThemeIcon(isDark){
   const prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;
   if(saved==='dark'||(saved===null&&prefersDark)){
     document.body.classList.add('dark');
+    document.documentElement.classList.add('dark');
     updateThemeIcon(true);
   }
 })();
