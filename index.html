@@ -4604,10 +4604,12 @@ async function loadNotifsFromDB() {
 // Mark all read in DB when user clicks "Mark all read"
 async function markAllNotifsReadInDB() {
   if(!currentUser) return;
-  try {
-    await sb.from('notifications').update({read: true})
-      .eq('user_id', currentUser.id).eq('read', false);
-  } catch(e) { /* silent */ }
+  const { error } = await sb.from('notifications').update({read: true})
+    .eq('user_id', currentUser.id).eq('read', false);
+  if(error) {
+    console.error('markAllNotifsReadInDB failed:', error.message);
+    toast('Could not save read status: '+error.message);
+  }
 }
 
 function updateNotifBadge() {
