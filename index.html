@@ -186,6 +186,29 @@
     .landing-features { grid-template-columns: repeat(2,1fr); padding: 0 22px 56px; }
   }
 
+  @media (max-width: 480px) {
+    .landing { padding: 36px 18px 32px; gap: 28px; }
+    .landing-title { font-size: 27px; }
+    .landing-sub { font-size: 14px; max-width: none; }
+    .landing-cta-row { flex-direction: column; }
+    .landing-btn { width: 100%; text-align: center; padding: 14px 20px; }
+    .landing-stats { flex-wrap: wrap; row-gap: 14px; column-gap: 22px; }
+    .landing-stats div b { font-size: 17px; }
+
+    .landing-editor-body { padding: 16px 14px 20px; font-size: 11px; line-height: 1.85; }
+    .landing-editor-body .ln { width: 16px; }
+    .landing-editor-bar { padding: 10px 12px; }
+    .landing-editor-tab { font-size: 10px; padding: 3px 8px; }
+
+    .landing-features { grid-template-columns: 1fr; gap: 12px; padding: 0 18px 48px; }
+    .landing-feature { padding: 16px 16px; }
+
+    .landing-mission { padding: 8px 20px 64px; }
+    .landing-mission h2 { font-size: 21px; }
+    .landing-mission p { font-size: 13px; }
+    .landing-mission .landing-btn { width: 100%; }
+  }
+
   /* Category chips */
   .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 140px; overflow-y: auto; }
   .cat-chip { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); font-family: 'Kanit', sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; text-align: center; transition: all 0.15s; color: var(--text-muted); user-select: none; }
