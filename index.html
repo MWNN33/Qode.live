@@ -171,6 +171,15 @@
   .landing-mission h2 { font-size: 26px; font-weight: 700; line-height: 1.3; margin-bottom: 16px; }
   .landing-mission p { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 26px; }
 
+  /* FAQ */
+  .landing-faq { max-width: 640px; margin: 0 auto; padding: 0 24px 90px; }
+  .faq-item { border-bottom: 1px solid var(--border); padding: 16px 4px; }
+  .faq-item summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text); list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::after { content: '+'; font-size: 18px; font-weight: 400; color: var(--text-light); flex-shrink: 0; transition: transform 0.15s; }
+  .faq-item[open] summary::after { transform: rotate(45deg); }
+  .faq-item p { font-size: 13px; color: var(--text-muted); line-height: 1.65; margin-top: 12px; }
+
   /* Feature strip */
   .landing-features { max-width: 1180px; margin: 0 auto; padding: 0 48px 80px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
   .landing-feature { border: 1px solid var(--border); border-radius: 12px; padding: 20px 18px; background: var(--bg-card); transition: transform 0.15s, border-color 0.15s; cursor: pointer; }
@@ -207,6 +216,10 @@
     .landing-mission h2 { font-size: 21px; }
     .landing-mission p { font-size: 13px; }
     .landing-mission .landing-btn { width: 100%; }
+
+    .landing-faq { padding: 0 18px 64px; }
+    .faq-item summary { font-size: 13px; }
+    .faq-item p { font-size: 12.5px; }
   }
 
   /* Category chips */
@@ -1776,6 +1789,27 @@
     <p>Most platforms make money by keeping you scrolling as long as possible. QODE won't. If something here ever costs money, it's because servers aren't free — not because we're selling your time back to you. No feed ranking your friends by rage-bait, no algorithm deciding what you see. Just forums, DMs, and a gallery that work the way you'd expect.</p>
     <button class="landing-btn primary" onclick="openAuthFromLanding('register', event)">Get Started — it's free</button>
   </div>
+
+  <!-- FAQ (logged-out only) -->
+  <div class="landing-faq" id="landingFaq" style="display:none;">
+    <div class="landing-mission-eyebrow" style="text-align:center;">// frequently asked</div>
+    <details class="faq-item">
+      <summary>Do I need to be a developer to use QODE?</summary>
+      <p>No. QODE started as a place for people who build things, but the forums cover way more than code — hardware, design, gaming, and plain off-topic chat too.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Is QODE actually free?</summary>
+      <p>Yes — signing up, forums, DMs, and photo sharing are free and always will be. We may add optional paid perks later, but core features never end up behind a paywall.</p>
+    </details>
+    <details class="faq-item">
+      <summary>What happens to my data if I delete my account?</summary>
+      <p>Everything — your posts, comments, messages, and profile — gets permanently deleted, not just hidden. No 30-day grace period. You can do it yourself anytime from Settings.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Can I look around before making an account?</summary>
+      <p>Yep — forums are public. <a onclick="goTo('forum')" style="color:var(--accent);text-decoration:underline;cursor:pointer;">Browse the forum</a> without signing up for anything.</p>
+    </details>
+  </div>
 </div>
 
 <!-- FORGOT PASSWORD MODAL -->
@@ -2793,6 +2827,8 @@ function applySession() {
     if(dg) dg.style.display='grid';
     const lm=document.getElementById('landingMission');
     if(lm) lm.style.display='none';
+    const lfaq=document.getElementById('landingFaq');
+    if(lfaq) lfaq.style.display='none';
 
     // ── Online status dot ──
     const privacyShowMyDot=localStorage.getItem('qode-privacy-myDot');
@@ -2827,6 +2863,8 @@ function applySession() {
     if(dg) dg.style.display='none';
     const lm=document.getElementById('landingMission');
     if(lm) lm.style.display='block';
+    const lfaq=document.getElementById('landingFaq');
+    if(lfaq) lfaq.style.display='block';
     const dot=document.getElementById('profileStatusDot');
     if(dot){ dot.classList.remove('online'); }
   }
