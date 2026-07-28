@@ -2365,6 +2365,17 @@
           </label>
         </div>
         <div style="margin-top:10px;font-size:11px;color:var(--text-light);">Privacy settings are stored locally on this device.</div>
+        <div class="settings-section-title" style="margin-top:20px;">Notifications</div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Email me about replies</div>
+            <div class="toggle-sub">Get an email when someone replies to your forum posts</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="emailNotifToggle" checked onchange="saveEmailNotifSetting()">
+            <div class="toggle-track"></div>
+          </label>
+        </div>
       </div>
       <!-- FORUMS TAB -->
       <div id="settings-forums-tab" style="display:none;">
@@ -3052,6 +3063,7 @@ function openSettings(){
   document.getElementById('hintNewPass2').className='field-hint';
   document.getElementById('passChangeError').style.display='none';
   document.getElementById('passChangeSuccess').style.display='none';
+  document.getElementById('emailNotifToggle').checked = currentProfile.email_notifications_enabled !== false;
   switchSettingsTab('profile');
   buildSettingsCatGrid();
   document.getElementById('settingsModal').classList.add('open');
@@ -3145,6 +3157,15 @@ function savePrivacySettings() {
   const dot=document.getElementById('profileStatusDot');
   if(dot){ dot.style.display=showMyDot?'block':'none'; }
   toast('Privacy settings saved ✓');
+}
+
+async function saveEmailNotifSetting() {
+  if(!currentUser){toast('Log in first.');return;}
+  const enabled=document.getElementById('emailNotifToggle').checked;
+  const {error}=await sb.from('profiles').update({email_notifications_enabled:enabled}).eq('id',currentUser.id);
+  if(error){toast('Error: '+error.message);document.getElementById('emailNotifToggle').checked=!enabled;return;}
+  currentProfile.email_notifications_enabled=enabled;
+  toast(enabled?'Email notifications on ✓':'Email notifications off');
 }
 
 // ─── DATA EXPORT ───
