@@ -695,6 +695,9 @@
   .photo-detail-reply-user { font-size:11px; font-weight:700; color:var(--text); }
   .photo-detail-reply-time { font-size:9px; color:var(--text-light); margin-left:5px; }
   .photo-detail-reply-text { font-size:12px; color:var(--text-muted); line-height:1.5; margin-top:2px; }
+  .photo-detail-reply-actions { display:flex; gap:10px; margin-top:5px; align-items:center; }
+  .photo-detail-reply-actions .photo-detail-reply-btn { padding:3px 10px; font-size:11px; }
+  .photo-detail-reply .photo-detail-replies { margin-top:6px; }
   .photo-detail-close { display:none; }
   .profile-page-row {
     display: flex; align-items: center; gap: 14px;
@@ -4251,16 +4254,16 @@ async function loadDetailComments(postId) {
           <button class="photo-detail-reply-btn" id="${replyBtnId}" onclick="toggleReplyForm('${c.id}')">↩ Reply</button>
         </div>
         <div class="photo-detail-reply-form" id="${replyFormId}">
-          <input class="photo-detail-reply-input" id="${replyInputId}" type="text" placeholder="Write a reply…" onkeydown="if(event.key==='Enter')submitReply('${c.id}','${postId}')">
-          <button class="photo-detail-reply-send" onclick="submitReply('${c.id}','${postId}')">
+          <input class="photo-detail-reply-input" id="${replyInputId}" type="text" placeholder="Write a reply…" onkeydown="if(event.key==='Enter')submitReply('${c.id}','${postId}','${c.id}')">
+          <button class="photo-detail-reply-send" onclick="submitReply('${c.id}','${postId}','${c.id}')">
             <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
         <div class="photo-detail-replies" id="${repliesId}"></div>
       </div>`;
     list.appendChild(el);
-    // Load replies for this comment
-    loadReplies(c.id);
+    // Load replies for this comment (recursively nested)
+    loadReplies(c.id, postId);
   }
 }
 
@@ -4272,45 +4275,97 @@ function toggleReplyForm(commentId) {
   if (isOpen) document.getElementById('reply-input-' + commentId)?.focus();
 }
 
-async function loadReplies(commentId) {
+// Renders a single reply node (with its own reply button + reply form + a
+// container for its children) and returns that child container so callers
+// can recurse into it. This is what makes Reddit-style infinite nesting work:
+// every reply gets the exact same reply/children machinery as a top-level comment.
+function renderReplyNode(r, parentContainer, postId, rootCommentId, depth) {
+  const el = document.createElement('div');
+  el.className = 'photo-detail-reply';
+  const color = stringToColor(r.username||'?');
+  const initials = (r.username||'?').slice(0,2).toUpperCase();
+  const replyBtnId = 'reply-btn-' + r.id;
+  const replyFormId = 'reply-form-' + r.id;
+  const replyInputId = 'reply-input-' + r.id;
+  const childrenId = 'replies-' + r.id;
+
+  el.innerHTML = `
+    <div class="photo-detail-reply-av" style="background:${color}">${initials}</div>
+    <div class="photo-detail-reply-body">
+      <span class="photo-detail-reply-user">${r.username||'Unknown'}</span>
+      <span class="photo-detail-reply-time">${fmtTime(r.created_at)}</span>
+      <div class="photo-detail-reply-text">${r.content.replace(/</g,'&lt;')}</div>
+      <div class="photo-detail-reply-actions">
+        <button class="photo-detail-reply-btn" id="${replyBtnId}" onclick="toggleReplyForm('${r.id}')">↩ Reply</button>
+      </div>
+      <div class="photo-detail-reply-form" id="${replyFormId}">
+        <input class="photo-detail-reply-input" id="${replyInputId}" type="text" placeholder="Write a reply…" onkeydown="if(event.key==='Enter')submitReply('${rootCommentId}','${postId}','${r.id}')">
+        <button class="photo-detail-reply-send" onclick="submitReply('${rootCommentId}','${postId}','${r.id}')">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div class="photo-detail-replies" id="${childrenId}"></div>
+    </div>`;
+  parentContainer.appendChild(el);
+
+  const childContainer = document.getElementById(childrenId);
+  // Past a certain depth, stop growing the indent so deep threads don't get
+  // squeezed off-screen — the nesting itself still keeps going underneath.
+  if (depth >= 6) {
+    childContainer.style.paddingLeft = '8px';
+    childContainer.style.borderLeftWidth = '1px';
+  }
+  return childContainer;
+}
+
+async function loadReplies(commentId, postId) {
   const container = document.getElementById('replies-' + commentId);
   if (!container) return;
   const { data } = await sb.from('photo_comment_replies')
     .select('*').eq('comment_id', commentId).order('created_at', {ascending:true});
   container.innerHTML = '';
   if (!data || data.length === 0) return;
+
+  // Group replies by their parent so we can walk the tree top-down.
+  // Replies with no parent_reply_id are direct replies to the root comment.
+  const byParent = {};
   data.forEach(r => {
-    const el = document.createElement('div');
-    el.className = 'photo-detail-reply';
-    const color = stringToColor(r.username||'?');
-    el.innerHTML = `
-      <div class="photo-detail-reply-av" style="background:${color}">${(r.username||'?').slice(0,2).toUpperCase()}</div>
-      <div class="photo-detail-reply-body">
-        <span class="photo-detail-reply-user">${r.username||'Unknown'}</span>
-        <span class="photo-detail-reply-time">${fmtTime(r.created_at)}</span>
-        <div class="photo-detail-reply-text">${r.content.replace(/</g,'&lt;')}</div>
-      </div>`;
-    container.appendChild(el);
+    const key = r.parent_reply_id || 'root';
+    (byParent[key] = byParent[key] || []).push(r);
   });
+
+  function build(parentKey, parentContainer, depth) {
+    const items = byParent[parentKey];
+    if (!items) return;
+    items.forEach(r => {
+      const childContainer = renderReplyNode(r, parentContainer, postId, commentId, depth);
+      build(r.id, childContainer, depth + 1);
+    });
+  }
+  build('root', container, 1);
 }
 
-async function submitReply(commentId, postId) {
+async function submitReply(rootCommentId, postId, targetId) {
   if (!currentUser) { toast('Log in to reply.'); return; }
-  const input = document.getElementById('reply-input-' + commentId);
+  const input = document.getElementById('reply-input-' + targetId);
   const text = input?.value.trim();
   if (!text) return;
   input.value = '';
+  // If replying to the root comment itself, parent_reply_id is null.
+  // If replying to another reply, parent_reply_id points at that reply.
+  const parentReplyId = (targetId === rootCommentId) ? null : targetId;
   const { error } = await sb.from('photo_comment_replies').insert({
-    comment_id: commentId,
+    comment_id: rootCommentId,
     post_id: postId,
+    parent_reply_id: parentReplyId,
     user_id: currentUser.id,
     username: currentProfile.username,
     content: text
   });
   if (error) { toast('Error: ' + error.message); return; }
-  // Close form and reload replies
-  document.getElementById('reply-form-' + commentId)?.classList.remove('open');
-  await loadReplies(commentId);
+  // Close form and reload the whole reply tree for this comment
+  document.getElementById('reply-form-' + targetId)?.classList.remove('open');
+  await loadReplies(rootCommentId, postId);
 }
 
 async function submitDetailComment() {
