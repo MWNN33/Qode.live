@@ -698,6 +698,11 @@
   .photo-detail-reply-actions { display:flex; gap:10px; margin-top:5px; align-items:center; }
   .photo-detail-reply-actions .photo-detail-reply-btn { padding:3px 10px; font-size:11px; }
   .photo-detail-reply .photo-detail-replies { margin-top:6px; }
+  .photo-detail-edited-badge { font-size:10px; color:var(--text-light); font-style:italic; margin-left:4px; }
+  .photo-detail-reply-btn.danger { color:var(--danger); }
+  .photo-detail-reply-btn.danger:hover { color:var(--danger); opacity:0.75; }
+  .photo-detail-edit-form { display:none; flex-direction:column; gap:6px; margin-top:6px; }
+  .photo-detail-edit-form.open { display:flex; }
   .photo-detail-close { display:none; }
   .profile-page-row {
     display: flex; align-items: center; gap: 14px;
@@ -2596,6 +2601,7 @@ function fmtTime(iso) {
   return (d.getMonth()+1)+'/'+d.getDate()+'/'+String(d.getFullYear()).slice(2)+' '+d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');
 }
 function getJoined() { return currentProfile?.joined_forums || DEFAULT_FORUMS; }
+function escAttr(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ─── EMAIL VALIDATION ───
 function isValidEmail(e) {
@@ -4233,6 +4239,8 @@ async function loadDetailComments(postId) {
     return;
   }
 
+  const isOwner = currentProfile && currentProfile.role === 'owner';
+
   for (const c of data) {
     const el = document.createElement('div');
     el.className = 'photo-detail-comment';
@@ -4243,15 +4251,27 @@ async function loadDetailComments(postId) {
     const replyFormId = 'reply-form-' + c.id;
     const replyInputId = 'reply-input-' + c.id;
     const repliesId = 'replies-' + c.id;
+    const isMine = currentUser && c.user_id === currentUser.id;
+    const canDelete = isMine || isOwner;
 
     el.innerHTML = `
       <div class="photo-detail-comment-av2" style="background:${color}">${initials}</div>
       <div class="photo-detail-comment-body">
         <span class="photo-detail-comment-user">${c.username||'Unknown'}</span>
         <span class="photo-detail-comment-time">${fmtTime(c.created_at)}</span>
-        <div class="photo-detail-comment-text">${c.content.replace(/</g,'&lt;')}</div>
+        ${c.edited_at ? '<span class="photo-detail-edited-badge">· edited</span>' : ''}
+        <div class="photo-detail-comment-text" id="comment-text-${c.id}">${c.content.replace(/</g,'&lt;')}</div>
+        <div class="photo-detail-edit-form" id="comment-editform-${c.id}">
+          <input class="photo-detail-reply-input" id="comment-editinput-${c.id}" type="text" value="${escAttr(c.content)}">
+          <div style="display:flex;gap:8px;">
+            <button class="photo-detail-reply-btn" onclick="saveCommentEdit('${c.id}','${postId}')">Save</button>
+            <button class="photo-detail-reply-btn" onclick="toggleCommentEdit('${c.id}')">Cancel</button>
+          </div>
+        </div>
         <div class="photo-detail-comment-actions">
           <button class="photo-detail-reply-btn" id="${replyBtnId}" onclick="toggleReplyForm('${c.id}')">↩ Reply</button>
+          ${isMine ? `<button class="photo-detail-reply-btn" onclick="toggleCommentEdit('${c.id}')">✏️ Edit</button>` : ''}
+          ${canDelete ? `<button class="photo-detail-reply-btn danger" onclick="deleteComment('${c.id}','${postId}')">🗑 Delete</button>` : ''}
         </div>
         <div class="photo-detail-reply-form" id="${replyFormId}">
           <input class="photo-detail-reply-input" id="${replyInputId}" type="text" placeholder="Write a reply…" onkeydown="if(event.key==='Enter')submitReply('${c.id}','${postId}','${c.id}')">
@@ -4288,15 +4308,28 @@ function renderReplyNode(r, parentContainer, postId, rootCommentId, depth) {
   const replyFormId = 'reply-form-' + r.id;
   const replyInputId = 'reply-input-' + r.id;
   const childrenId = 'replies-' + r.id;
+  const isOwner = currentProfile && currentProfile.role === 'owner';
+  const isMine = currentUser && r.user_id === currentUser.id;
+  const canDelete = isMine || isOwner;
 
   el.innerHTML = `
     <div class="photo-detail-reply-av" style="background:${color}">${initials}</div>
     <div class="photo-detail-reply-body">
       <span class="photo-detail-reply-user">${r.username||'Unknown'}</span>
       <span class="photo-detail-reply-time">${fmtTime(r.created_at)}</span>
-      <div class="photo-detail-reply-text">${r.content.replace(/</g,'&lt;')}</div>
+      ${r.edited_at ? '<span class="photo-detail-edited-badge">· edited</span>' : ''}
+      <div class="photo-detail-reply-text" id="reply-text-${r.id}">${r.content.replace(/</g,'&lt;')}</div>
+      <div class="photo-detail-edit-form" id="reply-editform-${r.id}">
+        <input class="photo-detail-reply-input" id="reply-editinput-${r.id}" type="text" value="${escAttr(r.content)}">
+        <div style="display:flex;gap:8px;">
+          <button class="photo-detail-reply-btn" onclick="saveReplyEdit('${r.id}','${rootCommentId}','${postId}')">Save</button>
+          <button class="photo-detail-reply-btn" onclick="toggleReplyEdit('${r.id}')">Cancel</button>
+        </div>
+      </div>
       <div class="photo-detail-reply-actions">
         <button class="photo-detail-reply-btn" id="${replyBtnId}" onclick="toggleReplyForm('${r.id}')">↩ Reply</button>
+        ${isMine ? `<button class="photo-detail-reply-btn" onclick="toggleReplyEdit('${r.id}')">✏️ Edit</button>` : ''}
+        ${canDelete ? `<button class="photo-detail-reply-btn danger" onclick="deleteReply('${r.id}','${rootCommentId}','${postId}')">🗑 Delete</button>` : ''}
       </div>
       <div class="photo-detail-reply-form" id="${replyFormId}">
         <input class="photo-detail-reply-input" id="${replyInputId}" type="text" placeholder="Write a reply…" onkeydown="if(event.key==='Enter')submitReply('${rootCommentId}','${postId}','${r.id}')">
@@ -4368,6 +4401,49 @@ async function submitReply(rootCommentId, postId, targetId) {
   await loadReplies(rootCommentId, postId);
 }
 
+function toggleReplyEdit(replyId) {
+  const form = document.getElementById('reply-editform-' + replyId);
+  const view = document.getElementById('reply-text-' + replyId);
+  if (!form || !view) return;
+  const isOpen = form.classList.toggle('open');
+  view.style.display = isOpen ? 'none' : '';
+  if (isOpen) document.getElementById('reply-editinput-' + replyId)?.focus();
+}
+
+async function saveReplyEdit(replyId, rootCommentId, postId) {
+  const input = document.getElementById('reply-editinput-' + replyId);
+  const text = input?.value.trim();
+  if (!text) return;
+  const { error } = await sb.from('photo_comment_replies')
+    .update({ content: text, edited_at: new Date().toISOString() })
+    .eq('id', replyId);
+  if (error) { toast('Error: ' + error.message); return; }
+  await loadReplies(rootCommentId, postId);
+}
+
+async function deleteReply(replyId, rootCommentId, postId) {
+  if (!confirm('Delete this reply and any replies to it?')) return;
+  // Collect this reply plus every descendant reply under it, so a whole
+  // sub-thread gets cleaned up even if the DB isn't set to cascade-delete.
+  const { data } = await sb.from('photo_comment_replies').select('id,parent_reply_id').eq('comment_id', rootCommentId);
+  const all = data || [];
+  const toDelete = new Set([replyId]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    all.forEach(r => {
+      if (r.parent_reply_id && toDelete.has(r.parent_reply_id) && !toDelete.has(r.id)) {
+        toDelete.add(r.id);
+        changed = true;
+      }
+    });
+  }
+  const { error } = await sb.from('photo_comment_replies').delete().in('id', Array.from(toDelete));
+  if (error) { toast('Error: ' + error.message); return; }
+  toast('Reply deleted ✓');
+  await loadReplies(rootCommentId, postId);
+}
+
 async function submitDetailComment() {
   if (!_detailPost) return;
   const input = document.getElementById('photoDetailInput');
@@ -4380,6 +4456,36 @@ async function submitDetailComment() {
   });
   if (error) { toast('Error: ' + error.message); return; }
   await loadDetailComments(_detailPost.id);
+}
+
+function toggleCommentEdit(commentId) {
+  const form = document.getElementById('comment-editform-' + commentId);
+  const view = document.getElementById('comment-text-' + commentId);
+  if (!form || !view) return;
+  const isOpen = form.classList.toggle('open');
+  view.style.display = isOpen ? 'none' : '';
+  if (isOpen) document.getElementById('comment-editinput-' + commentId)?.focus();
+}
+
+async function saveCommentEdit(commentId, postId) {
+  const input = document.getElementById('comment-editinput-' + commentId);
+  const text = input?.value.trim();
+  if (!text) return;
+  const { error } = await sb.from('photo_comments')
+    .update({ content: text, edited_at: new Date().toISOString() })
+    .eq('id', commentId);
+  if (error) { toast('Error: ' + error.message); return; }
+  await loadDetailComments(postId);
+}
+
+async function deleteComment(commentId, postId) {
+  if (!confirm('Delete this comment and all its replies?')) return;
+  // Remove every reply under this comment first, then the comment itself.
+  await sb.from('photo_comment_replies').delete().eq('comment_id', commentId);
+  const { error } = await sb.from('photo_comments').delete().eq('id', commentId);
+  if (error) { toast('Error: ' + error.message); return; }
+  toast('Comment deleted ✓');
+  await loadDetailComments(postId);
 }
 
 function togglePostBody(postId) {
