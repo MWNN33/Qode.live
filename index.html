@@ -4417,8 +4417,13 @@ async function saveReplyEdit(replyId, rootCommentId, postId) {
   const { error } = await sb.from('photo_comment_replies')
     .update({ content: text, edited_at: new Date().toISOString() })
     .eq('id', replyId);
-  if (error) { toast('Error: ' + error.message); return; }
-  await loadReplies(rootCommentId, postId);
+  if (error) { console.error('saveReplyEdit failed:', error); toast('Error: ' + error.message); return; }
+  try {
+    await loadDetailComments(postId);
+  } catch (e) {
+    console.error('Reload after reply edit failed:', e);
+    toast('Saved, but refresh failed — reload the page to see it.');
+  }
 }
 
 async function deleteReply(replyId, rootCommentId, postId) {
@@ -4439,9 +4444,14 @@ async function deleteReply(replyId, rootCommentId, postId) {
     });
   }
   const { error } = await sb.from('photo_comment_replies').delete().in('id', Array.from(toDelete));
-  if (error) { toast('Error: ' + error.message); return; }
+  if (error) { console.error('deleteReply failed:', error); toast('Error: ' + error.message); return; }
   toast('Reply deleted ✓');
-  await loadReplies(rootCommentId, postId);
+  try {
+    await loadDetailComments(postId);
+  } catch (e) {
+    console.error('Reload after reply delete failed:', e);
+    toast('Deleted, but refresh failed — reload the page to see it.');
+  }
 }
 
 async function submitDetailComment() {
@@ -4474,8 +4484,13 @@ async function saveCommentEdit(commentId, postId) {
   const { error } = await sb.from('photo_comments')
     .update({ content: text, edited_at: new Date().toISOString() })
     .eq('id', commentId);
-  if (error) { toast('Error: ' + error.message); return; }
-  await loadDetailComments(postId);
+  if (error) { console.error('saveCommentEdit failed:', error); toast('Error: ' + error.message); return; }
+  try {
+    await loadDetailComments(postId);
+  } catch (e) {
+    console.error('Reload after comment edit failed:', e);
+    toast('Saved, but refresh failed — reload the page to see it.');
+  }
 }
 
 async function deleteComment(commentId, postId) {
@@ -4483,9 +4498,14 @@ async function deleteComment(commentId, postId) {
   // Remove every reply under this comment first, then the comment itself.
   await sb.from('photo_comment_replies').delete().eq('comment_id', commentId);
   const { error } = await sb.from('photo_comments').delete().eq('id', commentId);
-  if (error) { toast('Error: ' + error.message); return; }
+  if (error) { console.error('deleteComment failed:', error); toast('Error: ' + error.message); return; }
   toast('Comment deleted ✓');
-  await loadDetailComments(postId);
+  try {
+    await loadDetailComments(postId);
+  } catch (e) {
+    console.error('Reload after comment delete failed:', e);
+    toast('Deleted, but refresh failed — reload the page to see it.');
+  }
 }
 
 function togglePostBody(postId) {
