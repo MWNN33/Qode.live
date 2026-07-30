@@ -376,6 +376,8 @@
   .msg-row.mine .msg-col { align-items: flex-end; }
   .msg-meta { font-size: 10px; color: var(--text-light); display: flex; gap: 6px; align-items: center; }
   .msg-meta .username { font-weight: 600; color: var(--text-muted); }
+  .msg-del-btn { background:none; border:none; cursor:pointer; color:var(--text-light); font-size:11px; padding:0; line-height:1; opacity:0.6; transition:opacity 0.15s, color 0.15s; }
+  .msg-del-btn:hover { opacity:1; color:var(--danger); }
   .bubble { padding: 8px 12px; border-radius: 16px; font-size: 13.5px; line-height: 1.45; color: var(--text); background: var(--bg-card); border: 1px solid var(--border); word-break: break-word; }
   .msg-row.mine .bubble { background: var(--accent); color: #fff; border-color: #2a5a90; }
   .chat-input-bar { border-top: 1px solid var(--border); padding: 10px 14px; display: flex; align-items: center; gap: 10px; background: var(--bg-card); flex-shrink: 0; }
@@ -3784,12 +3786,30 @@ async function loadForumMessages(forumId) {
 function appendForumMsg(m) {
   const msgs=document.getElementById('chatMessages');
   const isMe=currentProfile&&m.user_id===currentUser?.id;
+  const isOwner=currentProfile&&currentProfile.role==='owner';
+  const canDelete=isMe||isOwner;
   const row=document.createElement('div');
   row.className='msg-row'+(isMe?' mine':'');
+  row.dataset.msgId=m.id;
   const color=stringToColor(m.username||'?');
-  row.innerHTML=`<div class="msg-avatar" style="background:${color}">${(m.username||'?').slice(0,2).toUpperCase()}</div><div class="msg-col"><div class="msg-meta"><span class="username">${m.username||'Unknown'}</span><span>${fmtTime(m.created_at)}</span></div><div class="bubble">${m.content.replace(/</g,'&lt;')}</div></div>`;
+  const delBtn=canDelete?`<button class="msg-del-btn" onclick="deleteForumMessage('${m.id}')" title="Delete message">🗑</button>`:'';
+  row.innerHTML=`<div class="msg-avatar" style="background:${color}">${(m.username||'?').slice(0,2).toUpperCase()}</div><div class="msg-col"><div class="msg-meta"><span class="username">${m.username||'Unknown'}</span><span>${fmtTime(m.created_at)}</span>${delBtn}</div><div class="bubble">${m.content.replace(/</g,'&lt;')}</div></div>`;
   msgs.appendChild(row);
   msgs.scrollTop=msgs.scrollHeight;
+}
+
+async function deleteForumMessage(messageId) {
+  if(!confirm('Delete this message?')) return;
+  const {error}=await sb.from('forum_messages').delete().eq('id',messageId);
+  if(error){ toast('Error: '+error.message); return; }
+  // Remove locally right away — the realtime DELETE event will also fire for
+  // everyone (including us), so guard against double-removal.
+  removeForumMsgFromDOM(messageId);
+}
+
+function removeForumMsgFromDOM(messageId) {
+  const row=document.querySelector('.msg-row[data-msg-id="'+messageId+'"]');
+  if(row) row.remove();
 }
 
 function switchForum(id) {
@@ -3845,6 +3865,8 @@ function subscribeToForum(id) {
     forumChannel = sb.channel('forum-'+id)
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'forum_messages',filter:'forum_id=eq.'+id},
         payload=>{ window._forumLastId=payload.new.id; appendForumMsg(payload.new); })
+      .on('postgres_changes',{event:'DELETE',schema:'public',table:'forum_messages',filter:'forum_id=eq.'+id},
+        payload=>{ removeForumMsgFromDOM(payload.old.id); })
       .on('broadcast',{event:'typing'}, ({payload})=>{
         if(!payload || payload.userId===currentUser?.id) return;
         registerForumTyper(payload.username);
