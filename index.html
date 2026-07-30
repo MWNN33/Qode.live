@@ -2438,7 +2438,14 @@
 // ─── SUPABASE INIT ───
 const SUPABASE_URL = 'https://rrfwmatmgtskzjgnfmdx.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyZndtYXRtZ3Rza3pqZ25mbWR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNTM4MTIsImV4cCI6MjA5MzgyOTgxMn0.Mm7gSdqyKm2DsgKw_CV96CqOIMrSRMOr5sG70lexvSo';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  global: {
+    // Some browsers/CDNs will happily cache GET responses by URL, which caused
+    // comment edits to save correctly but keep showing stale content after
+    // reload. Force every request through this client to skip the HTTP cache.
+    fetch: (url, options = {}) => fetch(url, { ...options, cache: 'no-store' })
+  }
+});
 
 // ─── OWNER CONFIG ───
 // Change this to your actual username after registering
