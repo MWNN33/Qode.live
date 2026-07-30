@@ -1455,6 +1455,11 @@
   .owner-photo-item .photo-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:32px; }
   .owner-photo-del { position:absolute; top:6px; right:6px; width:26px; height:26px; border-radius:50%; background:rgba(231,76,60,0.9); border:none; color:#fff; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.15s; }
   .owner-photo-del:hover { background:#c0392b; }
+  .owner-photo-comments-btn { position:absolute; top:6px; left:6px; width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,0.65); border:none; color:#fff; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.15s; }
+  .owner-photo-comments-btn:hover { background:rgba(0,0,0,0.85); }
+  .owner-comment-row { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); align-items:flex-start; }
+  .owner-comment-row:last-child { border-bottom:none; }
+  .owner-comment-text { font-size:12px; color:var(--text-muted); line-height:1.5; margin-top:2px; white-space:normal; word-break:break-word; }
   .owner-photo-caption { padding:6px 8px; font-size:10px; font-weight:600; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
   /* News edit form in owner panel */
@@ -3448,10 +3453,11 @@ async function loadOwnerPhotos() {
   posts.forEach(p=>{
     const item=document.createElement('div');
     item.className='owner-photo-item';
+    const commentsBtn = `<button class="owner-photo-comments-btn" onclick="ownerViewPhotoComments('${p.id}')" title="View comments">💬</button>`;
     if(p.image_url){
-      item.innerHTML=`<img src="${p.image_url}" alt="post image"><button class="owner-photo-del" onclick="ownerDeletePhoto('${p.id}')" title="Delete post">✕</button><div class="owner-photo-caption">${(p.title||'').replace(/</g,'&lt;')} <span style="opacity:0.6;">· ${p.username||'?'}</span></div>`;
+      item.innerHTML=`<img src="${p.image_url}" alt="post image">${commentsBtn}<button class="owner-photo-del" onclick="ownerDeletePhoto('${p.id}')" title="Delete post">✕</button><div class="owner-photo-caption">${(p.title||'').replace(/</g,'&lt;')} <span style="opacity:0.6;">· ${p.username||'?'}</span></div>`;
     } else {
-      item.innerHTML=`<div class="photo-placeholder">📷</div><button class="owner-photo-del" onclick="ownerDeletePhoto('${p.id}')" title="Delete post">✕</button><div class="owner-photo-caption">${(p.title||'').replace(/</g,'&lt;')} <span style="opacity:0.6;">· ${p.username||'?'}</span></div>`;
+      item.innerHTML=`<div class="photo-placeholder">📷</div>${commentsBtn}<button class="owner-photo-del" onclick="ownerDeletePhoto('${p.id}')" title="Delete post">✕</button><div class="owner-photo-caption">${(p.title||'').replace(/</g,'&lt;')} <span style="opacity:0.6;">· ${p.username||'?'}</span></div>`;
     }
     grid.appendChild(item);
   });
@@ -3463,12 +3469,122 @@ async function ownerDeletePhoto(postId) {
   // Delete associated comments and votes first
   await sb.from('forum_comments').delete().eq('post_id',postId);
   await sb.from('post_votes').delete().eq('post_id',postId);
+  // Also clean up the photo-detail comment thread tables (previously left orphaned)
+  await sb.from('photo_comment_replies').delete().eq('post_id',postId);
+  await sb.from('photo_comments').delete().eq('post_id',postId);
   const {error}=await sb.from('forum_posts').delete().eq('id',postId);
   if(error){toast('Error: '+error.message);return;}
   toast('Post deleted ✓');
   loadOwnerPhotos();
   // Refresh photo room if currently open
   if(activeChannelType==='photos') loadPhotoRoom(activeChannel);
+}
+
+async function ownerViewPhotoComments(postId) {
+  const content=document.getElementById('ownerContent');
+  content.innerHTML='<div style="color:var(--text-light);font-size:12px;padding:8px 0;">Loading comments...</div>';
+
+  const [{data:post}, {data:comments,error}, {data:repliesData}] = await Promise.all([
+    sb.from('forum_posts').select('title').eq('id',postId).single(),
+    sb.from('photo_comments').select('*').eq('post_id',postId).order('created_at',{ascending:true}),
+    sb.from('photo_comment_replies').select('*').eq('post_id',postId).order('created_at',{ascending:true})
+  ]);
+  if(error){content.innerHTML='<div style="color:var(--danger);font-size:12px;">Error: '+error.message+'</div>';return;}
+
+  content.innerHTML='';
+  const backBtn=document.createElement('button');
+  backBtn.className='action-btn';
+  backBtn.style.marginBottom='12px';
+  backBtn.textContent='← Back to Photos';
+  backBtn.onclick=()=>loadOwnerPhotos();
+  content.appendChild(backBtn);
+
+  const label=document.createElement('div');
+  label.className='section-divider';
+  label.style.marginTop='0';
+  label.textContent='Comments on "'+((post?.title)||'Untitled')+'" ('+(comments?.length||0)+')';
+  content.appendChild(label);
+
+  const commentList=comments||[];
+  if(commentList.length===0){
+    const empty=document.createElement('div');
+    empty.style.cssText='color:var(--text-light);font-size:12px;';
+    empty.textContent='No comments on this post.';
+    content.appendChild(empty);
+    return;
+  }
+
+  const allReplies = repliesData||[];
+  const list=document.createElement('div');
+
+  function makeRow(username, text, editedAt, depth, onDelete) {
+    const row=document.createElement('div');
+    row.className='owner-comment-row';
+    if(depth>0) row.style.marginLeft = Math.min(depth,6)*18+'px';
+    const color=stringToColor(username||'?');
+    const size = depth>0 ? 28 : 34;
+    row.innerHTML=`
+      <div class="dm-avatar" style="background:${color};width:${size}px;height:${size}px;font-size:${depth>0?11:12}px;flex-shrink:0;">${(username||'?').slice(0,2).toUpperCase()}</div>
+      <div class="user-row-info">
+        <div class="user-row-name">${depth>0?'↳ ':''}${username||'Unknown'} ${editedAt?'<span class="photo-detail-edited-badge">· edited</span>':''}</div>
+        <div class="owner-comment-text"></div>
+      </div>
+      <div class="user-row-actions"><button class="action-btn danger">🗑 Delete</button></div>`;
+    // Set text via textContent to avoid any HTML-escaping edge cases
+    row.querySelector('.owner-comment-text').textContent = text;
+    row.querySelector('.action-btn.danger').addEventListener('click', onDelete);
+    return row;
+  }
+
+  commentList.forEach(c=>{
+    list.appendChild(makeRow(c.username, c.content, c.edited_at, 0, () => ownerDeletePhotoComment(c.id, postId)));
+
+    const repliesForComment = allReplies.filter(r=>r.comment_id===c.id);
+    const byParent={};
+    repliesForComment.forEach(r=>{
+      const key=r.parent_reply_id||'root';
+      (byParent[key]=byParent[key]||[]).push(r);
+    });
+    (function build(parentKey, depth){
+      const items=byParent[parentKey];
+      if(!items) return;
+      items.forEach(r=>{
+        list.appendChild(makeRow(r.username, r.content, r.edited_at, depth, () => ownerDeletePhotoReply(r.id, c.id, postId)));
+        build(r.id, depth+1);
+      });
+    })('root',1);
+  });
+  content.appendChild(list);
+}
+
+async function ownerDeletePhotoComment(commentId, postId) {
+  if(!confirm('Delete this comment and all its replies?'))return;
+  await sb.from('photo_comment_replies').delete().eq('comment_id',commentId);
+  const {error}=await sb.from('photo_comments').delete().eq('id',commentId);
+  if(error){toast('Error: '+error.message);return;}
+  toast('Comment deleted ✓');
+  ownerViewPhotoComments(postId);
+}
+
+async function ownerDeletePhotoReply(replyId, rootCommentId, postId) {
+  if(!confirm('Delete this reply and any replies to it?'))return;
+  const {data}=await sb.from('photo_comment_replies').select('id,parent_reply_id').eq('comment_id',rootCommentId);
+  const all=data||[];
+  const toDelete=new Set([replyId]);
+  let changed=true;
+  while(changed){
+    changed=false;
+    all.forEach(r=>{
+      if(r.parent_reply_id && toDelete.has(r.parent_reply_id) && !toDelete.has(r.id)){
+        toDelete.add(r.id);
+        changed=true;
+      }
+    });
+  }
+  const {error}=await sb.from('photo_comment_replies').delete().in('id',Array.from(toDelete));
+  if(error){toast('Error: '+error.message);return;}
+  toast('Reply deleted ✓');
+  ownerViewPhotoComments(postId);
 }
 
 function loadOwnerChannels() {
