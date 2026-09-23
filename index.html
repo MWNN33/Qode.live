@@ -117,6 +117,33 @@
   .legal-doc strong { color: var(--text); }
   .legal-placeholder { background: var(--bg-card); border: 1px dashed var(--border); border-radius: 4px; padding: 0 4px; color: var(--text); font-style: italic; }
 
+  /* ROADMAP */
+  .roadmap-wrap { max-width: 760px; margin: 0 auto; padding: 32px 20px 60px; }
+  .roadmap-hero { border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card); box-shadow: var(--shadow); padding: 28px 32px; margin-bottom: 28px; }
+  .roadmap-hero p { font-size: 14px; color: var(--text-muted); line-height: 1.7; margin-bottom: 10px; }
+  .roadmap-hero p:last-child { margin-bottom: 0; }
+  .roadmap-hero strong { color: var(--text); }
+  .roadmap-release { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border); font-size: 12px; }
+  .roadmap-release .release-label { font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light); }
+  .roadmap-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
+  .roadmap-tab { padding: 7px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); transition: background 0.15s, color 0.15s; font-family: 'Kanit', sans-serif; }
+  .roadmap-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .roadmap-doc { display: none; }
+  .roadmap-doc.active { display: block; animation: dropIn 0.18s ease; }
+  .roadmap-doc-intro { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.7; }
+  .roadmap-doc-intro strong { color: var(--text); }
+  .roadmap-item { border: 1px solid var(--border); border-radius: 6px; background: var(--bg-card); padding: 16px 18px; margin-bottom: 12px; }
+  .roadmap-item-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .roadmap-item-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .roadmap-item p { font-size: 12.5px; color: var(--text-muted); line-height: 1.6; }
+  .badge-planned { background: rgba(83,74,183,0.12); color: var(--accent); }
+  .badge-progress { background: #fff3cd; color: #856404; }
+  .badge-done { background: rgba(22,192,96,0.14); color: #128a45; }
+  .badge-premium { background: rgba(217,50,31,0.1); color: #b5341d; }
+  body.dark .badge-progress { background: rgba(255,193,7,0.1); color: #e0b040; }
+  body.dark .badge-done { background: rgba(22,192,96,0.12); color: #3fd587; }
+  body.dark .badge-premium { background: rgba(240,96,96,0.12); color: #f08080; }
+
   /* COOKIE BANNER */
   .cookie-banner { position: fixed; left: 16px; right: 16px; bottom: 16px; max-width: 480px; margin: 0 auto; background: var(--bg-elevated, var(--bg-card)); border: 1.5px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); padding: 16px 18px; z-index: 900; display: none; animation: dropIn 0.2s ease; }
   .cookie-banner.open { display: block; }
@@ -1499,6 +1526,7 @@
     <li><a id="nav-forum" onclick="goTo('forum')">FORUM</a></li>
     <li><a id="nav-messages" onclick="goTo('messages')">MESSAGES</a></li>
     <li><a id="nav-about" onclick="goTo('about')">ABOUT</a></li>
+    <li><a id="nav-roadmap" onclick="goTo('roadmap')">ROADMAP</a></li>
   </ul>
   <!-- Notification bell -->
   <div class="nav-icon notif-bell" id="notifBell" onclick="toggleNotifPanel()" title="Notifications" style="margin-left:12px;display:none;">
@@ -1986,6 +2014,101 @@
       <p>This is a place for builders, dreamers, and creators.<br>For those who see beauty in clean code and bold design.</p>
       <p><strong>QODE</strong> isn't just another tech hub — it's an ecosystem.<br>A mix of news, forums, and tools crafted to spark creativity.</p>
       <p>Welcome to <strong>QODE</strong> —<br>where every line of code carries a bit of your own aura.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ROADMAP -->
+<div class="page" id="page-roadmap">
+  <div class="roadmap-wrap">
+    <span class="section-label">Roadmap</span>
+
+    <div class="roadmap-hero">
+      <p>QODE is being built in the open, so this page is our honest running list — what's live, what we're building next, and how we plan to keep it funded long-term.</p>
+      <p>Dates are our best target, not a promise — as a small team, things shift. We'll update this page as they do.</p>
+      <div class="roadmap-release">
+        <span class="release-label">Official Release</span>
+        <span class="legal-placeholder">[TARGET RELEASE DATE]</span>
+      </div>
+    </div>
+
+    <div class="roadmap-tabs">
+      <button class="roadmap-tab active" data-roadmap="now" onclick="openRoadmap('now')">Now</button>
+      <button class="roadmap-tab" data-roadmap="next" onclick="openRoadmap('next')">Next</button>
+      <button class="roadmap-tab" data-roadmap="later" onclick="openRoadmap('later')">Later</button>
+      <button class="roadmap-tab" data-roadmap="premium" onclick="openRoadmap('premium')">Premium</button>
+    </div>
+
+    <div class="roadmap-doc active" id="roadmap-now">
+      <p class="roadmap-doc-intro">In active development right now.</p>
+
+      <div class="roadmap-item">
+        <div class="roadmap-item-head"><span class="roadmap-item-title">Core forums &amp; DMs</span><span class="badge badge-progress">IN PROGRESS</span></div>
+        <p>Stabilizing the forum, direct messages, and gallery you're using today — bug fixes and performance passes.</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-item-head"><span class="roadmap-item-title">Mobile-friendly layout</span><span class="badge badge-progress">IN PROGRESS</span></div>
+        <p>Making every page — profile, forum, messages — feel native on a phone, not just usable.</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-item-head"><span class="roadmap-item-title">Notifications</span><span class="badge badge-done">SHIPPED</span></div>
+        <p>Real-time alerts for replies, mentions, and messages.</p>
+      </div>
+    </div>
+
+    <div class="roadmap-doc" id="roadmap-next">
+      <p class="roadmap-doc-intro">Up next, roughly in order.</p>
+
+      <div class="roadmap-item">
+        <div class="roadmap-item-head"><span class="roadmap-item-title">Search</span><span class="badge badge-planned">PLANNED</span></div>
+        <p>Find posts, messages, and people without scrolling forever.</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-item-head"><span class="roadmap-item-title">Custom profile themes</span><span class="badge badge-planned">PLANNED</span></div>
+        <p>Pick an accent color and layout style for your own profile.</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-item-head"><span class="roadmap-item-title">Better moderation tools</span><span class="badge badge-planned">PLANNED</span></div>
+        <p>Faster report review, mute/ban history, and clearer audit logs for the team.</p>
+      </div>
+    </div>
+
+    <div class="roadmap-doc" id="roadmap-later">
+      <p class="roadmap-doc-intro">On the horizon — no committed dates yet.</p>
+
+      <div class="roadmap-item">
+        <div class="roadmap-item-head"><span class="roadmap-item-title">Spaces / sub-communities</span><span class="badge badge-planned">EXPLORING</span></div>
+        <p>Smaller topic-based rooms inside QODE, for focused discussion.</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-item-head"><span class="roadmap-item-title">Public API</span><span class="badge badge-planned">EXPLORING</span></div>
+        <p>Let people build bots and integrations on top of QODE.</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-item-head"><span class="roadmap-item-title">Native mobile apps</span><span class="badge badge-planned">EXPLORING</span></div>
+        <p>iOS and Android apps, once the web experience is rock solid.</p>
+      </div>
+    </div>
+
+    <div class="roadmap-doc" id="roadmap-premium">
+      <p class="roadmap-doc-intro"><strong>QODE</strong> will stay free to use. To keep it running and fund the features above, we're planning an optional premium subscription.</p>
+
+      <div class="roadmap-item">
+        <div class="roadmap-item-head"><span class="roadmap-item-title">Custom profile themes &amp; badges</span><span class="badge badge-premium">PREMIUM</span></div>
+        <p>Extra cosmetic options for your profile and posts.</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-item-head"><span class="roadmap-item-title">Larger file &amp; photo uploads</span><span class="badge badge-premium">PREMIUM</span></div>
+        <p>Higher upload limits for the gallery and DMs.</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-item-head"><span class="roadmap-item-title">Priority support</span><span class="badge badge-premium">PREMIUM</span></div>
+        <p>Faster response times from the team.</p>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-item-head"><span class="roadmap-item-title">Forums, DMs, gallery &amp; core features</span><span class="badge badge-done">ALWAYS FREE</span></div>
+        <p>The things you use QODE for today stay free for everyone, forever.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -2865,7 +2988,7 @@ function goTo(page) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
-  const map={home:'nav-news',forum:'nav-forum',messages:'nav-messages',about:'nav-about'};
+  const map={home:'nav-news',forum:'nav-forum',messages:'nav-messages',about:'nav-about',roadmap:'nav-roadmap'};
   if(map[page]) document.getElementById(map[page]).classList.add('active');
   window.scrollTo(0,0);
   // Sync mobile bottom nav
@@ -2932,6 +3055,10 @@ function openLegal(doc){
   goTo('legal');
   document.querySelectorAll('.legal-tab').forEach(t=>t.classList.toggle('active', t.dataset.legal===doc));
   document.querySelectorAll('.legal-doc').forEach(d=>d.classList.toggle('active', d.id==='legal-'+doc));
+}
+function openRoadmap(tab){
+  document.querySelectorAll('.roadmap-tab').forEach(t=>t.classList.toggle('active', t.dataset.roadmap===tab));
+  document.querySelectorAll('.roadmap-doc').forEach(d=>d.classList.toggle('active', d.id==='roadmap-'+tab));
 }
 function toggleTheme(){
   const isDark=document.body.classList.toggle('dark');
@@ -5964,6 +6091,7 @@ async function loadProfileStats() {
   <div class="footer-inner">
     <span class="footer-copy">© <span id="footerYear"></span> QODE. All rights reserved.</span>
     <ul class="footer-links">
+      <li><a onclick="goTo('roadmap')">Roadmap</a></li>
       <li><a onclick="openLegal('terms')">Terms of Service</a></li>
       <li><a onclick="openLegal('privacy')">Privacy Policy</a></li>
       <li><a onclick="openLegal('cookies')">Cookies</a></li>
